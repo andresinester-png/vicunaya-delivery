@@ -223,7 +223,7 @@ export default function Checkout() {
   const [userId, setUserId] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [savedAddresses, setSavedAddresses] = useState([]);
-  const [selectedAddrId, setSelectedAddrId] = useState(null);
+  const [selectedAddr, setSelectedAddr] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showNewAddrForm, setShowNewAddrForm] = useState(false);
   const [newAddrForm, setNewAddrForm] = useState({ label: 'Casa', address: '', notes: '' });
@@ -249,7 +249,7 @@ export default function Checkout() {
           if (!data?.length) return;
           setSavedAddresses(data);
           const def = data.find(a => a.is_default) || data[0];
-          setSelectedAddrId(def.id);
+          setSelectedAddr(def);
           setForm(f => ({ ...f, address: def.address }));
         });
     });
@@ -265,10 +265,8 @@ export default function Checkout() {
     return null;
   }
 
-  const selectedAddr = savedAddresses.find(a => a.id === selectedAddrId) ?? null;
-
   const selectAddress = useCallback((addr) => {
-    setSelectedAddrId(addr.id);
+    setSelectedAddr(addr);
     setForm(f => ({ ...f, address: addr.address }));
     setSheetOpen(false);
     setShowNewAddrForm(false);
@@ -722,7 +720,7 @@ export default function Checkout() {
       {sheetOpen && (
         <AddressSheet
           savedAddresses={savedAddresses}
-          selectedAddrId={selectedAddrId}
+          selectedAddrId={selectedAddr?.id}
           showNewAddrForm={showNewAddrForm}
           newAddrForm={newAddrForm}
           savingAddr={savingAddr}
