@@ -67,6 +67,132 @@ function OrderSuccessScreen() {
   );
 }
 
+/* ── Address bottom sheet (componente externo para evitar re-montaje) ── */
+function AddressSheet({
+  savedAddresses,
+  selectedAddrId,
+  showNewAddrForm,
+  newAddrForm,
+  savingAddr,
+  onClose,
+  onSelectAddress,
+  onShowNewForm,
+  onChangeNewAddrForm,
+  onSaveNewAddress,
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative w-full max-w-lg rounded-t-2xl bg-white" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 p-4">
+          <h3 className="font-bold text-base">Tus direcciones</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-1 hover:bg-gray-100 transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Saved addresses list */}
+        {savedAddresses.length > 0 && (
+          <div className="divide-y divide-gray-100">
+            {savedAddresses.map(addr => (
+              <button
+                key={addr.id}
+                type="button"
+                onClick={() => onSelectAddress(addr)}
+                className={`flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-gray-50 ${
+                  selectedAddrId === addr.id ? 'bg-red-50' : ''
+                }`}
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-primary">
+                  <MapPin size={18} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm">{addr.label}</p>
+                  <p className="truncate text-xs text-gray-500">{addr.address}</p>
+                  {addr.notes && <p className="truncate text-xs text-gray-400">{addr.notes}</p>}
+                </div>
+                {selectedAddrId === addr.id && (
+                  <CheckCircle size={18} className="shrink-0 text-primary" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Add new address toggle / form */}
+        {!showNewAddrForm ? (
+          <button
+            type="button"
+            onClick={() => onShowNewForm(true)}
+            className="flex w-full items-center gap-2 p-4 text-sm font-medium text-primary transition-colors hover:bg-gray-50"
+          >
+            <Plus size={16} /> Agregar nueva dirección
+          </button>
+        ) : (
+          <div className="space-y-3 border-t border-gray-100 p-4">
+            <p className="font-semibold text-sm">Nueva dirección</p>
+            <div className="flex gap-2">
+              {LABEL_PRESETS.map(lbl => (
+                <button
+                  key={lbl}
+                  type="button"
+                  onClick={() => onChangeNewAddrForm(f => ({ ...f, label: lbl }))}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                    newAddrForm.label === lbl
+                      ? 'border-primary bg-red-50 text-primary'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  {lbl}
+                </button>
+              ))}
+            </div>
+            <PlacesInput
+              value={newAddrForm.address}
+              onChange={v => onChangeNewAddrForm(f => ({ ...f, address: v }))}
+              placeholder="Calle y número"
+              className="input"
+            />
+            <input
+              value={newAddrForm.notes}
+              onChange={e => onChangeNewAddrForm(f => ({ ...f, notes: e.target.value }))}
+              placeholder="Piso, depto, referencia... (opcional)"
+              className="input"
+            />
+            <div className="flex gap-2">
+              {savedAddresses.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onShowNewForm(false)}
+                  className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onSaveNewAddress}
+                disabled={savingAddr}
+                className="btn-primary flex-1"
+              >
+                {savingAddr ? 'Guardando...' : 'Guardar y usar'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Safe area padding for phones */}
+        <div className="h-safe-bottom h-4" />
+      </div>
+    </div>
+  );
+}
+
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, total, restaurantId, clear, updateQty } = useCartStore();
@@ -250,10 +376,8 @@ export default function Checkout() {
       }).select().single();
 
       if (error) throw error;
-console.log('PEDIDO CREADO OK:', order);
-setSuccessOrderId(order.id);
-setShowSuccess(true);
-console.log('showSuccess seteado a true');
+      setSuccessOrderId(order.id);
+      setShowSuccess(true);
 
       // FIX: clear() fue movido al useEffect de arriba.
       // Acá solo guardamos el perfil y activamos la pantalla de éxito.
@@ -265,119 +389,7 @@ console.log('showSuccess seteado a true');
     }
   };
 
-  /* ── Address bottom sheet ────────────────────────────────────── */
-  const AddressSheet = () => (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={() => setSheetOpen(false)} />
-      <div className="relative w-full max-w-lg rounded-t-2xl bg-white" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 p-4">
-          <h3 className="font-bold text-base">Tus direcciones</h3>
-          <button
-            type="button"
-            onClick={() => setSheetOpen(false)}
-            className="rounded-full p-1 hover:bg-gray-100 transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
 
-        {/* Saved addresses list */}
-        {savedAddresses.length > 0 && (
-          <div className="divide-y divide-gray-100">
-            {savedAddresses.map(addr => (
-              <button
-                key={addr.id}
-                type="button"
-                onClick={() => selectAddress(addr)}
-                className={`flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-gray-50 ${
-                  selectedAddrId === addr.id ? 'bg-red-50' : ''
-                }`}
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-primary">
-                  <MapPin size={18} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm">{addr.label}</p>
-                  <p className="truncate text-xs text-gray-500">{addr.address}</p>
-                  {addr.notes && <p className="truncate text-xs text-gray-400">{addr.notes}</p>}
-                </div>
-                {selectedAddrId === addr.id && (
-                  <CheckCircle size={18} className="shrink-0 text-primary" />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Add new address toggle / form */}
-        {!showNewAddrForm ? (
-          <button
-            type="button"
-            onClick={() => setShowNewAddrForm(true)}
-            className="flex w-full items-center gap-2 p-4 text-sm font-medium text-primary transition-colors hover:bg-gray-50"
-          >
-            <Plus size={16} /> Agregar nueva dirección
-          </button>
-        ) : (
-          <div className="space-y-3 border-t border-gray-100 p-4">
-            <p className="font-semibold text-sm">Nueva dirección</p>
-            <div className="flex gap-2">
-              {LABEL_PRESETS.map(lbl => (
-                <button
-                  key={lbl}
-                  type="button"
-                  onClick={() => setNewAddrForm(f => ({ ...f, label: lbl }))}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                    newAddrForm.label === lbl
-                      ? 'border-primary bg-red-50 text-primary'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  {lbl}
-                </button>
-              ))}
-            </div>
-            <PlacesInput
-              value={newAddrForm.address}
-              onChange={v => setNewAddrForm(f => ({ ...f, address: v }))}
-              placeholder="Calle y número"
-              className="input"
-              autoFocus
-            />
-            <input
-              value={newAddrForm.notes}
-              onChange={e => setNewAddrForm(f => ({ ...f, notes: e.target.value }))}
-              placeholder="Piso, depto, referencia... (opcional)"
-              className="input"
-            />
-            <div className="flex gap-2">
-              {savedAddresses.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowNewAddrForm(false)}
-                  className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium hover:bg-gray-50"
-                >
-                  Cancelar
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={saveNewAddress}
-                disabled={savingAddr}
-                className="btn-primary flex-1"
-              >
-                {savingAddr ? 'Guardando...' : 'Guardar y usar'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Safe area padding for phones */}
-        <div className="h-safe-bottom h-4" />
-      </div>
-    </div>
-  );
 
   /* ── Step 2: Review ─────────────────────────────────────────── */
   if (step === 2) {
@@ -706,7 +718,20 @@ console.log('showSuccess seteado a true');
         </div>
       </div>
 
-      {sheetOpen && <AddressSheet />}
+      {sheetOpen && (
+        <AddressSheet
+          savedAddresses={savedAddresses}
+          selectedAddrId={selectedAddrId}
+          showNewAddrForm={showNewAddrForm}
+          newAddrForm={newAddrForm}
+          savingAddr={savingAddr}
+          onClose={() => setSheetOpen(false)}
+          onSelectAddress={selectAddress}
+          onShowNewForm={setShowNewAddrForm}
+          onChangeNewAddrForm={setNewAddrForm}
+          onSaveNewAddress={saveNewAddress}
+        />
+      )}
     </div>
   );
 }
