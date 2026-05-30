@@ -1,0 +1,108 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+
+import MainLayout from './components/MainLayout.jsx';
+import AdminGuard from './components/AdminGuard.jsx';
+import DriverGuard from './components/DriverGuard.jsx';
+import RestaurantGuard from './components/RestaurantGuard.jsx';
+
+import Home from './pages/Home.jsx';
+import RemisesPage from './pages/Remises.jsx';
+import Orders from './pages/Orders.jsx';
+import Profile from './pages/Profile.jsx';
+import Addresses from './pages/Addresses.jsx';
+
+import Rotiserias from './pages/Rotiserias.jsx';
+import Encomiendas from './pages/Encomiendas.jsx';
+import Restaurant from './pages/Restaurant.jsx';
+import Checkout from './pages/Checkout.jsx';
+import OrderTracking from './pages/OrderTracking.jsx';
+
+import RequestTrip from './pages/RequestTrip.jsx';
+import TripTracking from './pages/TripTracking.jsx';
+import RateDriver from './pages/RateDriver.jsx';
+
+import AdminLogin from './pages/admin/AdminLogin.jsx';
+import AdminDashboard from './pages/admin/AdminDashboard.jsx';
+import AdminRestaurants from './pages/admin/AdminRestaurants.jsx';
+import MenuManagement from './pages/admin/MenuManagement.jsx';
+import Earnings from './pages/admin/Earnings.jsx';
+
+import RestaurantLogin from './pages/restaurant/RestaurantLogin.jsx';
+import RestaurantDashboard from './pages/restaurant/Dashboard.jsx';
+import RestaurantMenu from './pages/restaurant/Menu.jsx';
+import RestaurantProfile from './pages/restaurant/Profile.jsx';
+import RestaurantEarnings from './pages/restaurant/Earnings.jsx';
+
+import DriverLogin from './pages/driver/DriverLogin.jsx';
+import DriverDashboard from './pages/driver/DriverDashboard.jsx';
+import GoogleCallback from './pages/GoogleCallback.jsx';
+import Legal from './pages/Legal.jsx';
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: { borderRadius: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px' },
+          success: { iconTheme: { primary: '#e31b23', secondary: '#fff' } },
+        }}
+      />
+      <Routes>
+        {/* ── Tabs principales con bottom nav ── */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/remises" element={<RemisesPage />} />
+          <Route path="/pedidos" element={<Orders />} />
+          <Route path="/perfil" element={<Profile />} />
+          <Route path="/direcciones" element={<Addresses />} />
+        </Route>
+
+        {/* ── Secciones principales (sin bottom nav) ── */}
+        <Route path="/rotiserias" element={<Rotiserias />} />
+        <Route path="/encomiendas" element={<Encomiendas />} />
+        <Route path="/restaurant/:id" element={<Restaurant />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/pedido/:id" element={<OrderTracking />} />
+        <Route path="/legal" element={<Legal />} />
+
+        {/* ── Flujo remises (sin bottom nav) ── */}
+        <Route path="/remis/pedir" element={<RequestTrip />} />
+        <Route path="/remis/viaje/:id" element={<TripTracking />} />
+        <Route path="/remis/viaje/:id/calificar" element={<RateDriver />} />
+
+        {/* ── Panel admin (sidebar propio) ── */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<AdminGuard />}>
+          <Route index element={<Navigate to="/admin/pedidos" replace />} />
+          <Route path="pedidos"      element={<AdminDashboard />} />
+          <Route path="restaurantes" element={<AdminRestaurants />} />
+          <Route path="menu"         element={<MenuManagement />} />
+          <Route path="ganancias"    element={<Earnings />} />
+        </Route>
+
+        {/* ── Panel restaurante ── */}
+        <Route path="/restaurant/login" element={<RestaurantLogin />} />
+        <Route path="/restaurant/panel" element={<RestaurantGuard />}>
+          <Route index element={<Navigate to="/restaurant/panel/pedidos" replace />} />
+          <Route path="pedidos"   element={<RestaurantDashboard />} />
+          <Route path="menu"      element={<RestaurantMenu />} />
+          <Route path="perfil"    element={<RestaurantProfile />} />
+          <Route path="ganancias" element={<RestaurantEarnings />} />
+        </Route>
+
+        {/* ── Panel conductor ── */}
+        <Route path="/driver/login" element={<DriverLogin />} />
+        <Route path="/driver" element={<DriverGuard />}>
+          <Route index element={<DriverDashboard />} />
+        </Route>
+
+        {/* ── OAuth callback ── */}
+        <Route path="/auth/callback" element={<GoogleCallback />} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

@@ -1,0 +1,84 @@
+/* Swiper — importado en HeroCarousel.jsx directamente */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+    background-color: #F8F8F8;
+    color: #111;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+  h1, h2, h3 { font-weight: 900; letter-spacing: -0.02em; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white font-bold px-6 py-3 rounded-2xl
+           hover:bg-primary-dark active:scale-95
+           transition-all duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed
+           shadow-[0_4px_14px_rgba(227,27,35,0.35)];
+  }
+  .btn-outline {
+    @apply border-2 border-primary text-primary font-bold px-6 py-3 rounded-2xl
+           hover:bg-primary-bg active:scale-95 transition-all duration-150;
+  }
+  .card {
+    @apply bg-white rounded-3xl shadow-card overflow-hidden;
+  }
+  .input {
+    @apply w-full border border-neutral-200 rounded-2xl px-4 py-3 text-sm
+           bg-white
+           focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary
+           transition-all placeholder:text-gray-400;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full;
+  }
+  .section-title {
+    @apply text-xl tracking-tight;
+    font-weight: 900;
+    color: #111;
+  }
+}
+
+/* ── Shimmer skeleton ── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* ── Swiper bullets ── */
+.swiper-pagination-bullet {
+  background: rgba(255,255,255,0.6) !important;
+  opacity: 1 !important;
+  width: 6px !important;
+  height: 6px !important;
+  transition: all 0.3s ease !important;
+}
+.swiper-pagination-bullet-active {
+  background: #ffffff !important;
+  width: 20px !important;
+  border-radius: 3px !important;
+}
+
+/* ── Leaflet ── */
+.leaflet-container { font-family: 'Plus Jakarta Sans', sans-serif; }
+.leaflet-control-attribution { display: none; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 2px; }
+
+/* ── Safe area ── */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
