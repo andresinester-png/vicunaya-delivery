@@ -453,6 +453,7 @@ export default function Checkout() {
                   <div className="text-right">
                     {selectedAddr && <p className="font-semibold text-sm">{selectedAddr.label}</p>}
                     <p className="font-medium text-sm">{form.address}</p>
+                    {selectedAddr?.notes && <p className="text-xs text-gray-500">{selectedAddr.notes}</p>}
                   </div>
                   <button
                     type="button"
