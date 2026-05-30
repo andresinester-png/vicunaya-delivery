@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Upload, Copy, CheckCircle, Plus, Minus, Trash2, MapPin, X, Camera } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -68,7 +68,7 @@ function OrderSuccessScreen() {
 }
 
 /* ── Address bottom sheet (componente externo para evitar re-montaje) ── */
-function AddressSheet({
+const AddressSheet = memo(function AddressSheet({
   savedAddresses,
   selectedAddrId,
   showNewAddrForm,
@@ -191,7 +191,7 @@ function AddressSheet({
       </div>
     </div>
   );
-}
+});
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -267,19 +267,19 @@ export default function Checkout() {
 
   const selectedAddr = savedAddresses.find(a => a.id === selectedAddrId) ?? null;
 
-  const selectAddress = (addr) => {
+  const selectAddress = useCallback((addr) => {
     setSelectedAddrId(addr.id);
     setForm(f => ({ ...f, address: addr.address }));
     setSheetOpen(false);
     setShowNewAddrForm(false);
-  };
+  }, []);
 
-  const openSheet = (autoOpenForm = false) => {
+  const openSheet = useCallback((autoOpenForm = false) => {
     setShowNewAddrForm(autoOpenForm || savedAddresses.length === 0);
     setSheetOpen(true);
-  };
+  }, [savedAddresses.length]);
 
-  const saveNewAddress = async () => {
+  const saveNewAddress = useCallback(async () => {
     if (!newAddrForm.address.trim()) { toast.error('Ingresá la dirección'); return; }
     if (!userId) {
       const local = {
@@ -313,7 +313,7 @@ export default function Checkout() {
     } finally {
       setSavingAddr(false);
     }
-  };
+  }, [newAddrForm, userId, savedAddresses.length, selectAddress]);
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
