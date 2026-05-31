@@ -255,16 +255,6 @@ export default function Checkout() {
     });
   }, []);
 
-  // FIX: showSuccess se chequea ANTES que el guard de items vacíos.
-  // Antes estaba al revés: el guard de items[] interceptaba el render
-  // antes de que showSuccess pudiera mostrar la pantalla.
-  if (showSuccess) return <OrderSuccessScreen />;
-
-  if (items.length === 0) {
-    navigate('/');
-    return null;
-  }
-
   const selectAddress = useCallback((addr) => {
     setSelectedAddr(addr);
     setForm(f => ({ ...f, address: addr.address }));
@@ -273,7 +263,7 @@ export default function Checkout() {
   }, []);
 
   const openSheet = useCallback((autoOpenForm = false) => {
-    setShowNewAddrForm(autoOpenForm || savedAddresses.length === 0);
+    setShowNewAddrForm(s => autoOpenForm || savedAddresses.length === 0 ? true : s);
     setSheetOpen(true);
   }, [savedAddresses.length]);
 
@@ -312,6 +302,14 @@ export default function Checkout() {
       setSavingAddr(false);
     }
   }, [newAddrForm, userId, savedAddresses.length, selectAddress]);
+
+  // FIX: showSuccess se chequea ANTES que el guard de items vacíos.
+  if (showSuccess) return <OrderSuccessScreen />;
+
+  if (items.length === 0) {
+    navigate('/');
+    return null;
+  }
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
