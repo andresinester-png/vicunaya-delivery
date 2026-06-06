@@ -4,25 +4,25 @@ import { loadPlacesScript } from '../lib/placesScript.js';
 
 export default function PlacesInput({ value, onChange, placeholder, className, autoFocus }) {
   const [suggestions, setSuggestions] = useState([]);
-  const [mapsReady, setMapsReady] = useState(false);
+  const [mapsReady, setMapsReady] = useState(() => !!window.google?.maps?.places?.AutocompleteSuggestion);
   const debounceRef = useRef(null);
 
   useEffect(() => {
+    if (mapsReady) return;
     let cancelled = false;
-    const tryInit = () => {
-      if (cancelled) return;
-      if (window.google?.maps?.places) {
-        setMapsReady(true);
-      } else {
-        setTimeout(tryInit, 100);
-      }
-    };
-    loadPlacesScript().then(tryInit);
-    return () => {
-      cancelled = true;
-      clearTimeout(debounceRef.current);
-    };
-  }, []);
+    loadPlacesScript().then(() => {
+      const check = () => {
+        if (cancelled) return;
+        if (window.google?.maps?.places?.AutocompleteSuggestion) {
+          setMapsReady(true);
+        } else {
+          setTimeout(check, 100);
+        }
+      };
+      check();
+    });
+    return () => { cancelled = true; clearTimeout(debounceRef.current); };
+  }, [mapsReady]);
 
   const handleChange = (e) => {
     const val = e.target.value;
@@ -31,11 +31,14 @@ export default function PlacesInput({ value, onChange, placeholder, className, a
     if (!mapsReady || val.length < 3) { setSuggestions([]); return; }
     debounceRef.current = setTimeout(async () => {
       try {
-        const { AutocompleteSuggestion, AutocompleteRequest } = window.google.maps.places;
-        const request = { input: val, componentRestrictions: { country: 'ar' } };
-        const { suggestions: results } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+        const { AutocompleteSuggestion } = window.google.maps.places;
+        const { suggestions: results } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: val,
+          componentRestrictions: { country: 'ar' },
+        });
         setSuggestions(results?.slice(0, 5) || []);
-      } catch {
+      } catch(err) {
+        console.error('Places error:', err);
         setSuggestions([]);
       }
     }, 300);
@@ -43,20 +46,12 @@ export default function PlacesInput({ value, onChange, placeholder, className, a
 
   const handleBlur = () => setTimeout(() => setSuggestions([]), 150);
 
-  const getLabel = (s) => {
-    if (s.placePrediction) {
-      return {
-        main: s.placePrediction.structuredFormat?.mainText?.text || s.placePrediction.text?.text || '',
-        secondary: s.placePrediction.structuredFormat?.secondaryText?.text || '',
-      };
-    }
-    return { main: s.description || '', secondary: '' };
-  };
+  const getLabel = (s) => ({
+    main: s.placePrediction?.structuredFormat?.mainText?.text || s.placePrediction?.text?.text || '',
+    secondary: s.placePrediction?.structuredFormat?.secondaryText?.text || '',
+  });
 
-  const getValue = (s) => {
-    if (s.placePrediction) return s.placePrediction.text?.text || s.placePrediction.mainText?.text || '';
-    return s.description || '';
-  };
+  const getValue = (s) => s.placePrediction?.text?.text || '';
 
   return (
     <div className="relative">
