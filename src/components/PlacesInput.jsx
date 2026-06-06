@@ -5,24 +5,19 @@ import { loadPlacesScript } from '../lib/placesScript.js';
 export default function PlacesInput({ value, onChange, placeholder, className, autoFocus }) {
   const [suggestions, setSuggestions] = useState([]);
   const [mapsReady, setMapsReady] = useState(false);
-  const autocompleteRef = useRef(null);
   const debounceRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
-
     const tryInit = () => {
       if (cancelled) return;
       if (window.google?.maps?.places) {
-        autocompleteRef.current = new window.google.maps.places.AutocompleteService();
         setMapsReady(true);
       } else {
         setTimeout(tryInit, 100);
       }
     };
-
     loadPlacesScript().then(tryInit);
-
     return () => {
       cancelled = true;
       clearTimeout(debounceRef.current);
@@ -33,22 +28,35 @@ export default function PlacesInput({ value, onChange, placeholder, className, a
     const val = e.target.value;
     onChange(val);
     clearTimeout(debounceRef.current);
-    if (!mapsReady || !autocompleteRef.current || val.length < 3) { setSuggestions([]); return; }
-    debounceRef.current = setTimeout(() => {
-      autocompleteRef.current.getPlacePredictions(
-        { input: val, componentRestrictions: { country: 'ar' } },
-        (results, status) => {
-          setSuggestions(
-            status === window.google.maps.places.PlacesServiceStatus.OK
-              ? results.slice(0, 5)
-              : []
-          );
-        }
-      );
+    if (!mapsReady || val.length < 3) { setSuggestions([]); return; }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const { AutocompleteSuggestion, AutocompleteRequest } = window.google.maps.places;
+        const request = { input: val, componentRestrictions: { country: 'ar' } };
+        const { suggestions: results } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+        setSuggestions(results?.slice(0, 5) || []);
+      } catch {
+        setSuggestions([]);
+      }
     }, 300);
   };
 
   const handleBlur = () => setTimeout(() => setSuggestions([]), 150);
+
+  const getLabel = (s) => {
+    if (s.placePrediction) {
+      return {
+        main: s.placePrediction.structuredFormat?.mainText?.text || s.placePrediction.text?.text || '',
+        secondary: s.placePrediction.structuredFormat?.secondaryText?.text || '',
+      };
+    }
+    return { main: s.description || '', secondary: '' };
+  };
+
+  const getValue = (s) => {
+    if (s.placePrediction) return s.placePrediction.text?.text || s.placePrediction.mainText?.text || '';
+    return s.description || '';
+  };
 
   return (
     <div className="relative">
@@ -62,25 +70,24 @@ export default function PlacesInput({ value, onChange, placeholder, className, a
       />
       {suggestions.length > 0 && (
         <ul className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
-          {suggestions.map(s => (
-            <li key={s.place_id}>
-              <button
-                type="button"
-                onMouseDown={() => { onChange(s.description); setSuggestions([]); }}
-                className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-gray-50"
-              >
-                <MapPin size={14} className="mt-0.5 shrink-0 text-gray-400" />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium leading-tight">
-                    {s.structured_formatting.main_text}
-                  </p>
-                  <p className="truncate text-xs text-gray-400">
-                    {s.structured_formatting.secondary_text}
-                  </p>
-                </div>
-              </button>
-            </li>
-          ))}
+          {suggestions.map((s, i) => {
+            const label = getLabel(s);
+            return (
+              <li key={i}>
+                <button
+                  type="button"
+                  onMouseDown={() => { onChange(getValue(s)); setSuggestions([]); }}
+                  className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-gray-50"
+                >
+                  <MapPin size={14} className="mt-0.5 shrink-0 text-gray-400" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium leading-tight">{label.main}</p>
+                    <p className="truncate text-xs text-gray-400">{label.secondary}</p>
+                  </div>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
