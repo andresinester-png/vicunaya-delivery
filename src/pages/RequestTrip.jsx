@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Car, MapPin, Navigation } from 'lucide-react';
+import { ChevronLeft, Car, Navigation } from 'lucide-react';
 import toast from 'react-hot-toast';
-import PaymentSelector from './Checkout.jsx';
 import { supabase, FARE } from '../lib/supabase.js';
 import useProfileStore from '../store/profileStore.js';
-
-// Importar PaymentSelector directamente
+import PlacesInput from '../components/PlacesInput.jsx';
 import { CreditCard, Building2, Banknote } from 'lucide-react';
 
 const PAYMENT_METHODS = [
-  { id: 'cash',     label: 'Efectivo al llegar',      sublabel: 'Pag√°s al conductor',   icon: Banknote },
-  { id: 'card',     label: 'Tarjeta d√©bito/cr√©dito',  sublabel: 'V√≠a MercadoPago',      icon: CreditCard },
+  { id: 'cash',     label: 'Efectivo al llegar',      sublabel: 'Pag·s al conductor',   icon: Banknote },
+  { id: 'card',     label: 'Tarjeta dÈbito/crÈdito',  sublabel: 'VÌa MercadoPago',      icon: CreditCard },
   { id: 'transfer', label: 'Transferencia bancaria',   sublabel: 'CBU + comprobante',    icon: Building2 },
 ];
 
@@ -60,7 +58,7 @@ export default function RequestTrip() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.phone || !form.origin || !form.dest) {
-      toast.error('Complet√° todos los campos'); return;
+      toast.error('Complet· todos los campos'); return;
     }
     setLoading(true);
     try {
@@ -96,29 +94,34 @@ export default function RequestTrip() {
 
       <div className="max-w-lg mx-auto px-4 py-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Datos */}
           <div className="card p-5 space-y-3">
             <h2 className="font-bold text-sm text-gray-600 uppercase tracking-wide">Tus datos</h2>
             <div className="grid grid-cols-2 gap-3">
               <input name="name" value={form.name} onChange={handleChange} placeholder="Tu nombre *" className="input" required />
-              <input name="phone" value={form.phone} onChange={handleChange} placeholder="Tel√©fono *" className="input" required />
+              <input name="phone" value={form.phone} onChange={handleChange} placeholder="TelÈfono *" className="input" required />
             </div>
           </div>
 
-          {/* Recorrido */}
           <div className="card p-5 space-y-3">
             <h2 className="font-bold text-sm text-gray-600 uppercase tracking-wide">Recorrido</h2>
             <div className="relative">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-primary" />
-              <input name="origin" value={form.origin} onChange={handleChange} onBlur={calcEstimate}
-                placeholder="¬øD√≥nde te recogemos? *" className="input pl-8" required />
+              <div className="absolute left-3.5 top-4 w-2.5 h-2.5 rounded-full bg-primary z-10" />
+              <PlacesInput
+                value={form.origin}
+                onChange={v => setForm(f => ({ ...f, origin: v }))}
+                placeholder="øDÛnde te recogemos? *"
+                className="input pl-8"
+              />
             </div>
             <div className="relative">
-              <Navigation size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input name="dest" value={form.dest} onChange={handleChange} onBlur={calcEstimate}
-                placeholder="¬øA d√≥nde vas? *" className="input pl-8" required />
+              <Navigation size={14} className="absolute left-3.5 top-4 text-gray-400 z-10" />
+              <PlacesInput
+                value={form.dest}
+                onChange={v => { setForm(f => ({ ...f, dest: v })); setTimeout(calcEstimate, 100); }}
+                placeholder="øA dÛnde vas? *"
+                className="input pl-8"
+              />
             </div>
-
             {estimate && (
               <div className="bg-primary-bg border border-primary/20 rounded-xl p-4 flex justify-between items-center">
                 <div>
@@ -133,7 +136,6 @@ export default function RequestTrip() {
             )}
           </div>
 
-          {/* Pago */}
           <div className="card p-5">
             <h2 className="font-bold text-sm text-gray-600 uppercase tracking-wide mb-3">Pago</h2>
             <PayMethod value={paymentMethod} onChange={setPaymentMethod} />
