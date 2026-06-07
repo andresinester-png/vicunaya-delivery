@@ -1,8 +1,6 @@
 import { useState, useRef } from 'react';
 import { MapPin } from 'lucide-react';
 
-const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY;
-
 export default function PlacesInput({ value, onChange, placeholder, className, autoFocus }) {
   const [suggestions, setSuggestions] = useState([]);
   const debounceRef = useRef(null);
@@ -14,18 +12,7 @@ export default function PlacesInput({ value, onChange, placeholder, className, a
     if (val.length < 3) { setSuggestions([]); return; }
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Goog-Api-Key': API_KEY,
-          },
-          body: JSON.stringify({
-            input: val,
-            languageCode: 'es',
-            regionCode: 'ar',
-          }),
-        });
+        const res = await fetch(`/api/places?input=${encodeURIComponent(val)}`);
         const data = await res.json();
         setSuggestions(data.suggestions?.slice(0, 5) || []);
       } catch(err) {
