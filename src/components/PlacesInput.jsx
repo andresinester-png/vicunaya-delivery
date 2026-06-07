@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react';
 import { MapPin } from 'lucide-react';
 
+const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY;
+
 export default function PlacesInput({ value, onChange, placeholder, className, autoFocus }) {
   const [suggestions, setSuggestions] = useState([]);
   const debounceRef = useRef(null);
@@ -11,15 +13,21 @@ export default function PlacesInput({ value, onChange, placeholder, className, a
     clearTimeout(debounceRef.current);
     if (val.length < 3) { setSuggestions([]); return; }
     debounceRef.current = setTimeout(async () => {
-      const AC = window.google?.maps?.places?.AutocompleteSuggestion;
-      if (!AC) { console.warn('AutocompleteSuggestion no disponible'); return; }
       try {
-        const { suggestions: results } = await AC.fetchAutocompleteSuggestions({
-          input: val,
-          language: 'es',
-          region: 'ar',
+        const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': API_KEY,
+          },
+          body: JSON.stringify({
+            input: val,
+            languageCode: 'es',
+            regionCode: 'ar',
+          }),
         });
-        setSuggestions(results?.slice(0, 5) || []);
+        const data = await res.json();
+        setSuggestions(data.suggestions?.slice(0, 5) || []);
       } catch(err) {
         console.error('Places error:', err);
         setSuggestions([]);
@@ -29,11 +37,8 @@ export default function PlacesInput({ value, onChange, placeholder, className, a
 
   const handleBlur = () => setTimeout(() => setSuggestions([]), 150);
 
-  const getLabel = (s) => ({
-    main: s.placePrediction?.structuredFormat?.mainText?.text || s.placePrediction?.text?.text || '',
-    secondary: s.placePrediction?.structuredFormat?.secondaryText?.text || '',
-  });
-
+  const getMain = (s) => s.placePrediction?.structuredFormat?.mainText?.text || s.placePrediction?.text?.text || '';
+  const getSecondary = (s) => s.placePrediction?.structuredFormat?.secondaryText?.text || '';
   const getValue = (s) => s.placePrediction?.text?.text || '';
 
   return (
@@ -48,24 +53,21 @@ export default function PlacesInput({ value, onChange, placeholder, className, a
       />
       {suggestions.length > 0 && (
         <ul className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
-          {suggestions.map((s, i) => {
-            const label = getLabel(s);
-            return (
-              <li key={i}>
-                <button
-                  type="button"
-                  onMouseDown={() => { onChange(getValue(s)); setSuggestions([]); }}
-                  className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-gray-50"
-                >
-                  <MapPin size={14} className="mt-0.5 shrink-0 text-gray-400" />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium leading-tight">{label.main}</p>
-                    <p className="truncate text-xs text-gray-400">{label.secondary}</p>
-                  </div>
-                </button>
-              </li>
-            );
-          })}
+          {suggestions.map((s, i) => (
+            <li key={i}>
+              <button
+                type="button"
+                onMouseDown={() => { onChange(getValue(s)); setSuggestions([]); }}
+                className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-gray-50"
+              >
+                <MapPin size={14} className="mt-0.5 shrink-0 text-gray-400" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium leading-tight">{getMain(s)}</p>
+                  <p className="truncate text-xs text-gray-400">{getSecondary(s)}</p>
+                </div>
+              </button>
+            </li>
+          ))}
         </ul>
       )}
     </div>
