@@ -1,40 +1,23 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { MapPin } from 'lucide-react';
-import { loadPlacesScript } from '../lib/placesScript.js';
 
 export default function PlacesInput({ value, onChange, placeholder, className, autoFocus }) {
   const [suggestions, setSuggestions] = useState([]);
-  const [mapsReady, setMapsReady] = useState(() => !!window.google?.maps?.places?.AutocompleteSuggestion);
   const debounceRef = useRef(null);
-
-  useEffect(() => {
-    if (mapsReady) return;
-    let cancelled = false;
-    loadPlacesScript().then(() => {
-      const check = () => {
-        if (cancelled) return;
-        if (window.google?.maps?.places?.AutocompleteSuggestion) {
-          setMapsReady(true);
-        } else {
-          setTimeout(check, 100);
-        }
-      };
-      check();
-    });
-    return () => { cancelled = true; clearTimeout(debounceRef.current); };
-  }, [mapsReady]);
 
   const handleChange = (e) => {
     const val = e.target.value;
     onChange(val);
     clearTimeout(debounceRef.current);
-    if (!mapsReady || val.length < 3) { setSuggestions([]); return; }
+    if (val.length < 3) { setSuggestions([]); return; }
     debounceRef.current = setTimeout(async () => {
+      const AC = window.google?.maps?.places?.AutocompleteSuggestion;
+      if (!AC) { console.warn('AutocompleteSuggestion no disponible'); return; }
       try {
-        const { AutocompleteSuggestion } = window.google.maps.places;
-        const { suggestions: results } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+        const { suggestions: results } = await AC.fetchAutocompleteSuggestions({
           input: val,
-          componentRestrictions: { country: 'ar' },
+          language: 'es',
+          region: 'ar',
         });
         setSuggestions(results?.slice(0, 5) || []);
       } catch(err) {
