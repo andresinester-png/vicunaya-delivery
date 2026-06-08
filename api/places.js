@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       input,
       languageCode: 'es',
       regionCode: 'ar',
-      locationBias: {
+      locationRestriction: {
         circle: {
           center: { latitude: -34.1588, longitude: -64.3764 },
           radius: 10000
