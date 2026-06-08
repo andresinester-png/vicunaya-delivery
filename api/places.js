@@ -8,7 +8,17 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': process.env.VITE_GOOGLE_PLACES_API_KEY,
     },
-    body: JSON.stringify({ input, languageCode: 'es', regionCode: 'ar' }),
+    body: JSON.stringify({
+      input,
+      languageCode: 'es',
+      regionCode: 'ar',
+      locationBias: {
+        circle: {
+          center: { latitude: -34.1588, longitude: -64.3764 },
+          radius: 10000
+        }
+      }
+    }),
   });
 
   const data = await response.json();
