@@ -9,7 +9,7 @@ export default async function handler(req, res) {
       'X-Goog-Api-Key': process.env.VITE_GOOGLE_PLACES_API_KEY,
     },
     body: JSON.stringify({
-      input: input + ' Vicuña Mackenna',
+      input,
       languageCode: 'es',
       regionCode: 'ar',
       locationBias: {
