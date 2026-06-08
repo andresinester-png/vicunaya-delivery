@@ -1,42 +1,24 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Car, Navigation } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { ChevronLeft, Car } from 'lucide-react';
 import { supabase, FARE } from '../lib/supabase.js';
-import useProfileStore from '../store/profileStore.js';
+import { useProfileStore } from '../lib/profileStore.js';
 import PlacesInput from '../components/PlacesInput.jsx';
-import { CreditCard, Building2, Banknote } from 'lucide-react';
+import PaymentMethod from '../components/PaymentMethod.jsx';
+import toast from 'react-hot-toast';
 
 const PAYMENT_METHODS = [
-  { id: 'cash',     label: 'Efectivo al llegar',      sublabel: 'Pagás al conductor',   icon: Banknote },
-  { id: 'card',     label: 'Tarjeta débito/crédito',  sublabel: 'Vía MercadoPago',      icon: CreditCard },
-  { id: 'transfer', label: 'Transferencia bancaria',   sublabel: 'CBU + comprobante',    icon: Building2 },
+  { id: 'cash', label: 'Efectivo al llegar', sublabel: 'Pagás al conductor', icon: Car },
 ];
 
-function PayMethod({ value, onChange }) {
-  return (
-    <div className="space-y-2">
-      {PAYMENT_METHODS.map(m => {
-        const Icon = m.icon;
-        const sel = value === m.id;
-        return (
-          <button key={m.id} type="button" onClick={() => onChange(m.id)}
-            className={`w-full flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${sel ? 'border-primary bg-primary-bg' : 'border-neutral-200 hover:border-neutral-300'}`}>
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${sel ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'}`}>
-              <Icon size={18} />
-            </div>
-            <div className="flex-1">
-              <p className={`font-semibold text-sm ${sel ? 'text-primary' : ''}`}>{m.label}</p>
-              <p className="text-xs text-gray-500">{m.sublabel}</p>
-            </div>
-            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${sel ? 'border-primary' : 'border-gray-300'}`}>
-              {sel && <div className="w-2 h-2 bg-primary rounded-full" />}
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
+async function geocode(address) {
+  try {
+    const res = await fetch(`/api/geocode?address=${encodeURIComponent(address)}`);
+    const data = await res.json();
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 export default function RequestTrip() {
@@ -62,6 +44,11 @@ export default function RequestTrip() {
     }
     setLoading(true);
     try {
+      const [originCoords, destCoords] = await Promise.all([
+        geocode(form.origin),
+        geocode(form.dest),
+      ]);
+
       const { data: trip, error } = await supabase.from('trips').insert({
         passenger_name: form.name,
         passenger_phone: form.phone,
@@ -71,6 +58,10 @@ export default function RequestTrip() {
         estimated_price: estimate?.price,
         payment_method: paymentMethod,
         status: 'searching',
+        origin_lat: originCoords?.lat || null,
+        origin_lng: originCoords?.lng || null,
+        dest_lat: destCoords?.lat || null,
+        dest_lng: destCoords?.lng || null,
       }).select().single();
       if (error) throw error;
       navigate(`/remis/viaje/${trip.id}`);
@@ -138,7 +129,7 @@ export default function RequestTrip() {
 
           <div className="card p-5">
             <h2 className="font-bold text-sm text-gray-600 uppercase tracking-wide mb-3">Pago</h2>
-            <PayMethod value={paymentMethod} onChange={setPaymentMethod} />
+            <PaymentMethod value={paymentMethod} onChange={setPaymentMethod} />
           </div>
 
           <button type="submit" disabled={loading} className="btn-primary w-full py-4 text-base flex items-center justify-center gap-2">
