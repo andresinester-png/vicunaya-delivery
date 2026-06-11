@@ -12,9 +12,17 @@ export default function PlacesInput({ value, onChange, placeholder, className, a
     if (val.length < 3) { setSuggestions([]); return; }
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/places?input=${encodeURIComponent(val)}`);
+        const query = `${val}, Vicuña Mackenna, Córdoba, Argentina`;
+        const res = await fetch(`/api/places?input=${encodeURIComponent(query)}`);
         const data = await res.json();
-        setSuggestions(data.suggestions?.slice(0, 5) || []);
+        const results = (data.suggestions || [])
+          .map(s => s.placePrediction)
+          .filter(p => {
+            const text = p?.text?.text || '';
+            return text.toLowerCase().includes('vicuña mackenna') || text.toLowerCase().includes('vicuna mackenna');
+          })
+          .slice(0, 5);
+        setSuggestions(results);
       } catch(err) {
         console.error('Places error:', err);
         setSuggestions([]);
@@ -24,9 +32,9 @@ export default function PlacesInput({ value, onChange, placeholder, className, a
 
   const handleBlur = () => setTimeout(() => setSuggestions([]), 150);
 
-  const getMain = (s) => s.placePrediction?.structuredFormat?.mainText?.text || s.placePrediction?.text?.text || '';
-  const getSecondary = (s) => s.placePrediction?.structuredFormat?.secondaryText?.text || '';
-  const getValue = (s) => s.placePrediction?.text?.text || '';
+  const getMain = (s) => s?.structuredFormat?.mainText?.text || s?.text?.text || '';
+  const getSecondary = (s) => s?.structuredFormat?.secondaryText?.text || '';
+  const getValue = (s) => s?.text?.text || '';
 
   return (
     <div className="relative">
