@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Car } from 'lucide-react';
 import { supabase, FARE } from '../lib/supabase.js';
-import { useProfileStore } from '../lib/profileStore.js';
+import { useProfileStore } from '../store/profileStore.js';
 import PlacesInput from '../components/PlacesInput.jsx';
 import PaymentMethod from '../components/PaymentMethod.jsx';
 import toast from 'react-hot-toast';
