@@ -1,24 +1,48 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Phone, ChevronLeft, MapPin, Navigation, Star, Clock, Car, CheckCircle, X } from 'lucide-react';
 import { supabase, MAP_CENTER } from '../lib/supabase.js';
 
 const driverIcon = new L.DivIcon({
   className: '',
-  html: `<div style="background:#e31b23;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 12px rgba(227,27,35,0.4);font-size:21px">🚗</div>`,
+  html: `<div style="background:#e31b23;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 12px rgba(227,27,35,0.4);font-size:21px">??</div>`,
   iconSize: [42, 42],
   iconAnchor: [21, 21],
 });
 
+const originIcon = new L.DivIcon({
+  className: '',
+  html: `<div style="background:#e31b23;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
+const destIcon = new L.DivIcon({
+  className: '',
+  html: `<div style="background:#1d4ed8;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
+function FitBounds({ positions }) {
+  const map = useMap();
+  useEffect(() => {
+    if (positions.length >= 2) {
+      map.fitBounds(positions, { padding: [40, 40] });
+    }
+  }, [map, positions]);
+  return null;
+}
+
 const STATUS_INFO = {
-  searching:   { label: 'Buscando conductor...', icon: Clock,        color: 'text-amber-500' },
-  accepted:    { label: 'Conductor en camino',   icon: Car,          color: 'text-blue-500'  },
-  arriving:    { label: 'Llegando a buscarte',   icon: Car,          color: 'text-blue-500'  },
-  in_progress: { label: 'En viaje',              icon: Navigation,   color: 'text-primary'   },
-  completed:   { label: '¡Llegaste!',            icon: CheckCircle,  color: 'text-green-500' },
-  cancelled:   { label: 'Cancelado',             icon: X,            color: 'text-red-500'   },
+  searching:   { label: 'Buscando conductor...', icon: Clock,       color: 'text-amber-500' },
+  accepted:    { label: 'Conductor en camino',   icon: Car,         color: 'text-blue-500'  },
+  arriving:    { label: 'Llegando a buscarte',   icon: Car,         color: 'text-blue-500'  },
+  in_progress: { label: 'En viaje',              icon: Navigation,  color: 'text-primary'   },
+  completed:   { label: '�Llegaste!',            icon: CheckCircle, color: 'text-green-500' },
+  cancelled:   { label: 'Cancelado',             icon: X,           color: 'text-red-500'   },
 };
 
 export default function TripTracking() {
@@ -61,19 +85,22 @@ export default function TripTracking() {
 
   const si = STATUS_INFO[trip?.status] || STATUS_INFO.searching;
   const StatusIcon = si.icon;
-  const driverPos = driver?.lat && driver?.lng ? [driver.lat, driver.lng] : MAP_CENTER;
+  const driverPos = driver?.lat && driver?.lng ? [driver.lat, driver.lng] : null;
+  const originPos = trip?.origin_lat && trip?.origin_lng ? [trip.origin_lat, trip.origin_lng] : null;
+  const destPos = trip?.dest_lat && trip?.dest_lng ? [trip.dest_lat, trip.dest_lng] : null;
+  const routePositions = [originPos, destPos].filter(Boolean);
+  const mapCenter = originPos || driverPos || MAP_CENTER;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* Mapa */}
       <div className="relative" style={{ height: '45vh' }}>
-        <MapContainer center={driverPos} zoom={15} style={{ height: '100%', width: '100%' }} zoomControl={false}>
+        <MapContainer center={mapCenter} zoom={15} style={{ height: '100%', width: '100%' }} zoomControl={false}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          {driver?.lat && driver?.lng && (
-            <Marker position={[driver.lat, driver.lng]} icon={driverIcon}>
-              <Popup>{driver.name}</Popup>
-            </Marker>
-          )}
+          {routePositions.length >= 2 && <FitBounds positions={routePositions} />}
+          {originPos && <Marker position={originPos} icon={originIcon}><Popup>Origen</Popup></Marker>}
+          {destPos && <Marker position={destPos} icon={destIcon}><Popup>Destino</Popup></Marker>}
+          {routePositions.length >= 2 && <Polyline positions={routePositions} color="#e31b23" weight={3} dashArray="8,6" />}
+          {driverPos && <Marker position={driverPos} icon={driverIcon}><Popup>{driver.name}</Popup></Marker>}
         </MapContainer>
 
         <button onClick={() => navigate('/remises')}
@@ -81,24 +108,21 @@ export default function TripTracking() {
           <ChevronLeft size={20} />
         </button>
 
-        {/* Status badge */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-white rounded-2xl shadow-lg px-5 py-2.5 flex items-center gap-2.5">
           <StatusIcon className={si.color} size={18} />
           <p className={`font-bold text-sm ${si.color}`}>{si.label}</p>
         </div>
       </div>
 
-      {/* Panel */}
       <div className="flex-1 bg-white rounded-t-3xl -mt-4 px-5 pt-6 pb-6 overflow-y-auto">
-        {/* Conductor */}
         {driver ? (
           <div className="flex items-center gap-4 mb-5 pb-5 border-b border-neutral-100">
             <div className="w-14 h-14 bg-primary-bg rounded-2xl flex items-center justify-center text-2xl overflow-hidden shrink-0">
-              {driver.photo_url ? <img src={driver.photo_url} alt={driver.name} className="w-full h-full object-cover" /> : '👤'}
+              {driver.photo_url ? <img src={driver.photo_url} alt={driver.name} className="w-full h-full object-cover" /> : '??'}
             </div>
             <div className="flex-1">
               <p className="font-bold">{driver.name}</p>
-              <p className="text-sm text-gray-500">{driver.vehicle} · {driver.license_plate}</p>
+              <p className="text-sm text-gray-500">{driver.vehicle} � {driver.license_plate}</p>
               <div className="flex items-center gap-1 text-amber-500 text-sm">
                 <Star size={13} fill="currentColor" />
                 <span className="font-semibold">{driver.rating?.toFixed(1)}</span>
@@ -120,7 +144,6 @@ export default function TripTracking() {
           </div>
         )}
 
-        {/* Recorrido */}
         <div className="space-y-3 mb-5">
           <div className="flex gap-3 items-center">
             <div className="w-2.5 h-2.5 bg-primary rounded-full shrink-0" />
