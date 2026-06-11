@@ -14,14 +14,6 @@ const CARDS = [
     accent: '#FF6B00',
   },
   {
-    id: 'remises',
-    title: 'Remises',
-    subtitle: 'Disponibles las 24hs',
-    image: 'https://hvmdumuedqfoifgayleh.supabase.co/storage/v1/object/public/IMAGES/ChatGPT%20Image%2012%20may%202026,%2021_19_49.png',
-    to: '/remises',
-    accent: '#2563EB',
-  },
-  {
     id: 'encomiendas',
     title: 'Encomiendas a Río Cuarto',
     subtitle: 'Lunes a viernes',
