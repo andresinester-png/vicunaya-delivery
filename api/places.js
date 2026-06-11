@@ -9,13 +9,14 @@ export default async function handler(req, res) {
       'X-Goog-Api-Key': process.env.VITE_GOOGLE_PLACES_API_KEY,
     },
     body: JSON.stringify({
-      input,
+      input: `${input}, Vicuña Mackenna`,
       languageCode: 'es',
       regionCode: 'ar',
-      locationBias: {
+      includedPrimaryTypes: ['route', 'street_address', 'premise'],
+      locationRestriction: {
         circle: {
           center: { latitude: -34.1588, longitude: -64.3764 },
-          radius: 15000
+          radius: 8000
         }
       }
     }),
