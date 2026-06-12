@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Search, SlidersHorizontal, ChevronDown, X, Check } from 'lucide-react';
@@ -24,14 +24,19 @@ const SORT_OPTIONS = [
 const ALL_CATS = ['Todos','Rotisería','Pizza','Empanadas','Parrilla','Sushi','Vegano','Bebidas'];
 
 const CATEGORIES = [
-  { label:'Todos',     icon:'🍽️' },
-  { label:'Empanadas', image:'https://lh3.googleusercontent.com/aida/AP1WRLsF8g25q9zzjewJoYDuzt9P6VHhROMrTCzpRGxOFXz-KargpD9l9YqOD6MUq4xR9JAa2hRSi8tE29p5zbZiLBawIRhjTVjtMG4WakiipIGAN9vTMRLVhA0vH_gRCyesFMtH3_mSQwufLuTrMrGnVh9HCIZo5sEzlifBIEd0Km4XUom88DCmnDDRxgTyEDrf4HwcBTcHJF60M2a6XZN4_YCygxubUcd4XBGgQq7EZgRuiMA_DaWBDPpvawlC' },
-  { label:'Pizza',     image:'https://lh3.googleusercontent.com/aida/AP1WRLt2hfS7nG_MPKcxQt5drIIWkmBiRFzXgV_iec3sO25LWTCKz-NBMW9ggjBGf6OcH0TB-bj1wCRrMMMg7wRxv2YYyx-rSNofBWqV8DP2rXZSfKcVUhvLm-xA4l76bdLaJdFbH-k4qIyqcf2OD_ga0F2ktQXDBgTEJX6AjzFt8oc8ky71kG0RBIOVjyl-dTixl15ai4e-v4rVpLSLTl1cHTPI4g0FtqMchU047MiXEoBN-3NTs2Es0PTCFCy9' },
-  { label:'Parrilla',  image:'https://lh3.googleusercontent.com/aida/AP1WRLtJW0btAnqN6wtNQ9MxQ3jDa9tkruGHWwhM8asYCsnXDWN_LrPJw1tGCoKs--Ga3cZZPjI27CvLWQXgDvTLtX20Ti7dJq7n9Ln84VHXtGrrGqg-k2qxxk-eSa3kjO-0-qQX-gjhIAfF1u27cv9i529jLrdqXOrh3DWJWmY8e_NtqvKh8iM4OGGk-GAQP2zTGwWAt3VhZ5nbEIB9jM5xxx47tianzNJoyTnhXkfYrNHupZPI9xnttvMiwIcV' },
-  { label:'Lomitos',   image:'https://lh3.googleusercontent.com/aida-public/AB6AXuDBXP96Yc857UOzW4XLmmeq_pYvR_gdQ3FlpHerjxep7D5AoakMWFDWsgjz9AymSzrjXBkDq_YfqgTY1SGZEv24mNUT9Rxjv14wO8wnzy1VDyrN6G5vvD-WYQO06PtKtLH0HxworEN2dTL9OGHv0CgkpDsvtDR-Xxi0_h6c0C_OOEiabYzcD0Aqk1-N35M6HMCHSE51mb9WhRPo5VsNPprptX6HXTMRBonbBqC3d5EQ4BmmoorGMWcr2aRnE2UVqTW6eVPBy6VUQQUh' },
-  { label:'Bebidas',   image:'https://lh3.googleusercontent.com/aida-public/AB6AXuA4WfUPUZssd7XXSwzYFyEjk47A0IfsZZfhh--RSa4QXVizLe7YOSKnEBZBMfgXFFImJO3byCOD_Qdw_S8nJQ-mVnciz36O69pxiYYhfbygjp6u0oDGS3aClGz9QC1B3Q13NOhMe4T88C445IdDWIeWIfqQx-DhlZfg8lUX9vO9vPIn40734P1GgGnHCBYLetU8jFu4-tybQcSaMxLBntrh0NxPKzvkwklWpQSSIaGCOyW_vLQR9OvQ2pmx9MWxd1cvWF4PSNdFezAP' },
-  { label:'Sushi',     icon:'🍣' },
-  { label:'Vegano',    icon:'🥗' },
+  { label:'Todos',      icon:'🍽️' },
+  { label:'Café & Deli',image:'https://lh3.googleusercontent.com/aida-public/AB6AXuC644a3B293g3-fzwJUf-5nTko6ZGhRBZfc9uiyszTp4H94jQ-gETI_TFPxs1W7CiPeOxE4KrtGTIgWv0F-A_tfcg5kq9T1xZgrxld9fQApR4f1CAQEDTC4Qc5z4SfXXbfvrtrVqVg29LAQ2ipbsV9JSZz__YXhB0MW_llGsuvnhA-sZm6zqMAAnwQRTrKU3D2sAWfp6OyLKkQr-S2XGmMURhu4rf-DMAyjWYRcoMaImechqVDx0JCH2zrzV5rGU_6FDJibEpWeSxRI' },
+  { label:'Helados',    image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBv7yOHl7y0XboUsKxjWNmX1m9XRetNszCe1RaiZepbqkdISMo-zUU46A6j_EemDesBjBzYt-UUpVVbWS-s_NqqP2zyOOtCk6boPX0_hWxr1O_OzeSg2hcKodJ1b6Y8Ox1q4-iQwe-roKaBTKKo1ZsVJwvrBcER5t7Ih5NRLWi913Jpy12FCxoHpdFBJlkXPuRve_0BF4l-2VeE3SIBwmtDjem8YbOf5WG33n_i2q0ZJVR7t9mQyujE9coBulRjg5y-8DlNJL-Xvt5P' },
+  { label:'Kioscos',    image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBccfXnhe8YUeuyRdcy2264jmUjgX6ULlGtTlitCcoitH6GiU-YR5VivSG_onrjiNe12Ac7ZULYusEre-1CLoidFXRhA4PT5AS-qllyKt_KUHeJthuKT_OCe-gcV89ugyPRCPNtYyU_2SB9r1R7dTM11NcrFvrE688j30jgh5HeheIZWUBaYi20wsTzL_J9JmG-t-4t7e_0tWZVLsNv9Vz2KlQE-KtY0FxYm-wlFThnaYPo7ye_urBPoBtYOa5x-HCcg99akGQlX7pU' },
+  { label:'Bebidas',    image:'https://lh3.googleusercontent.com/aida-public/AB6AXuA4WfUPUZssd7XXSwzYFyEjk47A0IfsZZfhh--RSa4QXVizLe7YOSKnEBZBMfgXFFImJO3byCOD_Qdw_S8nJQ-mVnciz36O69pxiYYhfbygjp6u0oDGS3aClGz9QC1B3Q13NOhMe4T88C445IdDWIeWIfqQx-DhlZfg8lUX9vO9vPIn40734P1GgGnHCBYLetU8jFu4-tybQcSaMxLBntrh0NxPKzvkwklWpQSSIaGCOyW_vLQR9OvQ2pmx9MWxd1cvWF4PSNdFezAP' },
+  { label:'Empanadas',  image:'https://lh3.googleusercontent.com/aida/AP1WRLsF8g25q9zzjewJoYDuzt9P6VHhROMrTCzpRGxOFXz-KargpD9l9YqOD6MUq4xR9JAa2hRSi8tE29p5zbZiLBawIRhjTVjtMG4WakiipIGAN9vTMRLVhA0vH_gRCyesFMtH3_mSQwufLuTrMrGnVh9HCIZo5sEzlifBIEd0Km4XUom88DCmnDDRxgTyEDrf4HwcBTcHJF60M2a6XZN4_YCygxubUcd4XBGgQq7EZgRuiMA_DaWBDPpvawlC' },
+  { label:'Pizza',      image:'https://lh3.googleusercontent.com/aida/AP1WRLt2hfS7nG_MPKcxQt5drIIWkmBiRFzXgV_iec3sO25LWTCKz-NBMW9ggjBGf6OcH0TB-bj1wCRrMMMg7wRxv2YYyx-rSNofBWqV8DP2rXZSfKcVUhvLm-xA4l76bdLaJdFbH-k4qIyqcf2OD_ga0F2ktQXDBgTEJX6AjzFt8oc8ky71kG0RBIOVjyl-dTixl15ai4e-v4rVpLSLTl1cHTPI4g0FtqMchU047MiXEoBN-3NTs2Es0PTCFCy9' },
+  { label:'Lomitos',    image:'https://lh3.googleusercontent.com/aida-public/AB6AXuDBXP96Yc857UOzW4XLmmeq_pYvR_gdQ3FlpHerjxep7D5AoakMWFDWsgjz9AymSzrjXBkDq_YfqgTY1SGZEv24mNUT9Rxjv14wO8wnzy1VDyrN6G5vvD-WYQO06PtKtLH0HxworEN2dTL9OGHv0CgkpDsvtDR-Xxi0_h6c0C_OOEiabYzcD0Aqk1-N35M6HMCHSE51mb9WhRPo5VsNPprptX6HXTMRBonbBqC3d5EQ4BmmoorGMWcr2aRnE2UVqTW6eVPBy6VUQQUh' },
+];
+
+const BANNERS = [
+  { id:1, title:'¡Envío gratis!',   subtitle:'En tu primer pedido de Rotiserías',     gradient:'linear-gradient(135deg, #ff5b5f 0%, #e31b23 100%)' },
+  { id:2, title:'2x1 en Empanadas', subtitle:'Hoy en locales seleccionados',          gradient:'linear-gradient(135deg, #e31b23 0%, #8e0e13 100%)' },
 ];
 
 const cardVariants = {
@@ -47,6 +52,14 @@ export default function Rotiserias() {
   const [sortBy, setSortBy]           = useState('relevance');
   const [catFilter, setCatFilter]     = useState('Todos');
   const [sortOpen, setSortOpen]       = useState(false);
+  const [activeBanner, setActiveBanner] = useState(0);
+  const bannerRef = useRef(null);
+
+  const handleBannerScroll = () => {
+    const el = bannerRef.current;
+    if (!el) return;
+    setActiveBanner(Math.round(el.scrollLeft / el.clientWidth));
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -176,6 +189,53 @@ export default function Rotiserias() {
         </div>
       </div>
 
+      {/* ── Carrusel de banners ── */}
+      <div style={{ background:'#fff', padding:'16px 16px 0', position:'relative', zIndex:9 }}>
+        <div
+          ref={bannerRef}
+          onScroll={handleBannerScroll}
+          style={{
+            display:'flex', overflowX:'auto', scrollSnapType:'x mandatory',
+            scrollbarWidth:'none', WebkitOverflowScrolling:'touch',
+            borderRadius:16,
+          }}
+        >
+          {BANNERS.map(banner => (
+            <div
+              key={banner.id}
+              style={{
+                flex:'0 0 100%', scrollSnapAlign:'start',
+                height:160, borderRadius:16,
+                background:banner.gradient,
+                display:'flex', flexDirection:'column', justifyContent:'center',
+                padding:'0 24px', boxSizing:'border-box',
+              }}
+            >
+              <h3 style={{ color:'#fff', fontSize:20, fontWeight:900, margin:0, letterSpacing:'-0.02em' }}>
+                {banner.title}
+              </h3>
+              <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13, fontWeight:600, marginTop:6 }}>
+                {banner.subtitle}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Dots de paginación */}
+        <div style={{ display:'flex', justifyContent:'center', gap:6, padding:'10px 0' }}>
+          {BANNERS.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width:6, height:6, borderRadius:'50%',
+                background: i === activeBanner ? '#e31b23' : '#E5E7EB',
+                transition:'background 0.2s',
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
       {/* ── Grilla de categorías ── */}
       <div style={{ background:'#fff', padding:'16px 16px 6px', position:'relative', zIndex:9 }}>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:14 }}>
@@ -197,7 +257,7 @@ export default function Rotiserias() {
                   border: active ? '2.5px solid #e31b23' : '2.5px solid #F3F4F6',
                   boxSizing:'border-box', padding:2,
                   display:'flex', alignItems:'center', justifyContent:'center',
-                  overflow:'hidden', background:'#F9FAFB',
+                  overflow:'hidden', background:'#fff',
                   transition:'border-color 0.15s',
                 }}>
                   {cat.image ? (
