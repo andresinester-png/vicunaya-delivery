@@ -53,6 +53,7 @@ export default function Rotiserias() {
   const [catFilter, setCatFilter]     = useState('Todos');
   const [sortOpen, setSortOpen]       = useState(false);
   const [activeBanner, setActiveBanner] = useState(0);
+  const [hoveredCat, setHoveredCat]   = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -250,14 +251,22 @@ export default function Rotiserias() {
                   fontFamily:"'Plus Jakarta Sans', sans-serif",
                 }}
               >
-                <div style={{
-                  width:60, height:60, borderRadius:'50%',
-                  border: active ? '2.5px solid #e31b23' : '2.5px solid #F3F4F6',
-                  boxSizing:'border-box', padding:2,
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                  overflow:'hidden', background:'#fff',
-                  transition:'border-color 0.15s',
-                }}>
+                <div
+                  onMouseEnter={() => setHoveredCat(cat.label)}
+                  onMouseLeave={() => setHoveredCat(null)}
+                  onTouchStart={() => setHoveredCat(cat.label)}
+                  onTouchEnd={() => setHoveredCat(null)}
+                  style={{
+                    width:60, height:60, borderRadius:'50%',
+                    border: active ? '2.5px solid #e31b23' : '2.5px solid #F3F4F6',
+                    boxSizing:'border-box', padding:2,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    overflow:'hidden', background:'#fff',
+                    transform: hoveredCat === cat.label ? 'scale(1.08)' : 'scale(1)',
+                    boxShadow: hoveredCat === cat.label ? '0 6px 16px rgba(0,0,0,0.15)' : '0 0 0 rgba(0,0,0,0)',
+                    transition:'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.15s',
+                  }}
+                >
                   {cat.image ? (
                     <img
                       src={cat.image}
