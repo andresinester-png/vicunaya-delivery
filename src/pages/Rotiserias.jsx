@@ -23,6 +23,17 @@ const SORT_OPTIONS = [
 
 const ALL_CATS = ['Todos','Rotisería','Pizza','Empanadas','Parrilla','Sushi','Vegano','Bebidas'];
 
+const CATEGORIES = [
+  { label:'Todos',     icon:'🍽️' },
+  { label:'Empanadas', image:'https://lh3.googleusercontent.com/aida/AP1WRLsF8g25q9zzjewJoYDuzt9P6VHhROMrTCzpRGxOFXz-KargpD9l9YqOD6MUq4xR9JAa2hRSi8tE29p5zbZiLBawIRhjTVjtMG4WakiipIGAN9vTMRLVhA0vH_gRCyesFMtH3_mSQwufLuTrMrGnVh9HCIZo5sEzlifBIEd0Km4XUom88DCmnDDRxgTyEDrf4HwcBTcHJF60M2a6XZN4_YCygxubUcd4XBGgQq7EZgRuiMA_DaWBDPpvawlC' },
+  { label:'Pizza',     image:'https://lh3.googleusercontent.com/aida/AP1WRLt2hfS7nG_MPKcxQt5drIIWkmBiRFzXgV_iec3sO25LWTCKz-NBMW9ggjBGf6OcH0TB-bj1wCRrMMMg7wRxv2YYyx-rSNofBWqV8DP2rXZSfKcVUhvLm-xA4l76bdLaJdFbH-k4qIyqcf2OD_ga0F2ktQXDBgTEJX6AjzFt8oc8ky71kG0RBIOVjyl-dTixl15ai4e-v4rVpLSLTl1cHTPI4g0FtqMchU047MiXEoBN-3NTs2Es0PTCFCy9' },
+  { label:'Parrilla',  image:'https://lh3.googleusercontent.com/aida/AP1WRLtJW0btAnqN6wtNQ9MxQ3jDa9tkruGHWwhM8asYCsnXDWN_LrPJw1tGCoKs--Ga3cZZPjI27CvLWQXgDvTLtX20Ti7dJq7n9Ln84VHXtGrrGqg-k2qxxk-eSa3kjO-0-qQX-gjhIAfF1u27cv9i529jLrdqXOrh3DWJWmY8e_NtqvKh8iM4OGGk-GAQP2zTGwWAt3VhZ5nbEIB9jM5xxx47tianzNJoyTnhXkfYrNHupZPI9xnttvMiwIcV' },
+  { label:'Lomitos',   image:'https://lh3.googleusercontent.com/aida-public/AB6AXuDBXP96Yc857UOzW4XLmmeq_pYvR_gdQ3FlpHerjxep7D5AoakMWFDWsgjz9AymSzrjXBkDq_YfqgTY1SGZEv24mNUT9Rxjv14wO8wnzy1VDyrN6G5vvD-WYQO06PtKtLH0HxworEN2dTL9OGHv0CgkpDsvtDR-Xxi0_h6c0C_OOEiabYzcD0Aqk1-N35M6HMCHSE51mb9WhRPo5VsNPprptX6HXTMRBonbBqC3d5EQ4BmmoorGMWcr2aRnE2UVqTW6eVPBy6VUQQUh' },
+  { label:'Bebidas',   image:'https://lh3.googleusercontent.com/aida-public/AB6AXuA4WfUPUZssd7XXSwzYFyEjk47A0IfsZZfhh--RSa4QXVizLe7YOSKnEBZBMfgXFFImJO3byCOD_Qdw_S8nJQ-mVnciz36O69pxiYYhfbygjp6u0oDGS3aClGz9QC1B3Q13NOhMe4T88C445IdDWIeWIfqQx-DhlZfg8lUX9vO9vPIn40734P1GgGnHCBYLetU8jFu4-tybQcSaMxLBntrh0NxPKzvkwklWpQSSIaGCOyW_vLQR9OvQ2pmx9MWxd1cvWF4PSNdFezAP' },
+  { label:'Sushi',     icon:'🍣' },
+  { label:'Vegano',    icon:'🥗' },
+];
+
 const cardVariants = {
   hidden: { opacity:0, y:18 },
   show:   { opacity:1, y:0, transition:{ type:'spring', stiffness:260, damping:22 } },
@@ -162,6 +173,53 @@ export default function Rotiserias() {
               <X size={14} color="#9CA3AF" />
             </button>
           )}
+        </div>
+      </div>
+
+      {/* ── Grilla de categorías ── */}
+      <div style={{ background:'#fff', padding:'16px 16px 6px', position:'relative', zIndex:9 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:14 }}>
+          {CATEGORIES.map(cat => {
+            const active = catFilter === cat.label;
+            return (
+              <motion.button
+                key={cat.label}
+                whileTap={{ scale:0.92 }}
+                onClick={() => setCatFilter(cat.label)}
+                style={{
+                  display:'flex', flexDirection:'column', alignItems:'center', gap:6,
+                  background:'none', border:'none', cursor:'pointer', padding:0,
+                  fontFamily:"'Plus Jakarta Sans', sans-serif",
+                }}
+              >
+                <div style={{
+                  width:60, height:60, borderRadius:'50%',
+                  border: active ? '2.5px solid #e31b23' : '2.5px solid #F3F4F6',
+                  boxSizing:'border-box', padding:2,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  overflow:'hidden', background:'#F9FAFB',
+                  transition:'border-color 0.15s',
+                }}>
+                  {cat.image ? (
+                    <img
+                      src={cat.image}
+                      alt={cat.label}
+                      style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%' }}
+                    />
+                  ) : (
+                    <span style={{ fontSize:26 }}>{cat.icon}</span>
+                  )}
+                </div>
+                <span style={{
+                  fontSize:11.5, lineHeight:1.2, textAlign:'center',
+                  fontWeight: active ? 800 : 600,
+                  color: active ? '#e31b23' : '#374151',
+                }}>
+                  {cat.label}
+                </span>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 
