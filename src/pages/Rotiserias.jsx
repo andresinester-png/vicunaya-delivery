@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Search, SlidersHorizontal, ChevronDown, X, Check } from 'lucide-react';
@@ -53,13 +53,13 @@ export default function Rotiserias() {
   const [catFilter, setCatFilter]     = useState('Todos');
   const [sortOpen, setSortOpen]       = useState(false);
   const [activeBanner, setActiveBanner] = useState(0);
-  const bannerRef = useRef(null);
 
-  const handleBannerScroll = () => {
-    const el = bannerRef.current;
-    if (!el) return;
-    setActiveBanner(Math.round(el.scrollLeft / el.clientWidth));
-  };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveBanner(prev => (prev + 1) % BANNERS.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -191,34 +191,32 @@ export default function Rotiserias() {
 
       {/* ── Carrusel de banners ── */}
       <div style={{ background:'#fff', padding:'16px 16px 0', position:'relative', zIndex:9 }}>
-        <div
-          ref={bannerRef}
-          onScroll={handleBannerScroll}
-          style={{
-            display:'flex', overflowX:'auto', scrollSnapType:'x mandatory',
-            scrollbarWidth:'none', WebkitOverflowScrolling:'touch',
-            borderRadius:16,
-          }}
-        >
-          {BANNERS.map(banner => (
-            <div
-              key={banner.id}
-              style={{
-                flex:'0 0 100%', scrollSnapAlign:'start',
-                height:160, borderRadius:16,
-                background:banner.gradient,
-                display:'flex', flexDirection:'column', justifyContent:'center',
-                padding:'0 24px', boxSizing:'border-box',
-              }}
-            >
-              <h3 style={{ color:'#fff', fontSize:20, fontWeight:900, margin:0, letterSpacing:'-0.02em' }}>
-                {banner.title}
-              </h3>
-              <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13, fontWeight:600, marginTop:6 }}>
-                {banner.subtitle}
-              </p>
-            </div>
-          ))}
+        <div style={{ overflow:'hidden', borderRadius:16 }}>
+          <div style={{
+            display:'flex',
+            transform:`translateX(-${activeBanner * 100}%)`,
+            transition:'transform 0.5s ease',
+          }}>
+            {BANNERS.map(banner => (
+              <div
+                key={banner.id}
+                style={{
+                  flex:'0 0 100%',
+                  height:160, borderRadius:16,
+                  background:banner.gradient,
+                  display:'flex', flexDirection:'column', justifyContent:'center',
+                  padding:'0 24px', boxSizing:'border-box',
+                }}
+              >
+                <h3 style={{ color:'#fff', fontSize:20, fontWeight:900, margin:0, letterSpacing:'-0.02em' }}>
+                  {banner.title}
+                </h3>
+                <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13, fontWeight:600, marginTop:6 }}>
+                  {banner.subtitle}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Dots de paginación */}
