@@ -9,20 +9,16 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>
 );
 
-// Register service worker for PWA support and push notifications.
-// updateViaCache: 'none' makes the browser always fetch a fresh sw.js from
-// the network instead of serving a cached copy, so updates are picked up
-// as soon as they're deployed.
+// Remove any previously installed service worker and its caches so the app
+// always loads the latest version straight from the server.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js', { scope: '/', updateViaCache: 'none' })
-      .then(registration => registration.update())
-      .catch(err => console.error('[SW] Registration failed:', err));
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => registration.unregister());
+  });
+}
 
-    // Reload once the new service worker (skipWaiting + clientsClaim) takes control
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
-    });
+if ('caches' in window) {
+  caches.keys().then(cacheNames => {
+    cacheNames.forEach(cacheName => caches.delete(cacheName));
   });
 }
