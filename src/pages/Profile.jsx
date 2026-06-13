@@ -33,7 +33,7 @@ export default function Profile() {
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: 'https://delivery-navy.vercel.app/auth/callback' },
+      options: { redirectTo: 'https://vicunaya-delivery.vercel.app/auth/callback' },
     });
     if (error) toast.error('No se pudo conectar con Google');
   };
