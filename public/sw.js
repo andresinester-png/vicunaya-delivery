@@ -1,5 +1,15 @@
 // VicuñaYa Service Worker — handles push notifications
 
+// Activate the new service worker immediately and take control of open tabs,
+// so updates apply without waiting for all tabs to close.
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 self.addEventListener('push', (event) => {
   const data = event.data?.json() ?? {};
 
