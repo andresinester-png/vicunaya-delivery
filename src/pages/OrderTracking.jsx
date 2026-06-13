@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { X, Share2, HelpCircle, ChevronRight } from 'lucide-react';
+import { X, Share2, HelpCircle, ChevronRight, StickyNote } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 
@@ -40,6 +40,9 @@ export default function OrderTracking() {
   const [tab, setTab] = useState('detalle');
   const [showItems, setShowItems] = useState(false);
   const [addrCountdown, setAddrCountdown] = useState(ADDRESS_CHANGE_WINDOW);
+  const [addrModalOpen, setAddrModalOpen] = useState(false);
+  const [addrForm, setAddrForm] = useState({ address: '', notes: '' });
+  const [savingAddr, setSavingAddr] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -92,7 +95,33 @@ export default function OrderTracking() {
 
   const handleChangeAddress = () => {
     if (addrCountdown <= 0) return;
-    toast('Contactá al local para cambiar la dirección de entrega', { icon: '📍' });
+    setAddrForm({ address: order.customer_address || '', notes: order.delivery_notes || '' });
+    setAddrModalOpen(true);
+  };
+
+  const saveAddressInfo = async () => {
+    if (!addrForm.address.trim()) {
+      toast.error('Ingresá la dirección');
+      return;
+    }
+    setSavingAddr(true);
+    try {
+      const address = addrForm.address.trim();
+      const notes = addrForm.notes.trim() || null;
+      const { error } = await supabase.rpc('update_order_delivery_info', {
+        p_order_id: id,
+        p_customer_address: address,
+        p_delivery_notes: notes,
+      });
+      if (error) throw error;
+      setOrder(prev => ({ ...prev, customer_address: address, delivery_notes: notes }));
+      setAddrModalOpen(false);
+      toast.success('Dirección actualizada');
+    } catch (err) {
+      toast.error('No se pudo actualizar: ' + err.message);
+    } finally {
+      setSavingAddr(false);
+    }
   };
 
   if (loading) return (
@@ -269,6 +298,12 @@ export default function OrderTracking() {
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm text-gray-900">Lo recibís en</p>
                   <p className="text-sm text-gray-600 mt-0.5">{order.customer_address}</p>
+                  {order.delivery_notes && (
+                    <div className="flex items-start gap-1.5 mt-1.5">
+                      <StickyNote size={13} className="text-gray-400 shrink-0 mt-0.5" />
+                      <p className="text-xs text-gray-400">{order.delivery_notes}</p>
+                    </div>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -305,6 +340,57 @@ export default function OrderTracking() {
           </div>
         )}
       </div>
+
+      {/* ── Modal: cambiar dirección ── */}
+      {addrModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setAddrModalOpen(false)} />
+          <div className="relative w-full max-w-lg rounded-t-3xl bg-white p-5" style={{ maxHeight: '85vh', overflowY: 'auto' }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-base text-gray-900">Cambiar dirección de entrega</h3>
+              <button
+                type="button"
+                onClick={() => setAddrModalOpen(false)}
+                className="rounded-full p-1 hover:bg-gray-100 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Dirección</label>
+                <input
+                  value={addrForm.address}
+                  onChange={e => setAddrForm(f => ({ ...f, address: e.target.value }))}
+                  placeholder="Calle y número"
+                  className="input"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Referencias</label>
+                <textarea
+                  value={addrForm.notes}
+                  onChange={e => setAddrForm(f => ({ ...f, notes: e.target.value }))}
+                  placeholder="Ej: Casa azul, portón negro, timbre roto, piso 2 depto B"
+                  className="input resize-none h-20"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={saveAddressInfo}
+              disabled={savingAddr || !addrForm.address.trim()}
+              className="btn-primary w-full mt-4"
+            >
+              {savingAddr ? 'Guardando...' : 'Guardar cambios'}
+            </button>
+
+            <div className="h-safe-bottom h-4" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
