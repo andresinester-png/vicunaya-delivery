@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { X, Share2, HelpCircle, ChevronRight, StickyNote } from 'lucide-react';
+import { X, Share2, HelpCircle, ChevronRight, StickyNote, Plus, Minus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 
@@ -20,7 +20,8 @@ const PAYMENT_LABELS = {
   card: 'Tarjeta (MercadoPago)',
 };
 
-const ADDRESS_CHANGE_WINDOW = 5 * 60; // segundos
+const ADDRESS_CHANGE_WINDOW = 5 * 60; // segundos desde created_at
+const ADD_ITEMS_WINDOW = 3 * 60;      // segundos desde created_at
 
 function fmtTime(date) {
   return date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
@@ -39,10 +40,15 @@ export default function OrderTracking() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('detalle');
   const [showItems, setShowItems] = useState(false);
-  const [addrCountdown, setAddrCountdown] = useState(ADDRESS_CHANGE_WINDOW);
+  const [now, setNow] = useState(() => Date.now());
   const [addrModalOpen, setAddrModalOpen] = useState(false);
   const [addrForm, setAddrForm] = useState({ address: '', notes: '' });
   const [savingAddr, setSavingAddr] = useState(false);
+  const [menuItems, setMenuItems] = useState([]);
+  const [menuLoading, setMenuLoading] = useState(false);
+  const [addQty, setAddQty] = useState({});
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [addingItems, setAddingItems] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -68,11 +74,24 @@ export default function OrderTracking() {
   }, [id]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setAddrCountdown(s => (s > 0 ? s - 1 : 0));
-    }, 1000);
+    const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (tab !== 'agregar' || !order?.restaurant_id || menuItems.length > 0) return;
+    setMenuLoading(true);
+    supabase
+      .from('menu_items')
+      .select('id, name, price, image_url')
+      .eq('restaurant_id', order.restaurant_id)
+      .eq('is_available', true)
+      .order('sort_order')
+      .then(({ data }) => {
+        setMenuItems(data || []);
+        setMenuLoading(false);
+      });
+  }, [tab, order?.restaurant_id]);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -93,7 +112,7 @@ export default function OrderTracking() {
     }
   };
 
-  const handleChangeAddress = () => {
+  const handleChangeAddress = (addrCountdown) => {
     if (addrCountdown <= 0) return;
     setAddrForm({ address: order.customer_address || '', notes: order.delivery_notes || '' });
     setAddrModalOpen(true);
@@ -121,6 +140,36 @@ export default function OrderTracking() {
       toast.error('No se pudo actualizar: ' + err.message);
     } finally {
       setSavingAddr(false);
+    }
+  };
+
+  const incQty = (itemId) => setAddQty(q => ({ ...q, [itemId]: (q[itemId] || 0) + 1 }));
+
+  const decQty = (itemId) => setAddQty(q => {
+    const next = (q[itemId] || 0) - 1;
+    const copy = { ...q };
+    if (next <= 0) delete copy[itemId]; else copy[itemId] = next;
+    return copy;
+  });
+
+  const handleConfirmAddItems = async (selectedItems, newSubtotal) => {
+    setAddingItems(true);
+    try {
+      const { data, error } = await supabase.rpc('add_items_to_order', {
+        p_order_id: id,
+        p_new_items: selectedItems,
+        p_new_items_total: newSubtotal,
+      });
+      if (error) throw error;
+      setOrder(prev => ({ ...prev, ...data }));
+      setAddQty({});
+      setConfirmModalOpen(false);
+      setTab('detalle');
+      toast.success('Productos agregados al pedido');
+    } catch (err) {
+      toast.error('No se pudo actualizar el pedido: ' + err.message);
+    } finally {
+      setAddingItems(false);
     }
   };
 
@@ -163,6 +212,16 @@ export default function OrderTracking() {
   const orderTime = order.created_at ? new Date(order.created_at) : new Date();
   const etaEnd = new Date(orderTime.getTime() + 30 * 60000);
   const etaRange = `${fmtTime(orderTime)} - ${fmtTime(etaEnd)}`;
+
+  const elapsedSec = Math.max(0, Math.floor((now - orderTime.getTime()) / 1000));
+  const addrCountdown = Math.max(0, ADDRESS_CHANGE_WINDOW - elapsedSec);
+  const itemsCountdown = Math.max(0, ADD_ITEMS_WINDOW - elapsedSec);
+
+  const selectedItems = menuItems
+    .filter(mi => addQty[mi.id] > 0)
+    .map(mi => ({ id: mi.id, name: mi.name, price: mi.price, qty: addQty[mi.id], extras: 0, extra_price: 0 }));
+  const newSubtotal = selectedItems.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const newOrderTotal = (order.total || 0) + newSubtotal;
 
   return (
     <div className="min-h-screen bg-white">
@@ -307,7 +366,7 @@ export default function OrderTracking() {
                 </div>
                 <button
                   type="button"
-                  onClick={handleChangeAddress}
+                  onClick={() => handleChangeAddress(addrCountdown)}
                   disabled={addrCountdown <= 0}
                   className="shrink-0 text-sm font-bold transition-colors"
                   style={{
@@ -325,16 +384,72 @@ export default function OrderTracking() {
               )}
             </div>
           </div>
-        ) : (
+        ) : itemsCountdown <= 0 ? (
           <div className="rounded-2xl border border-gray-100 p-6 text-center">
-            <p className="text-sm text-gray-500">Por ahora no podés agregar productos a un pedido en curso.</p>
-            {order.restaurant_id && (
+            <p className="text-sm font-semibold text-gray-700">El local ya está preparando tu pedido</p>
+            <p className="text-xs text-gray-400 mt-1">Ya no podés agregar productos a este pedido.</p>
+          </div>
+        ) : (
+          <div>
+            <p className="text-xs font-semibold mb-3" style={{ color: '#e31b23' }}>
+              ⏱ Podés agregar productos por {fmtCountdown(itemsCountdown)} min
+            </p>
+
+            {menuLoading ? (
+              <div className="space-y-2">
+                {[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-gray-100 rounded-2xl animate-pulse" />)}
+              </div>
+            ) : menuItems.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">No hay productos disponibles ahora.</p>
+            ) : (
+              <div className="space-y-2 pb-2">
+                {menuItems.map(mi => {
+                  const qty = addQty[mi.id] || 0;
+                  return (
+                    <div key={mi.id} className="rounded-2xl border border-gray-100 p-3 flex items-center gap-3">
+                      {mi.image_url ? (
+                        <img src={mi.image_url} alt={mi.name} className="w-12 h-12 rounded-xl object-cover shrink-0" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-xl shrink-0">🍽️</div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{mi.name}</p>
+                        <p className="text-sm font-bold mt-0.5" style={{ color: '#e31b23' }}>${mi.price.toLocaleString('es-AR')}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {qty > 0 && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => decQty(mi.id)}
+                              className="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center hover:border-red-400 hover:text-red-500 transition-colors"
+                            >
+                              <Minus size={13} />
+                            </button>
+                            <span className="w-5 text-center font-extrabold text-sm">{qty}</span>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => incQty(mi.id)}
+                          className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center hover:bg-red-700 transition-colors"
+                        >
+                          <Plus size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {newSubtotal > 0 && (
               <button
                 type="button"
-                onClick={() => navigate(`/restaurant/${order.restaurant_id}`)}
-                className="btn-primary mt-4 text-sm py-2 px-5 inline-flex items-center gap-1"
+                onClick={() => setConfirmModalOpen(true)}
+                className="btn-primary w-full mt-2"
               >
-                Ver menú del restaurante <ChevronRight size={14} />
+                Agregar al pedido · ${newSubtotal.toLocaleString('es-AR')}
               </button>
             )}
           </div>
@@ -386,6 +501,50 @@ export default function OrderTracking() {
             >
               {savingAddr ? 'Guardando...' : 'Guardar cambios'}
             </button>
+
+            <div className="h-safe-bottom h-4" />
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: confirmar productos nuevos ── */}
+      {confirmModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setConfirmModalOpen(false)} />
+          <div className="relative w-full max-w-lg rounded-t-3xl bg-white p-5" style={{ maxHeight: '85vh', overflowY: 'auto' }}>
+            <h3 className="font-bold text-base text-gray-900 mb-4">¿Confirmar estos productos?</h3>
+
+            <div className="space-y-2 mb-4">
+              {selectedItems.map(item => (
+                <div key={item.id} className="flex justify-between text-sm">
+                  <span className="text-gray-600">{item.qty}x {item.name}</span>
+                  <span className="font-semibold text-gray-900">${(item.price * item.qty).toLocaleString('es-AR')}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-gray-100 pt-3 flex justify-between font-bold text-base mb-5">
+              <span>Total nuevo del pedido</span>
+              <span style={{ color: '#e31b23' }}>${newOrderTotal.toLocaleString('es-AR')}</span>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmModalOpen(false)}
+                className="flex-1 rounded-2xl border-2 border-gray-200 py-3 text-sm font-bold hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => handleConfirmAddItems(selectedItems, newSubtotal)}
+                disabled={addingItems}
+                className="btn-primary flex-1"
+              >
+                {addingItems ? 'Confirmando...' : 'Confirmar'}
+              </button>
+            </div>
 
             <div className="h-safe-bottom h-4" />
           </div>
