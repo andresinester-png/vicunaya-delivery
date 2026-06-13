@@ -111,14 +111,14 @@ export default function Rotiserias() {
       {/* ── Animación de scroll para imágenes de categorías ── */}
       <style>{`
         @keyframes categoryScroll {
-          0%   { transform: translateY(0); }
-          25%  { transform: translateY(-35%); }
-          26%  { transform: translateY(35%); }
-          50%  { transform: translateY(0); }
-          100% { transform: translateY(0); }
+          0%   { transform: translateY(0%); }
+          40%  { transform: translateY(-100%); }
+          41%  { transform: translateY(100%); }
+          80%  { transform: translateY(0%); }
+          100% { transform: translateY(0%); }
         }
         .category-scroll-img {
-          animation: categoryScroll 4s ease-in-out infinite;
+          animation: categoryScroll 3.5s linear infinite;
         }
       `}</style>
 
