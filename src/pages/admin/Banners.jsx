@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, X, Image, GripVertical, Upload, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Image, GripVertical, Upload, Loader2, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase, supabaseAdmin } from '../../lib/supabase.js';
 
@@ -15,6 +15,9 @@ export default function Banners() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
+  const [leads, setLeads] = useState([]);
+  const [leadsLoading, setLeadsLoading] = useState(true);
+
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase.from('banners').select('*').order('sort_order');
@@ -22,7 +25,14 @@ export default function Banners() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  const loadLeads = async () => {
+    setLeadsLoading(true);
+    const { data, error } = await supabaseAdmin.from('leads').select('*').order('created_at', { ascending: false });
+    if (!error) setLeads(data || []);
+    setLeadsLoading(false);
+  };
+
+  useEffect(() => { load(); loadLeads(); }, []);
 
   const openModal = (banner = null) => {
     setForm(banner
@@ -148,6 +158,40 @@ export default function Banners() {
           ))}
         </div>
       )}
+
+      {/* ── Consultas recibidas ── */}
+      <div className="mt-8">
+        <h2 className="font-extrabold text-xl mb-1">Consultas recibidas</h2>
+        <p className="text-sm text-gray-400 mb-4">Negocios interesados en publicitar en VicuñaYa</p>
+
+        {leadsLoading ? (
+          <div className="space-y-3">
+            {[...Array(2)].map((_, i) => <div key={i} className="h-16 bg-gray-200 rounded-2xl animate-pulse" />)}
+          </div>
+        ) : leads.length === 0 ? (
+          <div className="card p-10 text-center text-gray-400">
+            <Users size={44} strokeWidth={1} className="mx-auto mb-3" />
+            <p className="font-semibold">Todavía no hay consultas</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {leads.map(lead => (
+              <div key={lead.id} className="card p-4 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate">{lead.nombre} {lead.apellido}</p>
+                  <p className="text-xs text-gray-500 truncate">{lead.negocio}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-semibold text-primary">{lead.telefono}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {new Date(lead.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Modal */}
       {modal && (

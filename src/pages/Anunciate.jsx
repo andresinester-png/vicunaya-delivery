@@ -1,8 +1,20 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, MessageCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { supabase } from '../lib/supabase.js';
 
 const WHATSAPP_NUMBER = '5493584000000';
+
+const EMPTY_LEAD = { nombre: '', apellido: '', telefono: '', negocio: '' };
+
+const inputStyle = {
+  width:'100%', padding:'12px 14px',
+  borderRadius:12, border:'1.5px solid #E5E7EB', outline:'none',
+  fontSize:14, fontFamily:"'Plus Jakarta Sans', sans-serif",
+  boxSizing:'border-box', color:'#111',
+};
 
 const BENEFICIOS = [
   { icon:'📍', title:'Llegá a toda Vicuña Mackenna',     text:'Miles de vecinos usan VicuñaYa todos los días' },
@@ -14,10 +26,33 @@ const BENEFICIOS = [
 
 export default function Anunciate() {
   const navigate = useNavigate();
+  const [form, setForm] = useState(EMPTY_LEAD);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleWhatsApp = () => {
     const msg = encodeURIComponent('Hola! Me interesa publicitar mi negocio en VicuñaYa');
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('leads').insert({
+        nombre:   form.nombre.trim(),
+        apellido: form.apellido.trim(),
+        telefono: form.telefono.trim(),
+        negocio:  form.negocio.trim(),
+      });
+      if (error) throw error;
+      setSubmitted(true);
+      setForm(EMPTY_LEAD);
+    } catch (err) {
+      toast.error('Error: ' + err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -90,11 +125,58 @@ export default function Anunciate() {
           </motion.div>
         ))}
 
-        {/* ── Contacto ── */}
+        {/* ── Formulario de contacto ── */}
         <motion.div
           initial={{ opacity:0, y:16 }}
           animate={{ opacity:1, y:0 }}
           transition={{ delay:0.05 + BENEFICIOS.length * 0.05 }}
+          style={{
+            background:'#fff', borderRadius:24, padding:'20px',
+            boxShadow:'0 4px 20px rgba(0,0,0,0.07)',
+          }}
+        >
+          {submitted ? (
+            <div style={{ textAlign:'center', padding:'12px 0' }}>
+              <span style={{ fontSize:40, display:'block', marginBottom:8 }}>✅</span>
+              <p style={{ fontSize:15, fontWeight:800, color:'#111' }}>¡Gracias! Te contactaremos pronto.</p>
+            </div>
+          ) : (
+            <>
+              <h2 style={{ fontSize:16, fontWeight:900, color:'#111', marginBottom:4, letterSpacing:'-0.01em' }}>
+                Dejanos tus datos
+              </h2>
+              <p style={{ fontSize:13, color:'#6B7280', fontWeight:600, marginBottom:16 }}>
+                Te contactamos para contarte cómo sumarte
+              </p>
+              <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} placeholder="Nombre" style={inputStyle} />
+                <input required value={form.apellido} onChange={e => setForm(f => ({ ...f, apellido: e.target.value }))} placeholder="Apellido" style={inputStyle} />
+                <input required type="tel" value={form.telefono} onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))} placeholder="Teléfono" style={inputStyle} />
+                <input required value={form.negocio} onChange={e => setForm(f => ({ ...f, negocio: e.target.value }))} placeholder="Nombre del negocio" style={inputStyle} />
+                <motion.button
+                  whileTap={{ scale:0.97 }}
+                  type="submit"
+                  disabled={submitting}
+                  style={{
+                    background:'#e31b23', color:'#fff',
+                    border:'none', borderRadius:14, padding:'14px',
+                    fontSize:15, fontWeight:900, letterSpacing:'-0.01em',
+                    cursor:'pointer', width:'100%', marginTop:4,
+                    boxShadow:'0 4px 16px rgba(227,27,35,0.25)',
+                  }}
+                >
+                  {submitting ? 'Enviando...' : 'Enviar'}
+                </motion.button>
+              </form>
+            </>
+          )}
+        </motion.div>
+
+        {/* ── Contacto ── */}
+        <motion.div
+          initial={{ opacity:0, y:16 }}
+          animate={{ opacity:1, y:0 }}
+          transition={{ delay:0.1 + BENEFICIOS.length * 0.05 }}
           style={{
             marginTop:10, textAlign:'center',
             background:'linear-gradient(135deg, #ff5b5f 0%, #e31b23 100%)',
