@@ -8,6 +8,8 @@ const useCartStore = create(
       restaurantId: null,
       restaurantName: '',
       restaurantWhatsapp: '',
+      restaurantImage: '',
+      fulfillmentMethod: 'delivery', // 'delivery' | 'pickup'
 
       // Quick-add: increments baseQty by 1, keeps existing extras
       addItem: (item, restaurant) => {
@@ -15,7 +17,7 @@ const useCartStore = create(
 
         if (restaurantId && restaurantId !== restaurant.id) {
           if (!window.confirm(`Tu carrito tiene items de "${get().restaurantName}". ¿Querés vaciarlo y agregar de ${restaurant.name}?`)) return;
-          set({ items: [], restaurantId: null });
+          set({ items: [], restaurantId: null, fulfillmentMethod: 'delivery' });
         }
 
         const existing = get().items.find(i => i.id === item.id);
@@ -27,6 +29,7 @@ const useCartStore = create(
             restaurantId: restaurant.id,
             restaurantName: restaurant.name,
             restaurantWhatsapp: restaurant.whatsapp,
+            restaurantImage: restaurant.image_url,
           });
         }
       },
@@ -37,14 +40,14 @@ const useCartStore = create(
 
         if (restaurantId && restaurantId !== restaurant.id) {
           if (!window.confirm(`Tu carrito tiene items de "${get().restaurantName}". ¿Querés vaciarlo y pedir de ${restaurant.name}?`)) return;
-          set({ items: [], restaurantId: null });
+          set({ items: [], restaurantId: null, fulfillmentMethod: 'delivery' });
         }
 
         const currentItems = get().items;
 
         if (qty <= 0 && extras <= 0) {
           const newItems = currentItems.filter(i => i.id !== item.id);
-          set({ items: newItems, ...(newItems.length === 0 ? { restaurantId: null, restaurantName: '' } : {}) });
+          set({ items: newItems, ...(newItems.length === 0 ? { restaurantId: null, restaurantName: '', restaurantImage: '' } : {}) });
           return;
         }
 
@@ -59,13 +62,14 @@ const useCartStore = create(
             restaurantId: restaurant.id,
             restaurantName: restaurant.name,
             restaurantWhatsapp: restaurant.whatsapp,
+            restaurantImage: restaurant.image_url,
           });
         }
       },
 
       removeItem: (itemId) => {
         const items = get().items.filter(i => i.id !== itemId);
-        set({ items, ...(items.length === 0 ? { restaurantId: null, restaurantName: '' } : {}) });
+        set({ items, ...(items.length === 0 ? { restaurantId: null, restaurantName: '', restaurantImage: '' } : {}) });
       },
 
       updateQty: (itemId, qty) => {
@@ -73,7 +77,9 @@ const useCartStore = create(
         set({ items: get().items.map(i => i.id === itemId ? { ...i, qty } : i) });
       },
 
-      clear: () => set({ items: [], restaurantId: null, restaurantName: '', restaurantWhatsapp: '' }),
+      setFulfillmentMethod: (method) => set({ fulfillmentMethod: method }),
+
+      clear: () => set({ items: [], restaurantId: null, restaurantName: '', restaurantWhatsapp: '', restaurantImage: '', fulfillmentMethod: 'delivery' }),
 
       total: () => get().items.reduce(
         (sum, i) => sum + i.price * i.qty + (i.extras || 0) * (i.extra_price || 0),

@@ -97,6 +97,7 @@ export default function Restaurant() {
 
   const addItem = useCartStore(s => s.addItem);
   const count   = useCartStore(s => s.count());
+  const total   = useCartStore(s => s.total());
 
   const handleAdd = (item) => {
     addItem(item, restaurant);
@@ -490,7 +491,7 @@ export default function Restaurant() {
       </AnimatePresence>
 
       {/* ──────────────────────────────────────────────────────────
-          CART FAB
+          BARRA INFERIOR DE CARRITO
       ────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {count > 0 && (
@@ -499,34 +500,41 @@ export default function Restaurant() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            style={{ position: 'fixed', bottom: 80, left: 16, right: 16, zIndex: 40 }}
+            style={{
+              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 45,
+              background: '#fff',
+              boxShadow: '0 -4px 20px rgba(0,0,0,0.10)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14,
+              padding: '12px 16px',
+              paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
+            }}
           >
             <motion.button
               whileTap={{ scale: isOpen ? 0.97 : 1 }}
-              onClick={() => isOpen && navigate('/checkout')}
+              onClick={() => isOpen && navigate('/carrito')}
               style={{
-                width: '100%',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                flex: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 background: isOpen ? '#e31b23' : '#9CA3AF', color: '#fff',
-                fontWeight: 700, fontSize: 15,
-                padding: '14px 20px',
-                borderRadius: 20, border: 'none', cursor: isOpen ? 'pointer' : 'not-allowed',
-                boxShadow: isOpen ? '0 8px 30px rgba(227,27,35,0.45)' : 'none',
+                fontWeight: 800, fontSize: 15,
+                padding: '14px 22px',
+                borderRadius: 999, border: 'none', cursor: isOpen ? 'pointer' : 'not-allowed',
+                boxShadow: isOpen ? '0 6px 20px rgba(227,27,35,0.35)' : 'none',
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
               }}
             >
-              <span style={{
-                background: 'rgba(255,255,255,0.22)', color: '#fff',
-                fontSize: 13, fontWeight: 900,
-                width: 28, height: 28, borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                {count}
-              </span>
-              <span>Ver pedido</span>
-              <ShoppingCart size={20} strokeWidth={2} />
+              <ShoppingCart size={18} strokeWidth={2.2} />
+              Ver carrito
             </motion.button>
+
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <p style={{ fontSize: 19, fontWeight: 900, color: '#111', margin: 0, lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+                ${total.toLocaleString('es-AR')}
+              </p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', margin: 0 }}>
+                {count} {count === 1 ? 'producto' : 'productos'}
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

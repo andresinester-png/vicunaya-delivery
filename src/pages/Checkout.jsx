@@ -1,19 +1,12 @@
 import { useState, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Upload, Copy, CheckCircle, Plus, Minus, Trash2, MapPin, X, Camera } from 'lucide-react';
+import { ChevronLeft, Copy, CheckCircle, Plus, MapPin, X, Camera } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import PaymentSelector from '../components/PaymentSelector.jsx';
 import PlacesInput from '../components/PlacesInput.jsx';
 import { supabase } from '../lib/supabase.js';
 import useCartStore from '../store/cartStore.js';
-import useProfileStore from '../store/profileStore.js';
-
-const PAYMENT_LABELS = {
-  cash: 'Efectivo',
-  transfer: 'Transferencia bancaria',
-  card: 'Tarjeta (MercadoPago)',
-};
+import { useAuth } from '../context/AuthContext.jsx';
 
 const LABEL_PRESETS = ['Casa', 'Trabajo', 'Otro'];
 
@@ -218,33 +211,19 @@ const AddressSheet = memo(function AddressSheet({
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { items, total, restaurantId, clear, updateQty } = useCartStore();
+  const { items, total, restaurantId, restaurantName, fulfillmentMethod, clear } = useCartStore();
   const totalVal = total();
+  const { session, profile } = useAuth();
 
-  const { name: profileName, phone: profilePhone, address: profileAddress } = useProfileStore();
-  const [form, setForm] = useState({ name: profileName, phone: profilePhone, address: profileAddress, notes: '' });
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [restaurantInfo, setRestaurantInfo] = useState({ address: '', payment_alias: '' });
   const [receipt, setReceipt] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [aliasCopied, setAliasCopied] = useState(false);
-  const [restaurantAlias, setRestaurantAlias] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [successOrderId, setSuccessOrderId] = useState(null);
 
-  // FIX: clear() se llama aquí, DESPUÉS de que showSuccess ya está en true
-  // y el navigate ocurre al final del timeout, no antes.
-  useEffect(() => {
-    if (!showSuccess || !successOrderId) return;
-    clear(); // vaciamos el carrito recién ahora, cuando ya estamos mostrando la pantalla
-    const t = setTimeout(() => navigate(`/pedido/${successOrderId}`), 2500);
-    return () => clearTimeout(t);
-  }, [showSuccess, successOrderId]);
-
-  const [step, setStep] = useState(1);
-
-  // Address state
-  const [userId, setUserId] = useState(null);
-  const [loadingUser, setLoadingUser] = useState(true);
+  // Address state (sólo relevante para delivery)
+  const [address, setAddress] = useState('');
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddr, setSelectedAddr] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -252,52 +231,38 @@ export default function Checkout() {
   const [newAddrForm, setNewAddrForm] = useState({ label: 'Casa', address: '', notes: '' });
   const [savingAddr, setSavingAddr] = useState(false);
 
-  // Dirección guardada en el perfil (profiles.direccion) y override puntual para este pedido
-  const [profileDireccion, setProfileDireccion] = useState('');
-  const [customAddr, setCustomAddr] = useState(false);
-
   useEffect(() => {
-    if (restaurantId) {
-      supabase.from('restaurants').select('payment_alias').eq('id', restaurantId).single()
-        .then(({ data }) => { if (data?.payment_alias) setRestaurantAlias(data.payment_alias); });
-    }
+    if (!restaurantId) return;
+    supabase.from('restaurants').select('address, payment_alias').eq('id', restaurantId).single()
+      .then(({ data }) => { if (data) setRestaurantInfo(data); });
   }, [restaurantId]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setLoadingUser(false);
-      if (!user) return;
-      setUserId(user.id);
+    setAddress(profile?.direccion || '');
+    if (!session?.user?.id) return;
+    supabase.from('addresses').select('*')
+      .eq('user_id', session.user.id)
+      .order('is_default', { ascending: false })
+      .order('created_at')
+      .then(({ data }) => {
+        if (!data?.length) return;
+        setSavedAddresses(data);
+        const def = data.find(a => a.is_default) || data[0];
+        setSelectedAddr(def);
+        setAddress(def.address);
+      });
+  }, [session, profile]);
 
-      supabase.from('profiles').select('nombre, apellido, telefono, direccion').eq('id', user.id).maybeSingle()
-        .then(({ data: profile }) => {
-          if (!profile) return;
-          setProfileDireccion(profile.direccion || '');
-          setForm(f => ({
-            ...f,
-            name: f.name || `${profile.nombre || ''} ${profile.apellido || ''}`.trim(),
-            phone: f.phone || profile.telefono || '',
-            address: f.address || profile.direccion || '',
-          }));
-        });
-
-      supabase.from('addresses').select('*')
-        .eq('user_id', user.id)
-        .order('is_default', { ascending: false })
-        .order('created_at')
-        .then(({ data }) => {
-          if (!data?.length) return;
-          setSavedAddresses(data);
-          const def = data.find(a => a.is_default) || data[0];
-          setSelectedAddr(def);
-          setForm(f => ({ ...f, address: def.address }));
-        });
-    });
-  }, []);
+  useEffect(() => {
+    if (!showSuccess || !successOrderId) return;
+    clear();
+    const t = setTimeout(() => navigate(`/pedido/${successOrderId}`), 2500);
+    return () => clearTimeout(t);
+  }, [showSuccess, successOrderId]);
 
   const selectAddress = useCallback((addr) => {
     setSelectedAddr(addr);
-    setForm(f => ({ ...f, address: addr.address }));
+    setAddress(addr.address);
     setSheetOpen(false);
     setShowNewAddrForm(false);
   }, []);
@@ -309,23 +274,10 @@ export default function Checkout() {
 
   const saveNewAddress = useCallback(async () => {
     if (!newAddrForm.address.trim()) { toast.error('Ingresá la dirección'); return; }
-    if (!userId) {
-      const local = {
-        id: `local-${Date.now()}`,
-        label: newAddrForm.label || 'Casa',
-        address: newAddrForm.address.trim(),
-        notes: newAddrForm.notes.trim() || null,
-        is_default: true,
-      };
-      setSavedAddresses(prev => [...prev, local]);
-      setNewAddrForm({ label: 'Casa', address: '', notes: '' });
-      selectAddress(local);
-      return;
-    }
     setSavingAddr(true);
     try {
       const { data, error } = await supabase.from('addresses').insert({
-        user_id: userId,
+        user_id: session.user.id,
         label: newAddrForm.label || 'Casa',
         address: newAddrForm.address.trim(),
         notes: newAddrForm.notes.trim() || null,
@@ -341,9 +293,8 @@ export default function Checkout() {
     } finally {
       setSavingAddr(false);
     }
-  }, [newAddrForm, userId, savedAddresses.length, selectAddress]);
+  }, [newAddrForm, session, savedAddresses.length, selectAddress]);
 
-  // FIX: showSuccess se chequea ANTES que el guard de items vacíos.
   if (showSuccess) return <OrderSuccessScreen />;
 
   if (items.length === 0) {
@@ -351,26 +302,11 @@ export default function Checkout() {
     return null;
   }
 
-  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
-
   const copyAlias = () => {
-    navigator.clipboard.writeText(restaurantAlias);
+    navigator.clipboard.writeText(restaurantInfo.payment_alias);
     setAliasCopied(true);
     setTimeout(() => setAliasCopied(false), 2000);
     toast.success('Alias copiado');
-  };
-
-  const handleReview = () => {
-    if (!form.name || !form.phone || !form.address) {
-      toast.error('Completá todos los campos obligatorios');
-      return;
-    }
-    if (paymentMethod === 'transfer' && !receipt) {
-      toast.error('Subí el comprobante de transferencia para continuar');
-      return;
-    }
-    setStep(2);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const uploadReceipt = async (file) => {
@@ -382,31 +318,37 @@ export default function Checkout() {
     return publicUrl;
   };
 
-  const handleSubmit = async () => {
-    if (paymentMethod === 'card') {
-      toast('Redirigiendo a MercadoPago...', { icon: '💳' });
+  const handlePay = async () => {
+    if (!receipt) {
+      toast.error('Subí el comprobante de transferencia para continuar');
+      return;
     }
+    if (fulfillmentMethod === 'delivery' && !address.trim()) {
+      toast.error('Ingresá la dirección de entrega');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      let receiptUrl = null;
-      if (paymentMethod === 'transfer' && receipt) {
-        receiptUrl = await uploadReceipt(receipt);
-      }
+      const receiptUrl = await uploadReceipt(receipt);
 
       const orderItems = items.map(i => ({
         id: i.id, name: i.name, price: i.price, qty: i.qty,
         extras: i.extras || 0, extra_price: i.extra_price || 0,
       }));
+
+      const customerName = `${profile?.nombre || ''} ${profile?.apellido || ''}`.trim();
+
       const { data: order, error } = await supabase.from('orders').insert({
         restaurant_id: restaurantId,
-        customer_name: form.name,
-        customer_phone: form.phone,
-        customer_address: form.address,
-        notes: form.notes,
+        customer_name: customerName,
+        customer_phone: profile?.telefono || '',
+        customer_address: fulfillmentMethod === 'delivery' ? address.trim() : 'Retira en el local',
+        delivery_method: fulfillmentMethod,
         items: orderItems,
         subtotal: totalVal,
         total: totalVal,
-        payment_method: paymentMethod,
+        payment_method: 'transfer',
         comprobante_url: receiptUrl,
         order_status: 'pending',
       }).select().single();
@@ -414,10 +356,6 @@ export default function Checkout() {
       if (error) throw error;
       setSuccessOrderId(order.id);
       setShowSuccess(true);
-
-      // FIX: clear() fue movido al useEffect de arriba.
-      // Acá solo guardamos el perfil y activamos la pantalla de éxito.
-     
     } catch (err) {
       toast.error('Error al enviar el pedido: ' + err.message);
     } finally {
@@ -425,369 +363,199 @@ export default function Checkout() {
     }
   };
 
-
-
-  /* ── Step 2: Review ─────────────────────────────────────────── */
-  if (step === 2) {
-    return (
-      <div className="min-h-screen bg-gray-100">
-        <nav className="bg-white shadow-nav sticky top-0 z-40">
-          <div className="h-14 flex items-center px-4 gap-3">
-            <button
-              onClick={() => setStep(1)}
-              className="flex items-center gap-1 p-2 hover:bg-gray-100 rounded-full transition-colors text-sm font-medium text-gray-600"
-            >
-              <ChevronLeft size={20} /> Editar
-            </button>
-            <span className="font-bold">Revisá tu pedido</span>
-          </div>
-        </nav>
-
-        <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-          <div className="card p-5">
-            <h2 className="font-bold text-base mb-3">Tu pedido</h2>
-            <div className="space-y-3">
-              {items.map(i => {
-                const lineTotal = i.price * i.qty + (i.extras || 0) * (i.extra_price || 0);
-                const extraText = i.extras > 0 ? ` + ${i.extras} ${i.extra_label || 'extra'}` : '';
-                return (
-                  <div key={i.id} className="flex items-center gap-3">
-                    {i.image_url ? (
-                      <img src={i.image_url} alt={i.name} className="w-12 h-12 rounded-xl object-cover shrink-0" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-xl shrink-0">🍽️</div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold leading-tight truncate">{i.name}{extraText}</p>
-                      <p className="text-xs text-gray-500">{i.qty} × ${i.price.toLocaleString('es-AR')}</p>
-                    </div>
-                    <p className="text-primary font-bold text-sm shrink-0">${lineTotal.toLocaleString('es-AR')}</p>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="border-t border-neutral-100 mt-4 pt-3 flex justify-between font-bold text-base">
-              <span>Total</span>
-              <span className="text-primary">${totalVal.toLocaleString('es-AR')}</span>
-            </div>
-          </div>
-
-          <div className="card p-5 space-y-3">
-            <h2 className="font-bold text-base">Entrega</h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Nombre</span>
-                <span className="font-medium">{form.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Teléfono</span>
-                <span className="font-medium">{form.phone}</span>
-              </div>
-              <div className="flex items-start justify-between gap-4">
-                <span className="text-gray-500 shrink-0">Dirección</span>
-                <div className="flex items-start gap-3">
-                  <div className="text-right">
-                    {selectedAddr && <p className="font-semibold text-sm">{selectedAddr.label}</p>}
-                    <p className="font-medium text-sm">{form.address}</p>
-                    {selectedAddr?.notes && <p className="text-xs text-gray-500">{selectedAddr.notes}</p>}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    className="shrink-0 text-sm font-medium text-primary"
-                  >
-                    Cambiar
-                  </button>
-                </div>
-              </div>
-              {form.notes && (
-                <div className="flex justify-between gap-4">
-                  <span className="text-gray-500 shrink-0">Aclaración</span>
-                  <span className="font-medium text-right">{form.notes}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="card p-5 flex justify-between items-center text-sm">
-            <span className="text-gray-500">Pago</span>
-            <span className="font-medium">
-              {PAYMENT_LABELS[paymentMethod]}
-              {paymentMethod === 'transfer' && receipt && (
-                <span className="ml-2 text-green-600 text-xs">· comprobante adjunto</span>
-              )}
-            </span>
-          </div>
-
-          <button onClick={handleSubmit} disabled={submitting} className="btn-primary w-full py-4 text-base">
-            {submitting ? 'Enviando pedido...' : `Confirmar pedido · $${totalVal.toLocaleString('es-AR')}`}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  /* ── Step 1: Form ───────────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100" style={{ paddingBottom: 110 }}>
       <nav className="bg-white shadow-nav sticky top-0 z-40">
         <div className="h-14 flex items-center px-4 gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
             <ChevronLeft size={20} />
           </button>
-          <span className="font-bold">Confirmar pedido</span>
+          <span className="font-bold">Pagar</span>
         </div>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-4 py-4">
-        <div className="space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
 
-          {/* Datos personales */}
-          <div className="card p-5 space-y-4">
-            <h2 className="font-bold text-base">Tus datos</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Nombre *</label>
-                <input name="name" value={form.name} onChange={handleChange} placeholder="Juan García" className="input" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Teléfono *</label>
-                <input name="phone" value={form.phone} onChange={handleChange} placeholder="3571-123456" className="input" />
-              </div>
+        {/* Monto total */}
+        <div className="card p-6 text-center">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total a pagar</p>
+          <p className="text-4xl font-extrabold text-primary">${totalVal.toLocaleString('es-AR')}</p>
+          {restaurantName && <p className="text-xs text-gray-400 mt-1">{restaurantName}</p>}
+        </div>
+
+        {/* Dirección de entrega / retiro en local */}
+        {fulfillmentMethod === 'delivery' ? (
+          <div className="card p-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-lg">📍</div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm">Dirección de entrega</p>
+              <p className="truncate text-xs text-gray-500 mt-0.5">{address || 'Sin dirección'}</p>
             </div>
+            <button type="button" onClick={() => openSheet(false)} className="shrink-0 text-sm font-bold text-primary">
+              Cambiar
+            </button>
+          </div>
+        ) : (
+          <div className="card p-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-lg">🏪</div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm">Retirás en el local</p>
+              <p className="truncate text-xs text-gray-500 mt-0.5">{restaurantInfo.address || restaurantName}</p>
+            </div>
+          </div>
+        )}
 
-            {/* Address section */}
-            <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Dirección de entrega *</label>
+        {/* Modo de envío */}
+        <div className="card p-4 flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-lg">
+            {fulfillmentMethod === 'delivery' ? '🛵' : '🏪'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm">Modo de entrega</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {fulfillmentMethod === 'delivery' ? 'Delivery' : 'Retirar en el local'}
+            </p>
+          </div>
+        </div>
 
-              {loadingUser ? (
-                <div className="h-14 animate-pulse rounded-xl bg-gray-100" />
-              ) : selectedAddr ? (
-                /* Selected address card (from saved addresses) */
-                <div className="flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-primary">
-                    <MapPin size={18} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm leading-tight">{selectedAddr.label}</p>
-                    <p className="truncate text-xs text-gray-500">{selectedAddr.address}</p>
+        {/* Método de pago */}
+        <div className="card p-5 space-y-3">
+          <h2 className="font-bold text-base">Método de pago</h2>
+
+          <div className="flex items-center gap-3 rounded-xl border-2 p-3" style={{ borderColor: '#e31b23', background: '#fef2f2' }}>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-lg">🏦</div>
+            <p className="font-bold text-sm flex-1">Transferencia bancaria</p>
+            <CheckCircle size={18} className="text-primary shrink-0" />
+          </div>
+
+          <div className="rounded-xl p-4 space-y-3" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+            <p className="text-sm font-bold" style={{ color: '#15803D' }}>Datos para la transferencia</p>
+
+            {restaurantInfo.payment_alias ? (
+              <>
+                <div className="flex items-center justify-between gap-3 bg-white rounded-xl p-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Alias / CBU</p>
+                    <p className="font-bold text-base font-mono text-gray-900 truncate">{restaurantInfo.payment_alias}</p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => openSheet(false)}
-                    className="shrink-0 text-sm font-medium text-primary"
+                    onClick={copyAlias}
+                    className="flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-xl text-sm font-bold transition-colors"
+                    style={{
+                      background: aliasCopied ? '#DCFCE7' : '#e31b23',
+                      color: aliasCopied ? '#16A34A' : '#fff',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
                   >
-                    Cambiar
+                    {aliasCopied ? <CheckCircle size={15} /> : <Copy size={15} />}
+                    {aliasCopied ? 'Copiado' : 'Copiar alias'}
                   </button>
                 </div>
-              ) : profileDireccion ? (
-                /* Dirección del perfil como default, con opción de cambiarla solo para este pedido */
-                !customAddr ? (
-                  <div className="flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white p-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-primary">
-                      <MapPin size={18} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm leading-tight">Dirección de tu perfil</p>
-                      <p className="truncate text-xs text-gray-500">{form.address}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setCustomAddr(true)}
-                      className="shrink-0 text-sm font-medium text-primary"
-                    >
-                      Cambiar dirección
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <PlacesInput
-                      value={form.address}
-                      onChange={v => setForm(f => ({ ...f, address: v }))}
-                      placeholder="Calle y número"
-                      className="input"
-                    />
-                    <p className="text-xs text-gray-400">Esta dirección se usará solo para este pedido.</p>
-                    <button
-                      type="button"
-                      onClick={() => { setCustomAddr(false); setForm(f => ({ ...f, address: profileDireccion })); }}
-                      className="text-sm font-medium text-primary"
-                    >
-                      Usar la dirección de mi perfil
-                    </button>
-                  </div>
-                )
-              ) : (
-                /* No address — logged in or not */
-                <button
-                  type="button"
-                  onClick={() => openSheet(true)}
-                  className="flex w-full items-center justify-between rounded-xl border-2 border-dashed border-gray-200 p-4 text-left transition-colors hover:border-gray-300"
-                >
-                  <div className="flex items-center gap-3">
-                    <MapPin size={18} className="shrink-0 text-gray-400" />
-                    <span className="text-sm text-gray-500">Sin dirección guardada</span>
-                  </div>
-                  <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-primary">
-                    <Plus size={14} /> Agregar
-                  </span>
-                </button>
-              )}
-            </div>
+                <p className="text-sm" style={{ color: '#166534' }}>
+                  Transferí <strong>${totalVal.toLocaleString('es-AR')}</strong> y subí el comprobante para confirmar tu pedido.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-gray-500">El restaurante te indicará los datos de transferencia.</p>
+            )}
 
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Aclaraciones (opcional)</label>
-              <textarea name="notes" value={form.notes} onChange={handleChange} placeholder="Sin cebolla, casa con portón verde..." className="input resize-none h-20" />
-            </div>
-          </div>
-
-          {/* Resumen del pedido */}
-          <div className="card p-5">
-            <h2 className="font-bold text-base mb-3">Tu pedido</h2>
-            <div className="space-y-3">
-              {items.map(i => {
-                const lineTotal = i.price * i.qty + (i.extras || 0) * (i.extra_price || 0);
-                const extraText = i.extras > 0 ? ` + ${i.extras} ${i.extra_label || 'extra'}` : '';
-                return (
-                  <div key={i.id} className="flex items-center gap-3">
-                    {i.image_url ? (
-                      <img src={i.image_url} alt={i.name} className="w-12 h-12 rounded-xl object-cover shrink-0" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-xl shrink-0">🍽️</div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold leading-tight truncate">{i.name}{extraText}</p>
-                      <p className="text-primary font-bold text-sm">${lineTotal.toLocaleString('es-AR')}</p>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => updateQty(i.id, i.qty - 1)}
-                        className="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center hover:border-red-400 hover:text-red-500 transition-colors"
-                      >
-                        {i.qty === 1 ? <Trash2 size={13} /> : <Minus size={13} />}
-                      </button>
-                      <span className="w-6 text-center font-extrabold text-sm">{i.qty}</span>
-                      <button
-                        type="button"
-                        onClick={() => updateQty(i.id, i.qty + 1)}
-                        className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center hover:bg-red-700 transition-colors"
-                      >
-                        <Plus size={13} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="border-t border-neutral-100 mt-4 pt-3 flex justify-between font-bold">
-              <span>Total</span>
-              <span className="text-primary">${totalVal.toLocaleString('es-AR')}</span>
-            </div>
-          </div>
-
-          {/* Método de pago */}
-          <div className="card p-5">
-            <h2 className="font-bold text-base mb-3">Método de pago</h2>
-            <PaymentSelector value={paymentMethod} onChange={setPaymentMethod} />
-
-            {paymentMethod === 'transfer' && (
-              <div className="mt-4 rounded-xl p-4 space-y-3" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
-                <p className="text-sm font-bold" style={{ color: '#15803D' }}>Datos para la transferencia</p>
-
-                {restaurantAlias ? (
-                  <>
-                    <div className="flex items-center justify-between gap-3 bg-white rounded-xl p-3">
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Alias / CBU</p>
-                        <p className="font-bold text-base font-mono text-gray-900 truncate">{restaurantAlias}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={copyAlias}
-                        className="flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-xl text-sm font-bold transition-colors"
-                        style={{
-                          background: aliasCopied ? '#DCFCE7' : '#e31b23',
-                          color: aliasCopied ? '#16A34A' : '#fff',
-                          border: 'none',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {aliasCopied ? <CheckCircle size={15} /> : <Copy size={15} />}
-                        {aliasCopied ? 'Copiado' : 'Copiar alias'}
-                      </button>
-                    </div>
-                    <p className="text-sm" style={{ color: '#166534' }}>
-                      Realizá la transferencia y el restaurante confirmará tu pedido al recibir el pago.
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-sm text-gray-500">El restaurante te indicará los datos de transferencia.</p>
-                )}
-
-                <div>
-                  <span className="text-sm font-bold text-gray-700 block mb-2">
-                    Subir comprobante de transferencia <span className="text-red-500">*</span>
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,.pdf"
-                    className="hidden"
-                    id="receipt-upload"
-                    onChange={e => setReceipt(e.target.files[0] || null)}
-                  />
-                  <label
-                    htmlFor="receipt-upload"
-                    className="block cursor-pointer"
-                  >
-                    <div
-                      className="border-2 border-dashed rounded-xl transition-colors"
-                      style={{ borderColor: receipt ? '#16A34A' : '#BBF7D0', background: receipt ? '#F0FDF4' : '#fff' }}
-                    >
-                      {receipt ? (
-                        <div className="flex items-center gap-3 p-3">
-                          {receipt.type.startsWith('image/') ? (
-                            <img
-                              src={URL.createObjectURL(receipt)}
-                              alt="Comprobante"
-                              className="rounded-xl object-cover shrink-0"
-                              style={{ width: 72, height: 72 }}
-                            />
-                          ) : (
-                            <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl bg-green-100">
-                              <CheckCircle size={28} className="text-green-600" />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <p className="text-sm font-bold text-green-700 leading-tight truncate">{receipt.name}</p>
-                            <p className="text-xs text-green-600 mt-0.5">Listo para enviar</p>
-                            <button
-                              type="button"
-                              onClick={e => { e.preventDefault(); setReceipt(null); }}
-                              className="text-xs text-gray-400 hover:text-red-500 mt-1 transition-colors"
-                            >
-                              Cambiar archivo
-                            </button>
-                          </div>
-                        </div>
+              <span className="text-sm font-bold text-gray-700 block mb-2">
+                Subir comprobante de transferencia <span className="text-red-500">*</span>
+              </span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,.pdf"
+                className="hidden"
+                id="receipt-upload"
+                onChange={e => setReceipt(e.target.files[0] || null)}
+              />
+              <label htmlFor="receipt-upload" className="block cursor-pointer">
+                <div
+                  className="border-2 border-dashed rounded-xl transition-colors"
+                  style={{ borderColor: receipt ? '#16A34A' : '#BBF7D0', background: receipt ? '#F0FDF4' : '#fff' }}
+                >
+                  {receipt ? (
+                    <div className="flex items-center gap-3 p-3">
+                      {receipt.type.startsWith('image/') ? (
+                        <img
+                          src={URL.createObjectURL(receipt)}
+                          alt="Comprobante"
+                          className="rounded-xl object-cover shrink-0"
+                          style={{ width: 72, height: 72 }}
+                        />
                       ) : (
-                        <div className="flex flex-col items-center gap-2 py-6 px-4">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: '#DCFCE7' }}>
-                            <Camera size={22} style={{ color: '#16A34A' }} />
-                          </div>
-                          <p className="text-sm font-semibold text-gray-700">Tocá para subir el comprobante</p>
-                          <p className="text-xs text-gray-400">JPG, PNG o PDF</p>
+                        <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl bg-green-100">
+                          <CheckCircle size={28} className="text-green-600" />
                         </div>
                       )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-green-700 leading-tight truncate">{receipt.name}</p>
+                        <p className="text-xs text-green-600 mt-0.5">Listo para enviar</p>
+                        <button
+                          type="button"
+                          onClick={e => { e.preventDefault(); setReceipt(null); }}
+                          className="text-xs text-gray-400 hover:text-red-500 mt-1 transition-colors"
+                        >
+                          Cambiar archivo
+                        </button>
+                      </div>
                     </div>
-                  </label>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 py-6 px-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: '#DCFCE7' }}>
+                        <Camera size={22} style={{ color: '#16A34A' }} />
+                      </div>
+                      <p className="text-sm font-semibold text-gray-700">Tocá para subir el comprobante</p>
+                      <p className="text-xs text-gray-400">JPG, PNG o PDF</p>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              </label>
+            </div>
           </div>
+        </div>
 
-          <button type="button" onClick={handleReview} className="btn-primary w-full text-base py-4">
-            Revisar pedido →
+        {/* Resumen del pedido */}
+        <div className="card p-5">
+          <h2 className="font-bold text-base mb-3">Tu pedido</h2>
+          <div className="space-y-3">
+            {items.map(i => {
+              const lineTotal = i.price * i.qty + (i.extras || 0) * (i.extra_price || 0);
+              const extraText = i.extras > 0 ? ` + ${i.extras} ${i.extra_label || 'extra'}` : '';
+              return (
+                <div key={i.id} className="flex items-center gap-3">
+                  {i.image_url ? (
+                    <img src={i.image_url} alt={i.name} className="w-12 h-12 rounded-xl object-cover shrink-0" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-xl shrink-0">🍽️</div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold leading-tight truncate">{i.qty} × {i.name}{extraText}</p>
+                  </div>
+                  <p className="text-primary font-bold text-sm shrink-0">${lineTotal.toLocaleString('es-AR')}</p>
+                </div>
+              );
+            })}
+          </div>
+          <div className="border-t border-neutral-100 mt-4 pt-3 flex justify-between font-bold text-base">
+            <span>Valor total del pedido</span>
+            <span className="text-primary">${totalVal.toLocaleString('es-AR')}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Barra inferior fija */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white"
+        style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.10)', padding: '12px 16px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
+      >
+        <div className="max-w-2xl mx-auto">
+          <button type="button" onClick={handlePay} disabled={submitting} className="btn-primary w-full flex items-center justify-between text-base py-4">
+            <span>{submitting ? 'Procesando...' : 'Pagar'}</span>
+            <span className="font-extrabold">${totalVal.toLocaleString('es-AR')}</span>
           </button>
         </div>
       </div>

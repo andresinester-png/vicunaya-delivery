@@ -23,7 +23,7 @@ export default function CartPanel({ open, onClose }) {
   const { items, updateQty, removeItem, total, restaurantName } = useCartStore();
   const totalVal = total();
 
-  const handleCheckout = () => { onClose(); navigate('/checkout'); };
+  const handleCheckout = () => { onClose(); navigate('/carrito'); };
 
   return (
     <AnimatePresence>
