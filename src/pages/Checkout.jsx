@@ -217,6 +217,8 @@ export default function Checkout() {
 
   const [restaurantInfo, setRestaurantInfo] = useState({ address: '', payment_alias: '' });
   const [receipt, setReceipt] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('transfer');
+  const [cashAmount, setCashAmount] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [aliasCopied, setAliasCopied] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -319,7 +321,7 @@ export default function Checkout() {
   };
 
   const handlePay = async () => {
-    if (!receipt) {
+    if (paymentMethod === 'transfer' && !receipt) {
       toast.error('Subí el comprobante de transferencia para continuar');
       return;
     }
@@ -330,7 +332,7 @@ export default function Checkout() {
 
     setSubmitting(true);
     try {
-      const receiptUrl = await uploadReceipt(receipt);
+      const receiptUrl = paymentMethod === 'transfer' ? await uploadReceipt(receipt) : null;
 
       const orderItems = items.map(i => ({
         id: i.id, name: i.name, price: i.price, qty: i.qty,
@@ -348,8 +350,11 @@ export default function Checkout() {
         items: orderItems,
         subtotal: totalVal,
         total: totalVal,
-        payment_method: 'transfer',
+        payment_method: paymentMethod,
         comprobante_url: receiptUrl,
+        notes: paymentMethod === 'cash' && cashAmount.trim()
+          ? `Paga en efectivo con $${cashAmount.trim()}`
+          : null,
         order_status: 'pending',
       }).select().single();
 
@@ -422,12 +427,57 @@ export default function Checkout() {
         <div className="card p-5 space-y-3">
           <h2 className="font-bold text-base">Método de pago</h2>
 
-          <div className="flex items-center gap-3 rounded-xl border-2 p-3" style={{ borderColor: '#e31b23', background: '#fef2f2' }}>
+          <button
+            type="button"
+            onClick={() => setPaymentMethod('transfer')}
+            className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
+            style={{
+              borderColor: paymentMethod === 'transfer' ? '#e31b23' : '#E5E7EB',
+              background: paymentMethod === 'transfer' ? '#fef2f2' : '#fff',
+            }}
+          >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-lg">🏦</div>
             <p className="font-bold text-sm flex-1">Transferencia bancaria</p>
-            <CheckCircle size={18} className="text-primary shrink-0" />
-          </div>
+            {paymentMethod === 'transfer' && <CheckCircle size={18} className="text-primary shrink-0" />}
+          </button>
 
+          <button
+            type="button"
+            onClick={() => setPaymentMethod('cash')}
+            className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
+            style={{
+              borderColor: paymentMethod === 'cash' ? '#e31b23' : '#E5E7EB',
+              background: paymentMethod === 'cash' ? '#fef2f2' : '#fff',
+            }}
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-lg">💵</div>
+            <p className="font-bold text-sm flex-1">Efectivo</p>
+            {paymentMethod === 'cash' && <CheckCircle size={18} className="text-primary shrink-0" />}
+          </button>
+
+          {paymentMethod === 'cash' && (
+            <div className="rounded-xl p-4 space-y-3" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+              <p className="text-sm" style={{ color: '#166534' }}>
+                Pagás en efectivo al repartidor al momento de la entrega
+              </p>
+              <div>
+                <span className="text-sm font-bold text-gray-700 block mb-2">
+                  ¿Con cuánto vas a pagar? <span className="text-gray-400 font-normal">(para el cambio, opcional)</span>
+                </span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={cashAmount}
+                  onChange={e => setCashAmount(e.target.value)}
+                  placeholder="Ej: 5000"
+                  className="input"
+                />
+              </div>
+            </div>
+          )}
+
+          {paymentMethod === 'transfer' && (
           <div className="rounded-xl p-4 space-y-3" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
             <p className="text-sm font-bold" style={{ color: '#15803D' }}>Datos para la transferencia</p>
 
@@ -516,6 +566,7 @@ export default function Checkout() {
               </label>
             </div>
           </div>
+          )}
         </div>
 
         {/* Resumen del pedido */}
@@ -553,7 +604,7 @@ export default function Checkout() {
         style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.10)', padding: '12px 16px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
       >
         <div className="max-w-2xl mx-auto">
-          <button type="button" onClick={handlePay} disabled={submitting} className="btn-primary w-full flex items-center justify-between text-base py-4">
+          <button type="button" onClick={handlePay} disabled={submitting || !paymentMethod || (paymentMethod === 'transfer' && !receipt)} className="btn-primary w-full flex items-center justify-between text-base py-4">
             <span>{submitting ? 'Procesando...' : 'Pagar'}</span>
             <span className="font-extrabold">${totalVal.toLocaleString('es-AR')}</span>
           </button>
