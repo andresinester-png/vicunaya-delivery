@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, X, Image, GripVertical } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Plus, Pencil, Trash2, X, Image, GripVertical, Upload, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase, supabaseAdmin } from '../../lib/supabase.js';
 
+const BUCKET = 'IMAGES';
 const EMPTY_BANNER = { image_url: '', title: '', subtitle: '', active: true, sort_order: 0 };
 
 export default function Banners() {
@@ -11,6 +12,8 @@ export default function Banners() {
   const [modal,   setModal]   = useState(false);
   const [form,    setForm]    = useState(EMPTY_BANNER);
   const [saving,  setSaving]  = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const load = async () => {
     setLoading(true);
@@ -30,6 +33,26 @@ export default function Banners() {
   };
 
   const closeModal = () => setModal(false);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext  = file.name.split('.').pop();
+      const path = `banners/${Date.now()}.${ext}`;
+      const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
+      setForm(f => ({ ...f, image_url: data.publicUrl }));
+      toast.success('Imagen subida');
+    } catch (err) {
+      toast.error('Error: ' + err.message);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
 
   const save = async () => {
     if (!form.image_url.trim()) { toast.error('La URL de la imagen es obligatoria'); return; }
@@ -140,12 +163,24 @@ export default function Banners() {
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">URL de la imagen *</label>
-                <input
-                  value={form.image_url}
-                  onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
-                  placeholder="https://..."
-                  className="input"
-                />
+                <div className="flex gap-2">
+                  <input
+                    value={form.image_url}
+                    onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
+                    placeholder="https://..."
+                    className="input flex-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="shrink-0 flex items-center gap-1.5 px-3 rounded-xl border-2 border-dashed border-neutral-200 hover:border-primary text-sm font-medium text-gray-600 transition-colors"
+                  >
+                    {uploading ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
+                    Subir imagen
+                  </button>
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                </div>
               </div>
 
               <div className="rounded-xl overflow-hidden bg-gray-100 h-32 flex items-center justify-center">
