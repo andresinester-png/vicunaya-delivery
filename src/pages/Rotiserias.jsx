@@ -245,23 +245,36 @@ export default function Rotiserias() {
                 }}
                 style={{
                   flex:'0 0 100%',
-                  height:160, borderRadius:16,
-                  background: banner.image_url ? `url(${banner.image_url}) center/cover no-repeat` : banner.gradient,
+                  height:160, borderRadius:16, overflow:'hidden', position:'relative',
+                  background: banner.image_url ? '#000' : banner.gradient,
                   display:'flex', flexDirection:'column', justifyContent:'center',
-                  padding:'0 24px', boxSizing:'border-box',
                   cursor: (idx === 0 || idx === 1 || (banner.link_type && banner.link_type !== 'none')) ? 'pointer' : 'default',
                 }}
               >
-                {banner.title && (
-                  <h3 style={{ color:'#fff', fontSize:20, fontWeight:900, margin:0, letterSpacing:'-0.02em', textShadow: banner.image_url ? '0 1px 6px rgba(0,0,0,0.4)' : 'none' }}>
-                    {banner.title}
-                  </h3>
+                {banner.image_url && (
+                  <img
+                    src={banner.image_url}
+                    alt=""
+                    style={{
+                      position:'absolute', inset:0,
+                      width:'100%', height:'100%',
+                      objectFit:'cover', objectPosition:'center',
+                      zIndex:0,
+                    }}
+                  />
                 )}
-                {banner.subtitle && (
-                  <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13, fontWeight:600, marginTop:6, textShadow: banner.image_url ? '0 1px 6px rgba(0,0,0,0.4)' : 'none' }}>
-                    {banner.subtitle}
-                  </p>
-                )}
+                <div style={{ position:'relative', zIndex:1, padding:'0 24px', boxSizing:'border-box' }}>
+                  {banner.title && (
+                    <h3 style={{ color:'#fff', fontSize:20, fontWeight:900, margin:0, letterSpacing:'-0.02em', textShadow: banner.image_url ? '0 1px 6px rgba(0,0,0,0.4)' : 'none' }}>
+                      {banner.title}
+                    </h3>
+                  )}
+                  {banner.subtitle && (
+                    <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13, fontWeight:600, marginTop:6, textShadow: banner.image_url ? '0 1px 6px rgba(0,0,0,0.4)' : 'none' }}>
+                      {banner.subtitle}
+                    </p>
+                  )}
+                </div>
               </div>
             ))}
           </div>
