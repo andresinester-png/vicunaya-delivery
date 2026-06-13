@@ -108,14 +108,16 @@ export default function Rotiserias() {
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', position:'relative' }}>
 
-      {/* ── Animación flotante de categorías ── */}
+      {/* ── Animación de scroll para imágenes de categorías ── */}
       <style>{`
-        @keyframes categoryFloat {
-          from { transform: translateY(-4px); }
-          to   { transform: translateY(0px); }
+        @keyframes categoryScroll {
+          0%   { transform: translateY(0); }
+          70%  { transform: translateY(-30%); }
+          71%  { transform: translateY(0); }
+          100% { transform: translateY(0); }
         }
-        .category-float {
-          animation: categoryFloat 2s ease-in-out infinite alternate;
+        .category-scroll-img {
+          animation: categoryScroll 2s ease-in infinite;
         }
       `}</style>
 
@@ -262,33 +264,35 @@ export default function Rotiserias() {
                   fontFamily:"'Plus Jakarta Sans', sans-serif",
                 }}
               >
-                <div className="category-float" style={{ animationDelay:`${idx * 0.2}s` }}>
-                  <div
-                    onMouseEnter={() => setHoveredCat(cat.label)}
-                    onMouseLeave={() => setHoveredCat(null)}
-                    onTouchStart={() => setHoveredCat(cat.label)}
-                    onTouchEnd={() => setHoveredCat(null)}
-                    style={{
-                      width:60, height:60, borderRadius:'50%',
-                      border: active ? '2.5px solid #e31b23' : '2.5px solid #F3F4F6',
-                      boxSizing:'border-box', padding:2,
-                      display:'flex', alignItems:'center', justifyContent:'center',
-                      overflow:'hidden', background:'#fff',
-                      transform: hoveredCat === cat.label ? 'scale(1.08)' : 'scale(1)',
-                      boxShadow: hoveredCat === cat.label ? '0 6px 16px rgba(0,0,0,0.15)' : '0 0 0 rgba(0,0,0,0)',
-                      transition:'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.15s',
-                    }}
-                  >
-                    {cat.image ? (
-                      <img
-                        src={cat.image}
-                        alt={cat.label}
-                        style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%' }}
-                      />
-                    ) : (
-                      <span style={{ fontSize:26 }}>{cat.icon}</span>
-                    )}
-                  </div>
+                <div
+                  onMouseEnter={() => setHoveredCat(cat.label)}
+                  onMouseLeave={() => setHoveredCat(null)}
+                  onTouchStart={() => setHoveredCat(cat.label)}
+                  onTouchEnd={() => setHoveredCat(null)}
+                  style={{
+                    width:60, height:60, borderRadius:'50%',
+                    border: active ? '2.5px solid #e31b23' : '2.5px solid #F3F4F6',
+                    boxSizing:'border-box', padding:2,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    overflow:'hidden', background:'#fff',
+                    transform: hoveredCat === cat.label ? 'scale(1.08)' : 'scale(1)',
+                    boxShadow: hoveredCat === cat.label ? '0 6px 16px rgba(0,0,0,0.15)' : '0 0 0 rgba(0,0,0,0)',
+                    transition:'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.15s',
+                  }}
+                >
+                  {cat.image ? (
+                    <img
+                      className="category-scroll-img"
+                      src={cat.image}
+                      alt={cat.label}
+                      style={{
+                        width:'100%', height:'130%', objectFit:'cover', borderRadius:'50%',
+                        animationDelay:`${idx * 0.3}s`,
+                      }}
+                    />
+                  ) : (
+                    <span style={{ fontSize:26 }}>{cat.icon}</span>
+                  )}
                 </div>
                 <span style={{
                   fontSize:11.5, lineHeight:1.2, textAlign:'center',
