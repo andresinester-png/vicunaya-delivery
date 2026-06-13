@@ -223,12 +223,14 @@ export default function Rotiserias() {
             {banners.map(banner => (
               <div
                 key={banner.id}
+                onClick={() => navigate('/anunciate')}
                 style={{
                   flex:'0 0 100%',
                   height:160, borderRadius:16,
                   background: banner.image_url ? `url(${banner.image_url}) center/cover no-repeat` : banner.gradient,
                   display:'flex', flexDirection:'column', justifyContent:'center',
                   padding:'0 24px', boxSizing:'border-box',
+                  cursor:'pointer',
                 }}
               >
                 {banner.title && (
