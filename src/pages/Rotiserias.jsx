@@ -220,10 +220,11 @@ export default function Rotiserias() {
             transform:`translateX(-${activeBanner * 100}%)`,
             transition:'transform 0.5s ease',
           }}>
-            {banners.map(banner => (
+            {banners.map((banner, idx) => (
               <div
                 key={banner.id}
                 onClick={() => {
+                  if (idx === 0) { navigate('/anunciate'); return; }
                   if (banner.link) { navigate(banner.link); return; }
                   if (banner.link_type === 'url' && banner.link_url) {
                     window.open(banner.link_url, '_blank');
@@ -237,7 +238,7 @@ export default function Rotiserias() {
                   background: banner.image_url ? `url(${banner.image_url}) center/cover no-repeat` : banner.gradient,
                   display:'flex', flexDirection:'column', justifyContent:'center',
                   padding:'0 24px', boxSizing:'border-box',
-                  cursor: (banner.link || (banner.link_type && banner.link_type !== 'none')) ? 'pointer' : 'default',
+                  cursor: (idx === 0 || banner.link || (banner.link_type && banner.link_type !== 'none')) ? 'pointer' : 'default',
                 }}
               >
                 {banner.title && (
