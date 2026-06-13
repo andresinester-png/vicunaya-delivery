@@ -20,48 +20,71 @@ const LABEL_PRESETS = ['Casa', 'Trabajo', 'Otro'];
 function OrderSuccessScreen() {
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+      style={{ background: '#22c55e' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
     >
-      {/* Checkmark SVG */}
-      <motion.svg
-        viewBox="0 0 100 100"
-        width={140}
-        height={140}
-        fill="none"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.1, type: 'spring', stiffness: 260, damping: 22 }}
+      <style>{`
+        @keyframes checkmarkDraw {
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes circlePop {
+          0%   { transform: scale(0); opacity: 0; }
+          60%  { transform: scale(1.08); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+
+      {/* Círculo blanco con tilde dibujándose */}
+      <div
+        style={{
+          width: 140,
+          height: 140,
+          borderRadius: '50%',
+          background: '#fff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
+          animation: 'circlePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+        }}
       >
-        <circle cx="50" cy="50" r="50" fill="#22c55e" />
-        <path
-          d="M 22 52 L 40 70 L 76 30"
-          stroke="white"
-          strokeWidth="5.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      </motion.svg>
+        <svg viewBox="0 0 52 52" width={78} height={78} fill="none">
+          <path
+            d="M14 27 L22 35 L38 17"
+            stroke="#22c55e"
+            strokeWidth="5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+            style={{
+              strokeDasharray: 40,
+              strokeDashoffset: 40,
+              animation: 'checkmarkDraw 0.5s 0.4s ease-out forwards',
+            }}
+          />
+        </svg>
+      </div>
 
       {/* Text */}
       <motion.p
-        className="text-3xl font-extrabold text-gray-900 mt-6"
+        className="text-3xl font-extrabold text-white mt-7 text-center px-8"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.55, duration: 0.4, ease: 'easeOut' }}
       >
-        ¡Pedido enviado!
+        ¡Pedido confirmado!
       </motion.p>
       <motion.p
-        className="text-base text-gray-500 mt-2 text-center px-8"
+        className="text-base font-semibold mt-2 text-center px-8"
+        style={{ color: 'rgba(255,255,255,0.9)' }}
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7, duration: 0.4, ease: 'easeOut' }}
       >
-        El restaurante recibirá tu pedido en breve
+        Tu pedido está siendo procesado
       </motion.p>
     </motion.div>
   );
