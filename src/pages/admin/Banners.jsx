@@ -4,7 +4,16 @@ import toast from 'react-hot-toast';
 import { supabase, supabaseAdmin } from '../../lib/supabase.js';
 
 const BUCKET = 'IMAGES';
-const EMPTY_BANNER = { image_url: '', title: '', subtitle: '', active: true, sort_order: 0 };
+const EMPTY_BANNER = {
+  image_url: '', title: '', subtitle: '', active: true, sort_order: 0,
+  link_type: 'none', link_url: '', page_title: '', page_content: '', page_image_url: '',
+};
+
+const LINK_TYPES = [
+  { id:'none', label:'No hacer nada' },
+  { id:'page', label:'Abrir página con info' },
+  { id:'url',  label:'Abrir URL externa' },
+];
 
 export default function Banners() {
   const [banners, setBanners] = useState([]);
@@ -13,7 +22,9 @@ export default function Banners() {
   const [form,    setForm]    = useState(EMPTY_BANNER);
   const [saving,  setSaving]  = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingPageImage, setUploadingPageImage] = useState(false);
   const fileInputRef = useRef(null);
+  const pageImageInputRef = useRef(null);
 
   const [leads, setLeads] = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
@@ -36,7 +47,7 @@ export default function Banners() {
 
   const openModal = (banner = null) => {
     setForm(banner
-      ? { ...banner }
+      ? { ...EMPTY_BANNER, ...banner }
       : { ...EMPTY_BANNER, sort_order: banners.length }
     );
     setModal(true);
@@ -64,6 +75,26 @@ export default function Banners() {
     }
   };
 
+  const handlePageImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingPageImage(true);
+    try {
+      const ext  = file.name.split('.').pop();
+      const path = `banners/${Date.now()}.${ext}`;
+      const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
+      setForm(f => ({ ...f, page_image_url: data.publicUrl }));
+      toast.success('Imagen subida');
+    } catch (err) {
+      toast.error('Error: ' + err.message);
+    } finally {
+      setUploadingPageImage(false);
+      e.target.value = '';
+    }
+  };
+
   const save = async () => {
     if (!form.image_url.trim()) { toast.error('La URL de la imagen es obligatoria'); return; }
     setSaving(true);
@@ -74,6 +105,11 @@ export default function Banners() {
         subtitle:  form.subtitle?.trim() || null,
         active:    form.active,
         sort_order: Number(form.sort_order) || 0,
+        link_type: form.link_type || 'none',
+        link_url:       form.link_type === 'url'  ? (form.link_url?.trim()       || null) : null,
+        page_title:     form.link_type === 'page' ? (form.page_title?.trim()     || null) : null,
+        page_content:   form.link_type === 'page' ? (form.page_content?.trim()   || null) : null,
+        page_image_url: form.link_type === 'page' ? (form.page_image_url?.trim() || null) : null,
       };
 
       const { error } = form.id
@@ -255,6 +291,66 @@ export default function Banners() {
                   min="0"
                 />
               </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Al hacer click</label>
+                <select
+                  value={form.link_type || 'none'}
+                  onChange={e => setForm(f => ({ ...f, link_type: e.target.value }))}
+                  className="input"
+                >
+                  {LINK_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                </select>
+              </div>
+
+              {form.link_type === 'page' && (
+                <>
+                  <input
+                    value={form.page_title || ''}
+                    onChange={e => setForm(f => ({ ...f, page_title: e.target.value }))}
+                    placeholder="Título de la página"
+                    className="input"
+                  />
+                  <textarea
+                    value={form.page_content || ''}
+                    onChange={e => setForm(f => ({ ...f, page_content: e.target.value }))}
+                    placeholder="Contenido (descripción, condiciones, info...)"
+                    className="input"
+                    rows={5}
+                    style={{ resize:'vertical' }}
+                  />
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Imagen de la página (opcional)</label>
+                    <div className="flex gap-2">
+                      <input
+                        value={form.page_image_url || ''}
+                        onChange={e => setForm(f => ({ ...f, page_image_url: e.target.value }))}
+                        placeholder="https://..."
+                        className="input flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => pageImageInputRef.current?.click()}
+                        disabled={uploadingPageImage}
+                        className="shrink-0 flex items-center gap-1.5 px-3 rounded-xl border-2 border-dashed border-neutral-200 hover:border-primary text-sm font-medium text-gray-600 transition-colors"
+                      >
+                        {uploadingPageImage ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
+                        Subir imagen
+                      </button>
+                      <input ref={pageImageInputRef} type="file" accept="image/*" className="hidden" onChange={handlePageImageChange} />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {form.link_type === 'url' && (
+                <input
+                  value={form.link_url || ''}
+                  onChange={e => setForm(f => ({ ...f, link_url: e.target.value }))}
+                  placeholder="https://..."
+                  className="input"
+                />
+              )}
 
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} className="w-4 h-4 accent-primary" />

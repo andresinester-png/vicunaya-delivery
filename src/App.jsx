@@ -15,6 +15,8 @@ import Addresses from './pages/Addresses.jsx';
 import Rotiserias from './pages/Rotiserias.jsx';
 import Encomiendas from './pages/Encomiendas.jsx';
 import Anunciate from './pages/Anunciate.jsx';
+import Sorteo from './pages/Sorteo.jsx';
+import BannerDetail from './pages/BannerDetail.jsx';
 import Restaurant from './pages/Restaurant.jsx';
 import Checkout from './pages/Checkout.jsx';
 import OrderTracking from './pages/OrderTracking.jsx';
@@ -65,6 +67,8 @@ export default function App() {
         <Route path="/rotiserias" element={<Rotiserias />} />
         <Route path="/encomiendas" element={<Encomiendas />} />
         <Route path="/anunciate" element={<Anunciate />} />
+        <Route path="/sorteo" element={<Sorteo />} />
+        <Route path="/banner/:id" element={<BannerDetail />} />
         <Route path="/restaurant/:id" element={<Restaurant />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/pedido/:id" element={<OrderTracking />} />
