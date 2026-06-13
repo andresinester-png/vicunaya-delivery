@@ -35,7 +35,7 @@ const CATEGORIES = [
 ];
 
 const BANNERS = [
-  { id:1, title:'¡Envío gratis!',   subtitle:'En tu primer pedido de Rotiserías',     gradient:'linear-gradient(135deg, #ff5b5f 0%, #e31b23 100%)', link:'/sorteo' },
+  { id:1, title:'¡Envío gratis!',   subtitle:'En tu primer pedido de Rotiserías',     gradient:'linear-gradient(135deg, #ff5b5f 0%, #e31b23 100%)' },
   { id:2, title:'2x1 en Empanadas', subtitle:'Hoy en locales seleccionados',          gradient:'linear-gradient(135deg, #e31b23 0%, #8e0e13 100%)' },
 ];
 
@@ -225,7 +225,7 @@ export default function Rotiserias() {
                 key={banner.id}
                 onClick={() => {
                   if (idx === 0) { navigate('/anunciate'); return; }
-                  if (banner.link) { navigate(banner.link); return; }
+                  if (idx === 1) { navigate('/sorteo'); return; }
                   if (banner.link_type === 'url' && banner.link_url) {
                     window.open(banner.link_url, '_blank');
                   } else if (banner.link_type === 'page') {
@@ -238,7 +238,7 @@ export default function Rotiserias() {
                   background: banner.image_url ? `url(${banner.image_url}) center/cover no-repeat` : banner.gradient,
                   display:'flex', flexDirection:'column', justifyContent:'center',
                   padding:'0 24px', boxSizing:'border-box',
-                  cursor: (idx === 0 || banner.link || (banner.link_type && banner.link_type !== 'none')) ? 'pointer' : 'default',
+                  cursor: (idx === 0 || idx === 1 || (banner.link_type && banner.link_type !== 'none')) ? 'pointer' : 'default',
                 }}
               >
                 {banner.title && (
