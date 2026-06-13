@@ -54,19 +54,27 @@ export default function Rotiserias() {
   const [sortOpen, setSortOpen]       = useState(false);
   const [activeBanner, setActiveBanner] = useState(0);
   const [hoveredCat, setHoveredCat]   = useState(null);
+  const [banners, setBanners]         = useState(BANNERS);
 
   useEffect(() => {
+    if (activeBanner >= banners.length) setActiveBanner(0);
     const interval = setInterval(() => {
-      setActiveBanner(prev => (prev + 1) % BANNERS.length);
+      setActiveBanner(prev => (prev + 1) % banners.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [banners.length]);
 
   useEffect(() => {
     setLoading(true);
     supabase.from('restaurants').select('*').order('name').then(({ data, error }) => {
       if (!error && data && data.length > 0) setRestaurants(data);
       setLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    supabase.from('banners').select('*').eq('active', true).order('sort_order').then(({ data, error }) => {
+      if (!error && data && data.length > 0) setBanners(data);
     });
   }, []);
 
@@ -212,23 +220,27 @@ export default function Rotiserias() {
             transform:`translateX(-${activeBanner * 100}%)`,
             transition:'transform 0.5s ease',
           }}>
-            {BANNERS.map(banner => (
+            {banners.map(banner => (
               <div
                 key={banner.id}
                 style={{
                   flex:'0 0 100%',
                   height:160, borderRadius:16,
-                  background:banner.gradient,
+                  background: banner.image_url ? `url(${banner.image_url}) center/cover no-repeat` : banner.gradient,
                   display:'flex', flexDirection:'column', justifyContent:'center',
                   padding:'0 24px', boxSizing:'border-box',
                 }}
               >
-                <h3 style={{ color:'#fff', fontSize:20, fontWeight:900, margin:0, letterSpacing:'-0.02em' }}>
-                  {banner.title}
-                </h3>
-                <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13, fontWeight:600, marginTop:6 }}>
-                  {banner.subtitle}
-                </p>
+                {banner.title && (
+                  <h3 style={{ color:'#fff', fontSize:20, fontWeight:900, margin:0, letterSpacing:'-0.02em', textShadow: banner.image_url ? '0 1px 6px rgba(0,0,0,0.4)' : 'none' }}>
+                    {banner.title}
+                  </h3>
+                )}
+                {banner.subtitle && (
+                  <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13, fontWeight:600, marginTop:6, textShadow: banner.image_url ? '0 1px 6px rgba(0,0,0,0.4)' : 'none' }}>
+                    {banner.subtitle}
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -236,7 +248,7 @@ export default function Rotiserias() {
 
         {/* Dots de paginación */}
         <div style={{ display:'flex', justifyContent:'center', gap:6, padding:'10px 0' }}>
-          {BANNERS.map((_, i) => (
+          {banners.map((_, i) => (
             <div
               key={i}
               style={{

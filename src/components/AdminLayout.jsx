@@ -1,11 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { ClipboardList, TrendingUp, LogOut, Store } from 'lucide-react';
+import { ClipboardList, TrendingUp, LogOut, Store, Image } from 'lucide-react';
 import { supabase } from '../lib/supabase.js';
 import toast from 'react-hot-toast';
 
 const navItems = [
   { to: '/admin/pedidos',      icon: ClipboardList, label: 'Pedidos'      },
   { to: '/admin/restaurantes', icon: Store,          label: 'Restaurantes' },
+  { to: '/admin/banners',      icon: Image,          label: 'Banners'      },
   { to: '/admin/ganancias',    icon: TrendingUp,     label: 'Ganancias'    },
 ];
 

@@ -27,6 +27,7 @@ import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import AdminRestaurants from './pages/admin/AdminRestaurants.jsx';
 import MenuManagement from './pages/admin/MenuManagement.jsx';
 import Earnings from './pages/admin/Earnings.jsx';
+import Banners from './pages/admin/Banners.jsx';
 
 import RestaurantLogin from './pages/restaurant/RestaurantLogin.jsx';
 import RestaurantDashboard from './pages/restaurant/Dashboard.jsx';
@@ -80,6 +81,7 @@ export default function App() {
           <Route path="restaurantes" element={<AdminRestaurants />} />
           <Route path="menu"         element={<MenuManagement />} />
           <Route path="ganancias"    element={<Earnings />} />
+          <Route path="banners"      element={<Banners />} />
         </Route>
 
         {/* ── Panel restaurante ── */}
