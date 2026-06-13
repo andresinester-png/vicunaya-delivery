@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { User, Phone, MapPin, Save, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Phone, MapPin, Save, ExternalLink, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useProfileStore from '../store/profileStore.js';
 import { supabase } from '../lib/supabase.js';
@@ -16,6 +17,7 @@ function GoogleIcon() {
 }
 
 export default function Profile() {
+  const navigate = useNavigate();
   const { name, phone, address, setProfile } = useProfileStore();
   const [form, setForm] = useState({ name, phone, address });
   const [saved, setSaved] = useState(false);
@@ -34,6 +36,11 @@ export default function Profile() {
       options: { redirectTo: 'https://delivery-navy.vercel.app/auth/callback' },
     });
     if (error) toast.error('No se pudo conectar con Google');
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/welcome', { replace: true });
   };
 
   const fields = [
@@ -111,6 +118,14 @@ export default function Profile() {
           </a>
         ))}
       </div>
+
+      <button
+        type="button"
+        onClick={handleSignOut}
+        className="card mt-4 w-full flex items-center justify-center gap-2 p-4 text-sm font-semibold text-primary hover:bg-red-50 transition-colors"
+      >
+        <LogOut size={16} /> Cerrar sesión
+      </button>
 
       <p className="text-center text-xs text-gray-400 mt-6">VicuñaYa · Vicuña Mackenna, Córdoba</p>
     </div>

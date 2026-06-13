@@ -229,6 +229,10 @@ export default function Checkout() {
   const [newAddrForm, setNewAddrForm] = useState({ label: 'Casa', address: '', notes: '' });
   const [savingAddr, setSavingAddr] = useState(false);
 
+  // Dirección guardada en el perfil (profiles.direccion) y override puntual para este pedido
+  const [profileDireccion, setProfileDireccion] = useState('');
+  const [customAddr, setCustomAddr] = useState(false);
+
   useEffect(() => {
     if (restaurantId) {
       supabase.from('restaurants').select('payment_alias').eq('id', restaurantId).single()
@@ -241,6 +245,19 @@ export default function Checkout() {
       setLoadingUser(false);
       if (!user) return;
       setUserId(user.id);
+
+      supabase.from('profiles').select('nombre, apellido, telefono, direccion').eq('id', user.id).maybeSingle()
+        .then(({ data: profile }) => {
+          if (!profile) return;
+          setProfileDireccion(profile.direccion || '');
+          setForm(f => ({
+            ...f,
+            name: f.name || `${profile.nombre || ''} ${profile.apellido || ''}`.trim(),
+            phone: f.phone || profile.telefono || '',
+            address: f.address || profile.direccion || '',
+          }));
+        });
+
       supabase.from('addresses').select('*')
         .eq('user_id', user.id)
         .order('is_default', { ascending: false })
@@ -523,7 +540,7 @@ export default function Checkout() {
               {loadingUser ? (
                 <div className="h-14 animate-pulse rounded-xl bg-gray-100" />
               ) : selectedAddr ? (
-                /* Selected address card */
+                /* Selected address card (from saved addresses) */
                 <div className="flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white p-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-primary">
                     <MapPin size={18} />
@@ -540,6 +557,43 @@ export default function Checkout() {
                     Cambiar
                   </button>
                 </div>
+              ) : profileDireccion ? (
+                /* Dirección del perfil como default, con opción de cambiarla solo para este pedido */
+                !customAddr ? (
+                  <div className="flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white p-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-primary">
+                      <MapPin size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm leading-tight">Dirección de tu perfil</p>
+                      <p className="truncate text-xs text-gray-500">{form.address}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCustomAddr(true)}
+                      className="shrink-0 text-sm font-medium text-primary"
+                    >
+                      Cambiar dirección
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <PlacesInput
+                      value={form.address}
+                      onChange={v => setForm(f => ({ ...f, address: v }))}
+                      placeholder="Calle y número"
+                      className="input"
+                    />
+                    <p className="text-xs text-gray-400">Esta dirección se usará solo para este pedido.</p>
+                    <button
+                      type="button"
+                      onClick={() => { setCustomAddr(false); setForm(f => ({ ...f, address: profileDireccion })); }}
+                      className="text-sm font-medium text-primary"
+                    >
+                      Usar la dirección de mi perfil
+                    </button>
+                  </div>
+                )
               ) : (
                 /* No address — logged in or not */
                 <button

@@ -1,11 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
+import { AuthProvider } from './context/AuthContext.jsx';
+import CustomerGate from './components/CustomerGate.jsx';
 import MainLayout from './components/MainLayout.jsx';
 import AdminGuard from './components/AdminGuard.jsx';
 import DriverGuard from './components/DriverGuard.jsx';
 import RestaurantGuard from './components/RestaurantGuard.jsx';
 
+import Welcome from './pages/Welcome.jsx';
+import CompleteProfile from './pages/CompleteProfile.jsx';
 import Home from './pages/Home.jsx';
 import RemisesPage from './pages/Remises.jsx';
 import Orders from './pages/Orders.jsx';
@@ -46,38 +50,45 @@ import Legal from './pages/Legal.jsx';
 export default function App() {
   return (
     <BrowserRouter>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: { borderRadius: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px' },
-          success: { iconTheme: { primary: '#e31b23', secondary: '#fff' } },
-        }}
-      />
-      <Routes>
-        {/* ── Tabs principales con bottom nav ── */}
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/remises" element={<RemisesPage />} />
-          <Route path="/pedidos" element={<Orders />} />
-          <Route path="/perfil" element={<Profile />} />
-          <Route path="/direcciones" element={<Addresses />} />
+      <AuthProvider>
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: { borderRadius: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px' },
+            success: { iconTheme: { primary: '#e31b23', secondary: '#fff' } },
+          }}
+        />
+        <Routes>
+        {/* ── Registro / login / perfil ── */}
+        <Route path="/welcome" element={<Welcome />} />
+        <Route path="/complete-profile" element={<CompleteProfile />} />
+
+        <Route element={<CustomerGate />}>
+          {/* ── Tabs principales con bottom nav ── */}
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/remises" element={<RemisesPage />} />
+            <Route path="/pedidos" element={<Orders />} />
+            <Route path="/perfil" element={<Profile />} />
+            <Route path="/direcciones" element={<Addresses />} />
+          </Route>
+
+          {/* ── Secciones principales (sin bottom nav) ── */}
+          <Route path="/rotiserias" element={<Rotiserias />} />
+          <Route path="/encomiendas" element={<Encomiendas />} />
+          <Route path="/anunciate" element={<Anunciate />} />
+          <Route path="/sorteo" element={<Sorteo />} />
+          <Route path="/banner/:id" element={<BannerDetail />} />
+          <Route path="/restaurant/:id" element={<Restaurant />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/pedido/:id" element={<OrderTracking />} />
+          <Route path="/legal" element={<Legal />} />
+
+          {/* ── Flujo remises (sin bottom nav) ── */}
+          <Route path="/remis/pedir" element={<RequestTrip />} />
+          <Route path="/remis/viaje/:id" element={<TripTracking />} />
+          <Route path="/remis/viaje/:id/calificar" element={<RateDriver />} />
         </Route>
-
-        {/* ── Secciones principales (sin bottom nav) ── */}
-        <Route path="/rotiserias" element={<Rotiserias />} />
-        <Route path="/encomiendas" element={<Encomiendas />} />
-        <Route path="/anunciate" element={<Anunciate />} />
-        <Route path="/sorteo" element={<Sorteo />} />
-        <Route path="/banner/:id" element={<BannerDetail />} />
-        <Route path="/restaurant/:id" element={<Restaurant />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/pedido/:id" element={<OrderTracking />} />
-        <Route path="/legal" element={<Legal />} />
-
-        {/* ── Flujo remises (sin bottom nav) ── */}
-        <Route path="/remis/pedir" element={<RequestTrip />} />
-        <Route path="/remis/viaje/:id" element={<TripTracking />} />
-        <Route path="/remis/viaje/:id/calificar" element={<RateDriver />} />
 
         {/* ── Panel admin (sidebar propio) ── */}
         <Route path="/admin/login" element={<AdminLogin />} />
@@ -110,7 +121,8 @@ export default function App() {
         <Route path="/auth/callback" element={<GoogleCallback />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
