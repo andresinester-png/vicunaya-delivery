@@ -217,7 +217,7 @@ export default function Checkout() {
 
   const [restaurantInfo, setRestaurantInfo] = useState({ address: '', payment_alias: '' });
   const [receipt, setReceipt] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('transfer');
+  const [paymentMethod, setPaymentMethod] = useState(null);
   const [cashAmount, setCashAmount] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [aliasCopied, setAliasCopied] = useState(false);
