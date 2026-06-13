@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Search, SlidersHorizontal, ChevronDown, X, Check } from 'lucide-react';
@@ -55,12 +55,13 @@ export default function Rotiserias() {
   const [activeBanner, setActiveBanner] = useState(0);
   const [hoveredCat, setHoveredCat]   = useState(null);
   const [banners, setBanners]         = useState(BANNERS);
+  const touchStartX = useRef(null);
 
   useEffect(() => {
     if (activeBanner >= banners.length) setActiveBanner(0);
     const interval = setInterval(() => {
       setActiveBanner(prev => (prev + 1) % banners.length);
-    }, 3000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [banners.length]);
 
@@ -214,7 +215,17 @@ export default function Rotiserias() {
 
       {/* ── Carrusel de banners ── */}
       <div style={{ background:'#fff', padding:'16px 16px 0', position:'relative', zIndex:9 }}>
-        <div style={{ overflow:'hidden', borderRadius:16 }}>
+        <div
+          style={{ overflow:'hidden', borderRadius:16 }}
+          onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
+          onTouchEnd={e => {
+            if (touchStartX.current === null) return;
+            const delta = touchStartX.current - e.changedTouches[0].clientX;
+            if (delta > 50) setActiveBanner(prev => (prev + 1) % banners.length);
+            else if (delta < -50) setActiveBanner(prev => (prev - 1 + banners.length) % banners.length);
+            touchStartX.current = null;
+          }}
+        >
           <div style={{
             display:'flex',
             transform:`translateX(-${activeBanner * 100}%)`,
