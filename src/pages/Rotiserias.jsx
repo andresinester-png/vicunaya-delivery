@@ -111,11 +111,11 @@ export default function Rotiserias() {
       {/* ── Animación de scroll para imágenes de categorías ── */}
       <style>{`
         @keyframes categoryScroll {
-          0%   { transform: translateY(0%); }
-          40%  { transform: translateY(-100%); }
-          41%  { transform: translateY(100%); }
-          80%  { transform: translateY(0%); }
-          100% { transform: translateY(0%); }
+          0%   { transform: translateY(0%); opacity: 1; }
+          35%  { transform: translateY(-100%); opacity: 0; }
+          36%  { transform: translateY(100%); opacity: 0; }
+          50%  { transform: translateY(0%); opacity: 1; }
+          100% { transform: translateY(0%); opacity: 1; }
         }
         .category-scroll-img {
           animation: categoryScroll 3.5s linear infinite;
@@ -287,7 +287,7 @@ export default function Rotiserias() {
                       src={cat.image}
                       alt={cat.label}
                       style={{
-                        width:'100%', height:'130%', objectFit:'cover', borderRadius:12,
+                        width:'100%', height:'130%', objectFit:'cover', borderRadius:0,
                         animationDelay:`${idx * 0.4}s`,
                       }}
                     />
