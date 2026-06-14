@@ -14,8 +14,18 @@ export const CATEGORY_INFO = {
   medico:      { label: 'Médico',      emoji: '🩺', bg: '#EFF6FF', color: '#0284C7' },
   veterinaria: { label: 'Veterinaria', emoji: '🐾', bg: '#F0FDF4', color: '#16A34A' },
   gimnasio:    { label: 'Gimnasio',    emoji: '🏋️', bg: '#FEF2F2', color: '#DC2626' },
+  lavadero:    { label: 'Lavadero',    emoji: '🚗', bg: '#ECFEFF', color: '#0891B2' },
   otro:        { label: 'Otro',        emoji: '📅', bg: '#F3F4F6', color: '#6B7280' },
 };
+
+const FILTER_CATEGORIES = [
+  { key: 'peluqueria',  label: 'Peluquería',  emoji: '💈' },
+  { key: 'estetica',    label: 'Estética',    emoji: '✂️' },
+  { key: 'taller',      label: 'Taller',      emoji: '🔧' },
+  { key: 'veterinaria', label: 'Veterinaria', emoji: '🐾' },
+  { key: 'lavadero',    label: 'Lavadero',    emoji: '🚗' },
+  { key: 'Todos',       label: 'Todos',       emoji: '📅' },
+];
 
 const cardVariants = {
   hidden: { opacity: 0, y: 14 },
@@ -35,11 +45,6 @@ export default function Turnos() {
         setLoading(false);
       });
   }, []);
-
-  const availableCats = useMemo(() => {
-    const cats = new Set(businesses.map(b => b.category).filter(Boolean));
-    return ['Todos', ...cats];
-  }, [businesses]);
 
   const filtered = useMemo(() => {
     let list = businesses;
@@ -80,32 +85,29 @@ export default function Turnos() {
         )}
       </div>
 
-      {/* Chips de categoría */}
-      {availableCats.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto mb-4 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
-          {availableCats.map(cat => {
-            const active = catFilter === cat;
-            const info = CATEGORY_INFO[cat];
-            return (
-              <motion.button
-                key={cat}
-                whileTap={{ scale: 0.94 }}
-                onClick={() => setCatFilter(cat)}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-bold transition-colors"
-                style={{
-                  background: active ? '#e31b23' : '#fff',
-                  color: active ? '#fff' : '#374151',
-                  border: active ? 'none' : '1.5px solid #E5E7EB',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-                }}
-              >
-                {cat !== 'Todos' && <span>{info?.emoji ?? '📅'}</span>}
-                {cat === 'Todos' ? 'Todos' : (info?.label ?? cat)}
-              </motion.button>
-            );
-          })}
-        </div>
-      )}
+      {/* Grid de categorías */}
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        {FILTER_CATEGORIES.map(cat => {
+          const active = catFilter === cat.key;
+          return (
+            <motion.button
+              key={cat.key}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCatFilter(cat.key)}
+              className="aspect-square rounded-2xl flex flex-col items-center justify-center gap-1.5 bg-white"
+              style={{
+                border: active ? '2px solid #e31b23' : '2px solid transparent',
+                boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
+              }}
+            >
+              <span style={{ fontSize: 28 }}>{cat.emoji}</span>
+              <span className="text-xs font-bold" style={{ color: active ? '#e31b23' : '#374151' }}>
+                {cat.label}
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
 
       {/* Lista */}
       {loading ? (
