@@ -136,8 +136,9 @@ export default function Restaurant() {
   );
 
   const isOpen = isRestaurantOpen(restaurant);
-  const colors = CAT_GRADIENT[restaurant.category] ?? CAT_GRADIENT.default;
-  const emoji  = CAT_EMOJI[restaurant.category]    ?? CAT_EMOJI.default;
+  const primaryCat = Array.isArray(restaurant.category) ? restaurant.category[0] : restaurant.category;
+  const colors = CAT_GRADIENT[primaryCat] ?? CAT_GRADIENT.default;
+  const emoji  = CAT_EMOJI[primaryCat]    ?? CAT_EMOJI.default;
   const itemsByCategory = categories.reduce((acc, cat) => {
     acc[cat.id] = items.filter(i => i.category_id === cat.id);
     return acc;

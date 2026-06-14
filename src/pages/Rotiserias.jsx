@@ -7,11 +7,11 @@ import { supabase } from '../lib/supabase.js';
 import bgImage from '../screen.png';
 
 const DEMO_RESTAURANTS = [
-  { id:'demo-1', name:'La Rotisería de Don Carlos', category:'Rotisería', tags:'Rotisería, Milanesas, Pollos', rating:4.8, delivery_time:25, delivery_price:350, min_order:1500, is_active:true,  image_url:null },
-  { id:'demo-2', name:'Rotisería Los Hermanos',     category:'Rotisería', tags:'Rotisería, Minutas',          rating:4.6, delivery_time:35, delivery_price:400, min_order:1200, is_active:true,  image_url:null },
-  { id:'demo-3', name:'El Buen Gusto',              category:'Empanadas', tags:'Empanadas, Locro',            rating:4.9, delivery_time:30, delivery_price:250, min_order:800,  is_active:true,  image_url:null },
-  { id:'demo-4', name:'Pizza & Co.',                category:'Pizza',     tags:'Pizza, Pizzas a la piedra',   rating:4.5, delivery_time:20, delivery_price:300, min_order:1200, is_active:true,  image_url:null },
-  { id:'demo-5', name:'La Parrilla del Sur',        category:'Parrilla',  tags:'Parrilla, Asado, Carnes',     rating:4.7, delivery_time:40, delivery_price:500, min_order:2000, is_active:false, image_url:null },
+  { id:'demo-1', name:'La Rotisería de Don Carlos', category:['Rotisería'], tags:'Rotisería, Milanesas, Pollos', rating:4.8, delivery_time:25, delivery_price:350, min_order:1500, is_active:true,  image_url:null },
+  { id:'demo-2', name:'Rotisería Los Hermanos',     category:['Rotisería'], tags:'Rotisería, Minutas',          rating:4.6, delivery_time:35, delivery_price:400, min_order:1200, is_active:true,  image_url:null },
+  { id:'demo-3', name:'El Buen Gusto',              category:['Empanadas'], tags:'Empanadas, Locro',            rating:4.9, delivery_time:30, delivery_price:250, min_order:800,  is_active:true,  image_url:null },
+  { id:'demo-4', name:'Pizza & Co.',                category:['Pizza'],     tags:'Pizza, Pizzas a la piedra',   rating:4.5, delivery_time:20, delivery_price:300, min_order:1200, is_active:true,  image_url:null },
+  { id:'demo-5', name:'La Parrilla del Sur',        category:['Parrilla'],  tags:'Parrilla, Asado, Carnes',     rating:4.7, delivery_time:40, delivery_price:500, min_order:2000, is_active:false, image_url:null },
 ];
 
 const SORT_OPTIONS = [
@@ -81,7 +81,7 @@ export default function Rotiserias() {
 
   // Categorías disponibles en los datos cargados
   const availableCats = useMemo(() => {
-    const cats = new Set(restaurants.map(r => r.category).filter(Boolean));
+    const cats = new Set(restaurants.flatMap(r => Array.isArray(r.category) ? r.category : (r.category ? [r.category] : [])));
     return ['Todos', ...ALL_CATS.filter(c => c !== 'Todos' && cats.has(c))];
   }, [restaurants]);
 
@@ -91,17 +91,18 @@ export default function Rotiserias() {
     // Búsqueda
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter(r =>
-        r.name.toLowerCase().includes(q) ||
-        (r.category || '').toLowerCase().includes(q) ||
-        (r.tags || '').toLowerCase().includes(q) ||
-        (r.description || '').toLowerCase().includes(q)
-      );
+      list = list.filter(r => {
+        const cats = Array.isArray(r.category) ? r.category.join(' ') : (r.category || '');
+        return r.name.toLowerCase().includes(q) ||
+          cats.toLowerCase().includes(q) ||
+          (r.tags || '').toLowerCase().includes(q) ||
+          (r.description || '').toLowerCase().includes(q);
+      });
     }
 
     // Categoría
     if (catFilter !== 'Todos') {
-      list = list.filter(r => r.category === catFilter);
+      list = list.filter(r => Array.isArray(r.category) ? r.category.includes(catFilter) : r.category === catFilter);
     }
 
     // Ordenar

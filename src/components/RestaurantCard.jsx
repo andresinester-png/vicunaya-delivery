@@ -37,15 +37,17 @@ export default function RestaurantCard({ restaurant }) {
     rating, delivery_time, delivery_price, min_order, tags,
   } = restaurant;
 
-  const isOpen    = isRestaurantOpen(restaurant);
-  const grad      = CAT_GRADIENT[category] ?? CAT_GRADIENT.default;
-  const logoBg    = CAT_LOGO_BG[category]  ?? CAT_LOGO_BG.default;
-  const chipStyle = CAT_CHIP[category]     ?? CAT_CHIP.default;
+  const isOpen        = isRestaurantOpen(restaurant);
+  const categories    = Array.isArray(category) ? category : (category ? [category] : []);
+  const primaryCat    = categories[0];
+  const grad      = CAT_GRADIENT[primaryCat] ?? CAT_GRADIENT.default;
+  const logoBg    = CAT_LOGO_BG[primaryCat]  ?? CAT_LOGO_BG.default;
+  const chipStyle = CAT_CHIP[primaryCat]     ?? CAT_CHIP.default;
 
   // Chips: prioriza campo tags, sino usa category
   const chips = tags
     ? (Array.isArray(tags) ? tags : String(tags).split(',').map(t => t.trim()).filter(Boolean))
-    : (category ? [category] : []);
+    : categories;
 
   return (
     <motion.div

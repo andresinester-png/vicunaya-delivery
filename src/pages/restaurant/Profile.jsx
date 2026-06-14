@@ -149,7 +149,7 @@ export default function Profile() {
   const [form, setForm] = useState({
     name:             '',
     description:      '',
-    category:         '',
+    category:         [],
     whatsapp:         '',
     delivery_time:    '',
     delivery_price:   '',
@@ -179,7 +179,7 @@ export default function Profile() {
     setForm({
       name:             restaurant.name           || '',
       description:      restaurant.description    || '',
-      category:         restaurant.category       || '',
+      category:         Array.isArray(restaurant.category) ? restaurant.category : (restaurant.category ? [restaurant.category] : []),
       whatsapp:         restaurant.whatsapp       || '',
       delivery_time:    restaurant.delivery_time  ?? '',
       delivery_price:   restaurant.delivery_price ?? '',
@@ -218,7 +218,7 @@ export default function Profile() {
       const updates = {
         name:             form.name.trim(),
         description:      form.description.trim() || null,
-        category:         form.category || null,
+        category:         form.category.length > 0 ? form.category : null,
         whatsapp:         form.whatsapp.trim() || null,
         delivery_time:    form.delivery_time  !== '' ? Number(form.delivery_time)  : null,
         delivery_price:   form.delivery_price !== '' ? Number(form.delivery_price) : null,
@@ -318,11 +318,28 @@ export default function Profile() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Categoría</label>
-          <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className="input">
-            <option value="">Seleccioná una categoría</option>
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Categorías</label>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {CATEGORIES.map(c => {
+              const selected = form.category.includes(c);
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setForm(p => ({
+                    ...p,
+                    category: selected ? p.category.filter(x => x !== c) : [...p.category, c],
+                  }))}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
+                    selected ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-neutral-200'
+                  }`}
+                >
+                  {selected && <Check size={13} />}
+                  {c}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {field('WhatsApp (solo números)', 'whatsapp', 'tel', { placeholder: '3571123456' })}
