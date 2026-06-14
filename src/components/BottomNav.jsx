@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Car, ClipboardList, User } from 'lucide-react';
+import { Home, Car, ClipboardList, Calendar, User } from 'lucide-react';
 
 const TABS = [
   { to: '/',        icon: Home,          label: 'Inicio'  },
   // { to: '/remises', icon: Car, label: 'Remises' }, // Remises: deshabilitado temporalmente
   { to: '/pedidos', icon: ClipboardList, label: 'Pedidos' },
+  { to: '/turnos',  icon: Calendar,      label: 'Turnos'  },
   { to: '/perfil',  icon: User,          label: 'Perfil'  },
 ];
 

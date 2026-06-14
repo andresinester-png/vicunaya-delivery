@@ -9,6 +9,7 @@ import useCartStore from '../store/cartStore.js';
 const PAGE_TITLES = {
   '/remises': 'Remises',
   '/pedidos': 'Mis pedidos',
+  '/turnos':  'Turnos',
   '/perfil':  'Mi perfil',
 };
 

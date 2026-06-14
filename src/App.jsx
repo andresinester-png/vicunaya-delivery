@@ -26,6 +26,8 @@ import Restaurant from './pages/Restaurant.jsx';
 import Cart from './pages/Cart.jsx';
 import Checkout from './pages/Checkout.jsx';
 import OrderTracking from './pages/OrderTracking.jsx';
+import Turnos from './pages/Turnos.jsx';
+import TurnoNegocio from './pages/TurnoNegocio.jsx';
 
 // Remises: deshabilitado temporalmente
 // import RequestTrip from './pages/RequestTrip.jsx';
@@ -74,6 +76,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             {/* <Route path="/remises" element={<RemisesPage />} /> */}
             <Route path="/pedidos" element={<Orders />} />
+            <Route path="/turnos" element={<Turnos />} />
             <Route path="/perfil" element={<Profile />} />
             <Route path="/direcciones" element={<Addresses />} />
           </Route>
@@ -88,6 +91,7 @@ export default function App() {
           <Route path="/carrito" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/pedido/:id" element={<OrderTracking />} />
+          <Route path="/turnos/:id" element={<TurnoNegocio />} />
           <Route path="/legal" element={<Legal />} />
 
           {/* ── Flujo remises (sin bottom nav) — deshabilitado temporalmente ──
