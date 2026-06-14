@@ -215,7 +215,7 @@ export default function Checkout() {
   const totalVal = total();
   const { session, profile } = useAuth();
 
-  const [restaurantInfo, setRestaurantInfo] = useState({ address: '', payment_alias: '' });
+  const [restaurantInfo, setRestaurantInfo] = useState({ pickup_address: '', payment_alias: '' });
   const [receipt, setReceipt] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [cashAmount, setCashAmount] = useState('');
@@ -235,7 +235,7 @@ export default function Checkout() {
 
   useEffect(() => {
     if (!restaurantId) return;
-    supabase.from('restaurants').select('address, payment_alias').eq('id', restaurantId).single()
+    supabase.from('restaurants').select('pickup_address, payment_alias').eq('id', restaurantId).single()
       .then(({ data }) => { if (data) setRestaurantInfo(data); });
   }, [restaurantId]);
 
@@ -405,7 +405,7 @@ export default function Checkout() {
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-lg">🏪</div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-sm">Retirás en el local</p>
-              <p className="truncate text-xs text-gray-500 mt-0.5">{restaurantInfo.address || restaurantName}</p>
+              <p className="truncate text-xs text-gray-500 mt-0.5">{restaurantInfo.pickup_address || restaurantName}</p>
             </div>
           </div>
         )}
