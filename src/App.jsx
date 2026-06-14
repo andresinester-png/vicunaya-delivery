@@ -6,13 +6,13 @@ import UpdateBanner from './components/UpdateBanner.jsx';
 import CustomerGate from './components/CustomerGate.jsx';
 import MainLayout from './components/MainLayout.jsx';
 import AdminGuard from './components/AdminGuard.jsx';
-import DriverGuard from './components/DriverGuard.jsx';
+// import DriverGuard from './components/DriverGuard.jsx'; // Remises: deshabilitado temporalmente
 import RestaurantGuard from './components/RestaurantGuard.jsx';
 
 import Welcome from './pages/Welcome.jsx';
 import CompleteProfile from './pages/CompleteProfile.jsx';
 import Home from './pages/Home.jsx';
-import RemisesPage from './pages/Remises.jsx';
+// import RemisesPage from './pages/Remises.jsx'; // Remises: deshabilitado temporalmente
 import Orders from './pages/Orders.jsx';
 import Profile from './pages/Profile.jsx';
 import Addresses from './pages/Addresses.jsx';
@@ -27,9 +27,10 @@ import Cart from './pages/Cart.jsx';
 import Checkout from './pages/Checkout.jsx';
 import OrderTracking from './pages/OrderTracking.jsx';
 
-import RequestTrip from './pages/RequestTrip.jsx';
-import TripTracking from './pages/TripTracking.jsx';
-import RateDriver from './pages/RateDriver.jsx';
+// Remises: deshabilitado temporalmente
+// import RequestTrip from './pages/RequestTrip.jsx';
+// import TripTracking from './pages/TripTracking.jsx';
+// import RateDriver from './pages/RateDriver.jsx';
 
 import AdminLogin from './pages/admin/AdminLogin.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
@@ -44,8 +45,9 @@ import RestaurantMenu from './pages/restaurant/Menu.jsx';
 import RestaurantProfile from './pages/restaurant/Profile.jsx';
 import RestaurantEarnings from './pages/restaurant/Earnings.jsx';
 
-import DriverLogin from './pages/driver/DriverLogin.jsx';
-import DriverDashboard from './pages/driver/DriverDashboard.jsx';
+// Remises: deshabilitado temporalmente
+// import DriverLogin from './pages/driver/DriverLogin.jsx';
+// import DriverDashboard from './pages/driver/DriverDashboard.jsx';
 import GoogleCallback from './pages/GoogleCallback.jsx';
 import Legal from './pages/Legal.jsx';
 
@@ -70,7 +72,7 @@ export default function App() {
           {/* ── Tabs principales con bottom nav ── */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/remises" element={<RemisesPage />} />
+            {/* <Route path="/remises" element={<RemisesPage />} /> */}
             <Route path="/pedidos" element={<Orders />} />
             <Route path="/perfil" element={<Profile />} />
             <Route path="/direcciones" element={<Addresses />} />
@@ -88,10 +90,11 @@ export default function App() {
           <Route path="/pedido/:id" element={<OrderTracking />} />
           <Route path="/legal" element={<Legal />} />
 
-          {/* ── Flujo remises (sin bottom nav) ── */}
+          {/* ── Flujo remises (sin bottom nav) — deshabilitado temporalmente ──
           <Route path="/remis/pedir" element={<RequestTrip />} />
           <Route path="/remis/viaje/:id" element={<TripTracking />} />
           <Route path="/remis/viaje/:id/calificar" element={<RateDriver />} />
+          ── */}
         </Route>
 
         {/* ── Panel admin (sidebar propio) ── */}
@@ -115,11 +118,12 @@ export default function App() {
           <Route path="ganancias" element={<RestaurantEarnings />} />
         </Route>
 
-        {/* ── Panel conductor ── */}
+        {/* ── Panel conductor — deshabilitado temporalmente ──
         <Route path="/driver/login" element={<DriverLogin />} />
         <Route path="/driver" element={<DriverGuard />}>
           <Route index element={<DriverDashboard />} />
         </Route>
+        ── */}
 
         {/* ── OAuth callback ── */}
         <Route path="/auth/callback" element={<GoogleCallback />} />

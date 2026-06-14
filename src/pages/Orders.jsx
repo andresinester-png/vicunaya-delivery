@@ -57,7 +57,10 @@ export default function Orders() {
     <div className="px-4 py-4">
       {/* Tabs */}
       <div className="flex bg-white rounded-xl p-1 mb-4 border border-neutral-100">
-        {[['delivery', ShoppingBag, 'Delivery'], ['remises', Car, 'Remises']].map(([key, Icon, label]) => (
+        {[
+          ['delivery', ShoppingBag, 'Delivery'],
+          // ['remises', Car, 'Remises'], // Remises: deshabilitado temporalmente
+        ].map(([key, Icon, label]) => (
           <button key={key} onClick={() => setTab(key)}
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all ${tab === key ? 'bg-primary text-white shadow' : 'text-gray-500 hover:text-gray-700'}`}>
             <Icon size={15} /> {label}

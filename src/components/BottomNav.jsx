@@ -4,7 +4,7 @@ import { Home, Car, ClipboardList, User } from 'lucide-react';
 
 const TABS = [
   { to: '/',        icon: Home,          label: 'Inicio'  },
-  { to: '/remises', icon: Car,           label: 'Remises' },
+  // { to: '/remises', icon: Car, label: 'Remises' }, // Remises: deshabilitado temporalmente
   { to: '/pedidos', icon: ClipboardList, label: 'Pedidos' },
   { to: '/perfil',  icon: User,          label: 'Perfil'  },
 ];

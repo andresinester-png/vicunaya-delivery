@@ -105,7 +105,7 @@ export default function Profile() {
         {[
           { label: 'Mis direcciones',  desc: 'Guardá tus lugares favoritos',  href: '/direcciones',  emoji: '📍' },
           { label: 'Panel de negocio', desc: 'Gestión de pedidos y menú',     href: '/admin/login',  emoji: '🏪' },
-          { label: 'Panel conductor',  desc: 'Activarte y recibir viajes',    href: '/driver/login', emoji: '🚗' },
+          // { label: 'Panel conductor', desc: 'Activarte y recibir viajes', href: '/driver/login', emoji: '🚗' }, // Remises: deshabilitado temporalmente
           { label: 'Legal',            desc: 'Privacidad y términos de uso',  href: '/legal',        emoji: '📄' },
         ].map(item => (
           <a key={item.href} href={item.href} className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
