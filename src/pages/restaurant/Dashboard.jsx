@@ -9,12 +9,12 @@ import { useRestaurant } from '../../contexts/RestaurantContext.js';
 import { subscribeToPush } from '../../lib/pushNotifications.js';
 
 const STATUS_LABELS = {
-  pending:   { label: 'Pendiente',  dot: 'bg-amber-400' },
-  accepted:  { label: 'Aceptado',   dot: 'bg-sky-400'   },
-  preparing: { label: 'Preparando', dot: 'bg-blue-500'  },
-  ready:     { label: 'En camino',  dot: 'bg-primary'   },
-  delivered: { label: 'Entregado',  dot: 'bg-green-500' },
-  rejected:  { label: 'Rechazado',  dot: 'bg-red-400'   },
+  pending:   { label: 'Pendiente',  dot: 'bg-amber-400', bg: 'bg-amber-50',   text: 'text-amber-700' },
+  accepted:  { label: 'Aceptado',   dot: 'bg-sky-400',   bg: 'bg-sky-50',     text: 'text-sky-700'   },
+  preparing: { label: 'Preparando', dot: 'bg-blue-500',  bg: 'bg-blue-50',    text: 'text-blue-700'  },
+  ready:     { label: 'En camino',  dot: 'bg-primary',   bg: 'bg-primary-bg', text: 'text-primary'   },
+  delivered: { label: 'Entregado',  dot: 'bg-green-500', bg: 'bg-green-50',   text: 'text-green-700' },
+  rejected:  { label: 'Rechazado',  dot: 'bg-red-400',   bg: 'bg-red-50',     text: 'text-red-700'   },
 };
 
 const NEXT_STATUS = { accepted: 'preparing', preparing: 'ready', ready: 'delivered' };
@@ -25,10 +25,12 @@ const FILTERS = [
   ['preparing', 'Preparando'], ['ready', 'En camino'], ['delivered', 'Entregados'],
 ];
 
+const CARD = 'card rounded-2xl border border-black/[0.04] shadow-[0_2px_16px_rgba(0,0,0,0.06)]';
+
 function StatusBadge({ status }) {
   const info = STATUS_LABELS[status] || STATUS_LABELS.pending;
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-full whitespace-nowrap">
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${info.bg} ${info.text}`}>
       <span className={`w-2 h-2 rounded-full shrink-0 ${info.dot}`} />
       {info.label}
     </span>
@@ -241,7 +243,7 @@ export default function Dashboard() {
 
       {/* Métricas */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="card p-4">
+        <div className={`${CARD} p-4`}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-gray-500">Pedidos nuevos</span>
             <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
@@ -250,7 +252,7 @@ export default function Dashboard() {
           </div>
           <p className="text-2xl font-extrabold text-gray-900">{newOrders}</p>
         </div>
-        <div className="card p-4">
+        <div className={`${CARD} p-4`}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-gray-500">En preparación</span>
             <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
@@ -259,7 +261,7 @@ export default function Dashboard() {
           </div>
           <p className="text-2xl font-extrabold text-gray-900">{preparingOrders}</p>
         </div>
-        <div className="card p-4">
+        <div className={`${CARD} p-4`}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-gray-500">Despachados</span>
             <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
@@ -268,7 +270,7 @@ export default function Dashboard() {
           </div>
           <p className="text-2xl font-extrabold text-gray-900">{dispatchedOrders}</p>
         </div>
-        <div className="card p-4 bg-gradient-to-br from-primary to-primary-dark text-white shadow-[0_8px_24px_rgba(227,27,35,0.3)]">
+        <div className="card rounded-2xl p-4 bg-gradient-to-br from-primary to-primary-dark text-white shadow-[0_8px_24px_rgba(227,27,35,0.3)]">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-white/80">Ventas del día</span>
             <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center">
@@ -300,25 +302,25 @@ export default function Dashboard() {
         <div className="flex gap-2 mb-4 flex-wrap">
           {FILTERS.map(([key, label]) => (
             <button key={key} onClick={() => setFilter(key)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filter === key ? 'bg-primary text-white' : 'bg-white text-gray-600 border border-neutral-200 hover:border-primary'}`}>
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filter === key ? 'bg-[#111827] text-white' : 'bg-white text-gray-600 border border-neutral-200 hover:border-primary'}`}>
               {label}
             </button>
           ))}
         </div>
 
         {filtered.length === 0 ? (
-          <div className="card p-10 text-center text-gray-400">
+          <div className={`${CARD} p-10 text-center text-gray-400`}>
             <Clock size={40} strokeWidth={1} className="mx-auto mb-3" />
             <p>No hay pedidos en esta categoría</p>
           </div>
         ) : (
           <>
             {/* Desktop: tabla */}
-            <div className="hidden lg:block card overflow-hidden">
+            <div className={`hidden lg:block ${CARD}`}>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm min-w-[1000px]">
                   <thead>
-                    <tr className="text-left text-[11px] text-gray-400 uppercase tracking-wider border-b border-neutral-100">
+                    <tr className="text-left text-[11px] text-gray-400 uppercase tracking-wider border-b border-neutral-100 bg-[#FAFAFA]">
                       <th className="px-5 py-3 font-semibold">Pedido</th>
                       <th className="px-5 py-3 font-semibold">Productos</th>
                       <th className="px-5 py-3 font-semibold">Entrega</th>
@@ -333,7 +335,7 @@ export default function Dashboard() {
                       const itemsLabel = (order.items || []).map(i => `${i.qty}x ${i.name}`).join(', ');
                       const hasAction = order.order_status === 'pending' || !!NEXT_STATUS[order.order_status];
                       return (
-                        <tr key={order.id} className="border-b border-neutral-50 last:border-0 align-top">
+                        <tr key={order.id} className="border-b border-neutral-50 last:border-0 align-top hover:bg-[#FAFAFA] transition-colors">
                           <td className="px-5 py-4">
                             <p className="font-extrabold text-primary">#{order.id.slice(0, 6).toUpperCase()}</p>
                             <p className="text-xs text-gray-500 mt-0.5">{order.customer_name}</p>
@@ -379,7 +381,7 @@ export default function Dashboard() {
               {filtered.map(order => {
                 const hasAction = order.order_status === 'pending' || !!NEXT_STATUS[order.order_status];
                 return (
-                  <div key={order.id} className="card p-4">
+                  <div key={order.id} className={`${CARD} p-4`}>
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div>
                         <p className="font-extrabold text-primary text-lg">#{order.id.slice(0, 6).toUpperCase()}</p>
@@ -444,7 +446,7 @@ export default function Dashboard() {
 
       {/* Horas pico + Productos más vendidos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="card p-5">
+        <div className={`${CARD} p-5`}>
           <h2 className="font-bold text-base mb-4 flex items-center gap-2"><BarChart3 size={16} className="text-primary" /> Horas pico</h2>
           {orders.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">Sin datos suficientes</p>
@@ -455,7 +457,7 @@ export default function Dashboard() {
                   <span className="text-[10px] text-gray-400">{count > 0 ? count : ''}</span>
                   <div className="w-full rounded-t-md bg-primary-bg overflow-hidden flex-1 flex flex-col justify-end">
                     <div
-                      className="bg-primary rounded-t-md w-full transition-all duration-500"
+                      className="bg-gradient-to-t from-primary-dark to-primary rounded-t-md w-full transition-all duration-500"
                       style={{ height: `${(count / maxHourCount) * 100}%`, minHeight: count > 0 ? '4px' : '0' }}
                     />
                   </div>
@@ -466,7 +468,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="card p-5">
+        <div className={`${CARD} p-5`}>
           <h2 className="font-bold text-base mb-4 flex items-center gap-2"><Star size={16} className="text-primary" /> Productos más vendidos</h2>
           {topProducts.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">Sin datos suficientes</p>
@@ -479,7 +481,7 @@ export default function Dashboard() {
                     <span className="font-bold text-gray-400 shrink-0">{p.qty}</span>
                   </div>
                   <div className="bg-gray-100 rounded-full h-2 overflow-hidden">
-                    <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: `${(p.qty / maxProductQty) * 100}%` }} />
+                    <div className="bg-gradient-to-r from-primary-dark to-primary h-full rounded-full transition-all duration-500" style={{ width: `${(p.qty / maxProductQty) * 100}%` }} />
                   </div>
                 </div>
               ))}

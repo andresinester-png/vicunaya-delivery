@@ -11,6 +11,8 @@ const navItems = [
   { to: '/restaurant/panel/ganancias', icon: TrendingUp,      label: 'Ganancias'       },
 ];
 
+const SIDEBAR_BG = { background: 'linear-gradient(160deg, #1a1f2e 0%, #161b27 100%)' };
+
 export default function RestaurantLayout({ children }) {
   const navigate    = useNavigate();
   const restaurant  = useRestaurant();
@@ -25,7 +27,7 @@ export default function RestaurantLayout({ children }) {
     <div className="min-h-screen bg-[#F0F2F5] flex">
 
       {/* ── Sidebar (desktop only) ── */}
-      <aside className="hidden lg:flex w-56 bg-[#1a1f2e] flex-col shrink-0 sticky top-0 h-screen">
+      <aside style={SIDEBAR_BG} className="hidden lg:flex w-56 flex-col shrink-0 sticky top-0 h-screen">
         <div className="px-5 py-5 border-b border-white/10">
           <span className="text-primary font-extrabold text-xl">Vicuña</span>
           <span className="bg-primary text-white font-extrabold text-xl px-1 rounded-md ml-0.5">Ya</span>
@@ -39,8 +41,8 @@ export default function RestaurantLayout({ children }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-white/5 text-white shadow-[inset_3px_0_0_0_#e31b23]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                    ? 'bg-[rgba(227,27,35,0.18)] text-white shadow-[inset_3px_0_0_0_#e31b23]'
+                    : 'text-[rgba(255,255,255,0.5)] hover:bg-white/5 hover:text-[rgba(255,255,255,0.8)]'
                 }`
               }
             >
@@ -51,7 +53,7 @@ export default function RestaurantLayout({ children }) {
         </nav>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-6 py-4 text-sm text-slate-400 hover:text-primary transition-colors border-t border-white/10"
+          className="flex items-center gap-3 px-6 py-4 text-sm text-[rgba(255,255,255,0.5)] hover:text-primary transition-colors border-t border-white/10"
         >
           <LogOut size={16} /> Cerrar sesión
         </button>
@@ -74,7 +76,7 @@ export default function RestaurantLayout({ children }) {
 
       {/* ── Bottom nav (mobile only) ── */}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-neutral-100 flex items-stretch"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#1a1f2e] border-t border-white/10 flex items-stretch"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {navItems.map(({ to, icon: Icon, label }) => (
@@ -83,7 +85,7 @@ export default function RestaurantLayout({ children }) {
             to={to}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors ${
-                isActive ? 'text-primary bg-primary-bg shadow-[inset_0_2px_0_0_#e31b23]' : 'text-gray-400'
+                isActive ? 'bg-[rgba(227,27,35,0.18)] text-white shadow-[inset_0_2px_0_0_#e31b23]' : 'text-[rgba(255,255,255,0.5)]'
               }`
             }
           >
@@ -97,7 +99,7 @@ export default function RestaurantLayout({ children }) {
         ))}
         <button
           onClick={handleLogout}
-          className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold text-gray-400 hover:text-red-500 transition-colors"
+          className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold text-[rgba(255,255,255,0.5)] hover:text-primary transition-colors"
         >
           <LogOut size={20} strokeWidth={1.8} />
           Salir
