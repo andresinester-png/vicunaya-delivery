@@ -154,6 +154,7 @@ export default function Profile() {
     delivery_time:    '',
     delivery_price:   '',
     min_order:        '',
+    pickup_address:   '',
     is_active:        true,
     payment_alias:    '',
     opening_time:     '',
@@ -184,6 +185,7 @@ export default function Profile() {
       delivery_time:    restaurant.delivery_time  ?? '',
       delivery_price:   restaurant.delivery_price ?? '',
       min_order:        restaurant.min_order      ?? '',
+      pickup_address:   restaurant.pickup_address || '',
       is_active:        restaurant.is_active      ?? true,
       payment_alias:    restaurant.payment_alias  || '',
       opening_time:     restaurant.opening_time   ? restaurant.opening_time.slice(0, 5)   : '',
@@ -223,6 +225,7 @@ export default function Profile() {
         delivery_time:    form.delivery_time  !== '' ? Number(form.delivery_time)  : null,
         delivery_price:   form.delivery_price !== '' ? Number(form.delivery_price) : null,
         min_order:        form.min_order      !== '' ? Number(form.min_order)      : null,
+        pickup_address:   form.pickup_address.trim() || null,
         is_active:        form.is_active,
         payment_alias:    form.payment_alias.trim() || null,
         cover_position:   `${coverPosition.x}% ${coverPosition.y}%`,
@@ -371,6 +374,26 @@ export default function Profile() {
           />
           <p className="text-xs text-gray-400 mt-1.5">
             Los clientes verán este alias para realizar la transferencia al seleccionar ese método de pago.
+          </p>
+        </div>
+      </div>
+
+      {/* Retiro en el local */}
+      <div className="card p-5 space-y-3">
+        <h2 className="font-bold text-base">Retiro en el local</h2>
+        <div>
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+            Dirección para retiro en local
+          </label>
+          <input
+            type="text"
+            value={form.pickup_address}
+            onChange={e => setForm(p => ({ ...p, pickup_address: e.target.value }))}
+            placeholder="Ej: San Martín 456, Vicuña Mackenna"
+            className="input"
+          />
+          <p className="text-xs text-gray-400 mt-1.5">
+            Se le mostrará al cliente cuando elija retirar su pedido en el local.
           </p>
         </div>
       </div>

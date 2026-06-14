@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { X, Share2, ChevronRight, StickyNote, Plus, Minus } from 'lucide-react';
+import { X, Share2, ChevronRight, StickyNote, Plus, Minus, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 
@@ -54,7 +54,7 @@ export default function OrderTracking() {
     const fetchOrder = async () => {
       const { data } = await supabase
         .from('orders')
-        .select('*, restaurants(name)')
+        .select('*, restaurants(name, pickup_address)')
         .eq('id', id)
         .single();
       setOrder(data);
@@ -334,38 +334,65 @@ export default function OrderTracking() {
             </div>
 
             {/* Dirección */}
-            <div className="rounded-2xl border border-gray-100 p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-xl shrink-0">📍</div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-gray-900">Lo recibís en</p>
-                  <p className="text-sm text-gray-600 mt-0.5">{order.customer_address}</p>
-                  {order.delivery_notes && (
-                    <div className="flex items-start gap-1.5 mt-1.5">
-                      <StickyNote size={13} className="text-gray-400 shrink-0 mt-0.5" />
-                      <p className="text-xs text-gray-400">{order.delivery_notes}</p>
-                    </div>
-                  )}
+            {order.delivery_method === 'pickup' ? (
+              <div className="rounded-2xl border border-gray-100 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
+                    <MapPin size={20} className="text-gray-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-gray-900">Retirás en el local</p>
+                    <p className="text-sm text-gray-600 mt-0.5">
+                      {order.restaurants?.pickup_address || order.restaurants?.name}
+                    </p>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleChangeAddress(addrCountdown)}
-                  disabled={addrCountdown <= 0}
-                  className="shrink-0 text-sm font-bold transition-colors"
-                  style={{
-                    color: addrCountdown > 0 ? '#e31b23' : '#D1D5DB',
-                    cursor: addrCountdown > 0 ? 'pointer' : 'not-allowed',
-                  }}
-                >
-                  Cambiar
-                </button>
+                {order.restaurants?.pickup_address && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.restaurants.pickup_address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 flex items-center justify-center gap-2 w-full rounded-xl border border-gray-200 py-2.5 text-sm font-bold text-gray-900 hover:bg-gray-50 transition-colors"
+                  >
+                    <MapPin size={15} />
+                    Ver en Google Maps
+                  </a>
+                )}
               </div>
-              {addrCountdown > 0 && (
-                <p className="text-xs text-gray-400 mt-2 ml-[52px]">
-                  Podés cambiarla durante {fmtCountdown(addrCountdown)}
-                </p>
-              )}
-            </div>
+            ) : (
+              <div className="rounded-2xl border border-gray-100 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-xl shrink-0">📍</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-gray-900">Lo recibís en</p>
+                    <p className="text-sm text-gray-600 mt-0.5">{order.customer_address}</p>
+                    {order.delivery_notes && (
+                      <div className="flex items-start gap-1.5 mt-1.5">
+                        <StickyNote size={13} className="text-gray-400 shrink-0 mt-0.5" />
+                        <p className="text-xs text-gray-400">{order.delivery_notes}</p>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleChangeAddress(addrCountdown)}
+                    disabled={addrCountdown <= 0}
+                    className="shrink-0 text-sm font-bold transition-colors"
+                    style={{
+                      color: addrCountdown > 0 ? '#e31b23' : '#D1D5DB',
+                      cursor: addrCountdown > 0 ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    Cambiar
+                  </button>
+                </div>
+                {addrCountdown > 0 && (
+                  <p className="text-xs text-gray-400 mt-2 ml-[52px]">
+                    Podés cambiarla durante {fmtCountdown(addrCountdown)}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         ) : itemsCountdown <= 0 ? (
           <div className="rounded-2xl border border-gray-100 p-6 text-center">
