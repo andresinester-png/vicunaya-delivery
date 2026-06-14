@@ -29,9 +29,14 @@ export default {
           '0%':   { backgroundPosition: '-400px 0' },
           '100%': { backgroundPosition: '400px 0' },
         },
+        'slide-up': {
+          '0%':   { transform: 'translateY(100%)', opacity: '0' },
+          '100%': { transform: 'translateY(0)',     opacity: '1' },
+        },
       },
       animation: {
-        shimmer: 'shimmer 1.4s ease-in-out infinite',
+        shimmer:    'shimmer 1.4s ease-in-out infinite',
+        'slide-up': 'slide-up 0.35s ease-out',
       },
     },
   },

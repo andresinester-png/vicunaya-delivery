@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import { AuthProvider } from './context/AuthContext.jsx';
+import UpdateBanner from './components/UpdateBanner.jsx';
 import CustomerGate from './components/CustomerGate.jsx';
 import MainLayout from './components/MainLayout.jsx';
 import AdminGuard from './components/AdminGuard.jsx';
@@ -59,6 +60,7 @@ export default function App() {
             success: { iconTheme: { primary: '#e31b23', secondary: '#fff' } },
           }}
         />
+        <UpdateBanner />
         <Routes>
         {/* ── Registro / login / perfil ── */}
         <Route path="/welcome" element={<Welcome />} />
