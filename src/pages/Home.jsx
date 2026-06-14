@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, CalendarClock } from 'lucide-react';
 import bgImage from '../screen.png';
 
 const CARDS = [
@@ -20,6 +20,15 @@ const CARDS = [
     image: 'https://hvmdumuedqfoifgayleh.supabase.co/storage/v1/object/public/IMAGES/ChatGPT%20Image%2012%20may%202026,%2021_25_26.png',
     to: '/encomiendas',
     accent: '#7C3AED',
+  },
+  {
+    id: 'turnos',
+    title: 'Turnos',
+    subtitle: 'Peluquerías, talleres y más',
+    to: '/turnos',
+    accent: '#FFC700',
+    gradient: 'linear-gradient(135deg, #ff5b5f 0%, #e31b23 55%, #8e0e13 100%)',
+    icon: CalendarClock,
   },
 ];
 
@@ -131,16 +140,29 @@ export default function Home() {
                 boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
               }}
             >
-              {/* Imagen de la card */}
-              <img
-                src={card.image}
-                alt={card.title}
-                style={{
-                  position: 'absolute', inset: 0,
-                  width: '100%', height: '100%',
-                  objectFit: 'cover',
-                }}
-              />
+              {/* Imagen o fondo de la card */}
+              {card.image ? (
+                <img
+                  src={card.image}
+                  alt={card.title}
+                  style={{
+                    position: 'absolute', inset: 0,
+                    width: '100%', height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              ) : (
+                <div style={{ position: 'absolute', inset: 0, background: card.gradient }} />
+              )}
+
+              {/* Ícono decorativo */}
+              {card.icon && (
+                <card.icon
+                  size={130}
+                  strokeWidth={1.5}
+                  style={{ position: 'absolute', right: -22, bottom: -18, color: 'rgba(255,255,255,0.18)' }}
+                />
+              )}
 
               {/* Overlay de la card */}
               <div style={{
