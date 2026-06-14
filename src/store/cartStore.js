@@ -7,7 +7,6 @@ const useCartStore = create(
       items: [],
       restaurantId: null,
       restaurantName: '',
-      restaurantWhatsapp: '',
       restaurantImage: '',
       fulfillmentMethod: 'delivery', // 'delivery' | 'pickup'
 
@@ -28,7 +27,6 @@ const useCartStore = create(
             items: [...get().items, { ...item, qty: 1, extras: 0 }],
             restaurantId: restaurant.id,
             restaurantName: restaurant.name,
-            restaurantWhatsapp: restaurant.whatsapp,
             restaurantImage: restaurant.image_url,
           });
         }
@@ -61,7 +59,6 @@ const useCartStore = create(
             items: [...currentItems, cartItem],
             restaurantId: restaurant.id,
             restaurantName: restaurant.name,
-            restaurantWhatsapp: restaurant.whatsapp,
             restaurantImage: restaurant.image_url,
           });
         }
@@ -79,7 +76,7 @@ const useCartStore = create(
 
       setFulfillmentMethod: (method) => set({ fulfillmentMethod: method }),
 
-      clear: () => set({ items: [], restaurantId: null, restaurantName: '', restaurantWhatsapp: '', restaurantImage: '', fulfillmentMethod: 'delivery' }),
+      clear: () => set({ items: [], restaurantId: null, restaurantName: '', restaurantImage: '', fulfillmentMethod: 'delivery' }),
 
       total: () => get().items.reduce(
         (sum, i) => sum + i.price * i.qty + (i.extras || 0) * (i.extra_price || 0),

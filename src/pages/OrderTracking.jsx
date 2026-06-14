@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { X, Share2, HelpCircle, ChevronRight, StickyNote, Plus, Minus } from 'lucide-react';
+import { X, Share2, ChevronRight, StickyNote, Plus, Minus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 
@@ -54,7 +54,7 @@ export default function OrderTracking() {
     const fetchOrder = async () => {
       const { data } = await supabase
         .from('orders')
-        .select('*, restaurants(name, whatsapp)')
+        .select('*, restaurants(name)')
         .eq('id', id)
         .single();
       setOrder(data);
@@ -100,15 +100,6 @@ export default function OrderTracking() {
     } else {
       await navigator.clipboard.writeText(url);
       toast.success('Enlace copiado');
-    }
-  };
-
-  const handleHelp = () => {
-    if (order?.restaurants?.whatsapp) {
-      const msg = `Hola, soy ${order.customer_name}. Necesito ayuda con mi pedido #${id.slice(0, 8).toUpperCase()}`;
-      window.open(`https://wa.me/${order.restaurants.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
-    } else {
-      toast('Pronto vas a poder contactar a soporte desde aquí', { icon: 'ℹ️' });
     }
   };
 
@@ -196,11 +187,6 @@ export default function OrderTracking() {
       <div className="text-5xl mb-4">😞</div>
       <h2 className="font-extrabold text-xl text-gray-900 mb-2">Pedido rechazado</h2>
       <p className="text-gray-500 text-sm mb-6">El restaurante no puede tomar tu pedido en este momento.</p>
-      {order.restaurants?.whatsapp && (
-        <button onClick={handleHelp} className="btn-outline flex items-center gap-2 mb-3">
-          <HelpCircle size={16} /> Contactar al local
-        </button>
-      )}
       <button onClick={() => navigate('/')} className="btn-primary">Volver al inicio</button>
     </div>
   );
@@ -233,9 +219,6 @@ export default function OrderTracking() {
         <div className="flex items-center gap-1">
           <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-gray-100 transition-colors text-sm font-bold text-gray-900">
             <Share2 size={16} /> Compartir
-          </button>
-          <button onClick={handleHelp} className="flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-gray-100 transition-colors text-sm font-bold text-gray-900">
-            <HelpCircle size={16} /> Ayuda
           </button>
         </div>
       </div>
