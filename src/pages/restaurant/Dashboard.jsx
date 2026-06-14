@@ -9,12 +9,12 @@ import { useRestaurant } from '../../contexts/RestaurantContext.js';
 import { subscribeToPush } from '../../lib/pushNotifications.js';
 
 const STATUS_LABELS = {
-  pending:   { label: 'Pendiente',  color: 'bg-amber-100 text-amber-700',  icon: Clock        },
-  accepted:  { label: 'Aceptado',   color: 'bg-blue-100 text-blue-700',    icon: CheckCircle  },
-  preparing: { label: 'Preparando', color: 'bg-blue-100 text-blue-700',    icon: ChefHat      },
-  ready:     { label: 'En camino',  color: 'bg-primary-bg text-primary',   icon: Bike         },
-  delivered: { label: 'Entregado',  color: 'bg-green-100 text-green-700',  icon: PackageCheck },
-  rejected:  { label: 'Rechazado',  color: 'bg-red-100 text-red-700',      icon: XCircle      },
+  pending:   { label: 'Pendiente',  dot: 'bg-amber-400' },
+  accepted:  { label: 'Aceptado',   dot: 'bg-sky-400'   },
+  preparing: { label: 'Preparando', dot: 'bg-blue-500'  },
+  ready:     { label: 'En camino',  dot: 'bg-primary'   },
+  delivered: { label: 'Entregado',  dot: 'bg-green-500' },
+  rejected:  { label: 'Rechazado',  dot: 'bg-red-400'   },
 };
 
 const NEXT_STATUS = { accepted: 'preparing', preparing: 'ready', ready: 'delivered' };
@@ -24,6 +24,16 @@ const FILTERS = [
   ['all', 'Todos'], ['pending', 'Pendientes'], ['accepted', 'Aceptados'],
   ['preparing', 'Preparando'], ['ready', 'En camino'], ['delivered', 'Entregados'],
 ];
+
+function StatusBadge({ status }) {
+  const info = STATUS_LABELS[status] || STATUS_LABELS.pending;
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-full whitespace-nowrap">
+      <span className={`w-2 h-2 rounded-full shrink-0 ${info.dot}`} />
+      {info.label}
+    </span>
+  );
+}
 
 function elapsedLabel(createdAt, now) {
   const diffMin = Math.max(0, Math.floor((now - new Date(createdAt).getTime()) / 60000));
@@ -39,7 +49,7 @@ function OrderActions({ order, onUpdate, fullWidth }) {
   if (order.order_status === 'pending') {
     return (
       <div className={`flex gap-2 ${fullWidth ? 'w-full' : ''}`}>
-        <button onClick={() => onUpdate(order.id, 'accepted')} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 transition-colors whitespace-nowrap ${w}`}>
+        <button onClick={() => onUpdate(order.id, 'accepted')} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 transition-colors whitespace-nowrap shadow-[0_4px_14px_rgba(34,197,94,0.35)] ${w}`}>
           <CheckCircle size={15} /> Aceptar
         </button>
         <button onClick={() => onUpdate(order.id, 'rejected')} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 border-red-200 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors whitespace-nowrap ${w}`}>
@@ -50,21 +60,21 @@ function OrderActions({ order, onUpdate, fullWidth }) {
   }
   if (order.order_status === 'accepted') {
     return (
-      <button onClick={() => onUpdate(order.id, 'preparing')} className={`btn-outline py-2.5 px-4 text-sm flex items-center gap-1.5 whitespace-nowrap ${fullWidth ? 'w-full justify-center' : ''}`}>
+      <button onClick={() => onUpdate(order.id, 'preparing')} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition-colors whitespace-nowrap shadow-[0_4px_14px_rgba(37,99,235,0.35)] ${fullWidth ? 'w-full justify-center' : ''}`}>
         <ChefHat size={15} /> Empezar a preparar
       </button>
     );
   }
   if (order.order_status === 'preparing') {
     return (
-      <button onClick={() => onUpdate(order.id, 'ready')} className={`btn-outline py-2.5 px-4 text-sm flex items-center gap-1.5 whitespace-nowrap ${fullWidth ? 'w-full justify-center' : ''}`}>
+      <button onClick={() => onUpdate(order.id, 'ready')} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-white font-bold text-sm hover:bg-primary-dark transition-colors whitespace-nowrap shadow-[0_4px_14px_rgba(227,27,35,0.35)] ${fullWidth ? 'w-full justify-center' : ''}`}>
         <PackageCheck size={15} /> Marcar como listo
       </button>
     );
   }
   if (order.order_status === 'ready') {
     return (
-      <button onClick={() => onUpdate(order.id, 'delivered')} className={`btn-outline py-2.5 px-4 text-sm flex items-center gap-1.5 whitespace-nowrap ${fullWidth ? 'w-full justify-center' : ''}`}>
+      <button onClick={() => onUpdate(order.id, 'delivered')} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 transition-colors whitespace-nowrap shadow-[0_4px_14px_rgba(34,197,94,0.35)] ${fullWidth ? 'w-full justify-center' : ''}`}>
         <Bike size={15} /> Marcar en camino
       </button>
     );
@@ -258,7 +268,7 @@ export default function Dashboard() {
           </div>
           <p className="text-2xl font-extrabold text-gray-900">{dispatchedOrders}</p>
         </div>
-        <div className="card p-4 bg-primary text-white">
+        <div className="card p-4 bg-gradient-to-br from-primary to-primary-dark text-white shadow-[0_8px_24px_rgba(227,27,35,0.3)]">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-white/80">Ventas del día</span>
             <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center">
@@ -274,9 +284,15 @@ export default function Dashboard() {
         <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
           <h2 className="font-extrabold text-xl">Pedidos en vivo</h2>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="badge bg-amber-100 text-amber-700"><Clock size={12} /> {pendingCount} pendientes</span>
-            <span className="badge bg-blue-100 text-blue-700"><ChefHat size={12} /> {inKitchenCount} en preparación</span>
-            <span className="badge bg-primary-bg text-primary"><Bike size={12} /> {onTheWayCount} en camino</span>
+            <span className="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-card">
+              <span className="w-2 h-2 rounded-full bg-amber-400" /> {pendingCount} pendientes
+            </span>
+            <span className="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-card">
+              <span className="w-2 h-2 rounded-full bg-blue-500" /> {inKitchenCount} en preparación
+            </span>
+            <span className="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-card">
+              <span className="w-2 h-2 rounded-full bg-primary" /> {onTheWayCount} en camino
+            </span>
           </div>
         </div>
 
@@ -314,8 +330,6 @@ export default function Dashboard() {
                   </thead>
                   <tbody>
                     {filtered.map(order => {
-                      const statusInfo = STATUS_LABELS[order.order_status] || STATUS_LABELS.pending;
-                      const StatusIcon = statusInfo.icon;
                       const itemsLabel = (order.items || []).map(i => `${i.qty}x ${i.name}`).join(', ');
                       const hasAction = order.order_status === 'pending' || !!NEXT_STATUS[order.order_status];
                       return (
@@ -347,7 +361,7 @@ export default function Dashboard() {
                             </span>
                           </td>
                           <td className="px-5 py-4">
-                            <span className={`badge ${statusInfo.color}`}><StatusIcon size={12} /> {statusInfo.label}</span>
+                            <StatusBadge status={order.order_status} />
                           </td>
                           <td className="px-5 py-4">
                             {hasAction ? <OrderActions order={order} onUpdate={updateStatus} /> : <span className="text-xs text-gray-400">—</span>}
@@ -363,8 +377,6 @@ export default function Dashboard() {
             {/* Mobile: cards */}
             <div className="lg:hidden space-y-3">
               {filtered.map(order => {
-                const statusInfo = STATUS_LABELS[order.order_status] || STATUS_LABELS.pending;
-                const StatusIcon = statusInfo.icon;
                 const hasAction = order.order_status === 'pending' || !!NEXT_STATUS[order.order_status];
                 return (
                   <div key={order.id} className="card p-4">
@@ -374,7 +386,7 @@ export default function Dashboard() {
                         <p className="text-sm font-semibold text-gray-800 mt-0.5">{order.customer_name}</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className={`badge ${statusInfo.color}`}><StatusIcon size={12} /> {statusInfo.label}</span>
+                        <StatusBadge status={order.order_status} />
                         <p className="text-xs text-gray-400 mt-1.5 flex items-center justify-end gap-1">
                           <Timer size={12} /> {elapsedLabel(order.created_at, now)}
                         </p>

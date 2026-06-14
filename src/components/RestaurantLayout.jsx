@@ -22,14 +22,14 @@ export default function RestaurantLayout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-[#F0F2F5] flex">
 
       {/* ── Sidebar (desktop only) ── */}
-      <aside className="hidden lg:flex w-56 bg-white shadow-nav flex-col shrink-0 sticky top-0 h-screen">
-        <div className="px-5 py-5 border-b border-neutral-100">
+      <aside className="hidden lg:flex w-56 bg-[#1a1f2e] flex-col shrink-0 sticky top-0 h-screen">
+        <div className="px-5 py-5 border-b border-white/10">
           <span className="text-primary font-extrabold text-xl">Vicuña</span>
           <span className="bg-primary text-white font-extrabold text-xl px-1 rounded-md ml-0.5">Ya</span>
-          <p className="text-xs text-gray-500 mt-0.5 truncate">{restaurant?.name || 'Mi restaurante'}</p>
+          <p className="text-xs text-slate-400 mt-0.5 truncate">{restaurant?.name || 'Mi restaurante'}</p>
         </div>
         <nav className="flex-1 py-4 space-y-1 px-3">
           {navItems.map(({ to, icon: Icon, label }) => (
@@ -38,7 +38,9 @@ export default function RestaurantLayout({ children }) {
               to={to}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  isActive ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'
+                  isActive
+                    ? 'bg-white/5 text-white shadow-[inset_3px_0_0_0_#e31b23]'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`
               }
             >
@@ -49,7 +51,7 @@ export default function RestaurantLayout({ children }) {
         </nav>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-6 py-4 text-sm text-gray-500 hover:text-red-500 transition-colors border-t border-neutral-100"
+          className="flex items-center gap-3 px-6 py-4 text-sm text-slate-400 hover:text-primary transition-colors border-t border-white/10"
         >
           <LogOut size={16} /> Cerrar sesión
         </button>
@@ -59,10 +61,10 @@ export default function RestaurantLayout({ children }) {
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Mobile header */}
-        <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-neutral-100 px-4 py-3 flex items-center shrink-0">
+        <header className="lg:hidden sticky top-0 z-30 bg-[#1a1f2e] border-b border-white/10 px-4 py-3 flex items-center shrink-0">
           <span className="text-primary font-extrabold text-lg">Vicuña</span>
           <span className="bg-primary text-white font-extrabold text-lg px-1 rounded-md ml-0.5">Ya</span>
-          <span className="ml-2 text-xs text-gray-400 font-medium truncate">{restaurant?.name || 'Mi restaurante'}</span>
+          <span className="ml-2 text-xs text-slate-400 font-medium truncate">{restaurant?.name || 'Mi restaurante'}</span>
         </header>
 
         <main className="flex-1 p-4 lg:p-6 overflow-auto pb-24 lg:pb-6">
@@ -81,7 +83,7 @@ export default function RestaurantLayout({ children }) {
             to={to}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors ${
-                isActive ? 'text-primary' : 'text-gray-400'
+                isActive ? 'text-primary bg-primary-bg shadow-[inset_0_2px_0_0_#e31b23]' : 'text-gray-400'
               }`
             }
           >
