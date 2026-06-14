@@ -10,7 +10,24 @@
       "Skill(supabase:supabase)",
       "mcp__plugin_supabase_supabase__execute_sql",
       "Bash(npm install *)",
-      "Bash(npx web-push *)"
+      "Bash(npx web-push *)",
+      "Bash(npx eslint *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Read(//c/Users/emine/vicunaya/**)",
+      "Bash(find . -maxdepth 4 -iname \"*supabase*\" -not -path \"*/node_modules/*\")",
+      "Bash(npx vite *)",
+      "Bash(git checkout *)",
+      "Bash(git clean *)",
+      "Bash(curl -s http://localhost:5181/)",
+      "Bash(git fetch *)",
+      "WebFetch(domain:vercel.com)",
+      "Read(//tmp/**)",
+      "Bash(curl *)",
+      "Skill(run)",
+      "mcp__plugin_supabase_supabase__get_project",
+      "Bash(grep -E '^\\\\.env$|^\\\\.env\\\\.')"
     ]
   }
 }

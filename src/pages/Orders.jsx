@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Car, Clock, ChevronRight, PackageCheck } from 'lucide-react';
+import { ShoppingBag, Car, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase.js';
 import useProfileStore from '../store/profileStore.js';
 
@@ -21,12 +21,18 @@ const TRIP_STATUS_LABEL = {
   cancelled:   { label: 'Cancelado',  color: 'bg-red-100 text-red-700' },
 };
 
+const ACTIVE_STATUSES = ['pending', 'accepted', 'preparing', 'ready'];
+const PAST_STATUSES = ['delivered', 'rejected'];
+
+const ORDER_STEPS = ['Confirmado', 'Preparando', 'En camino', 'Entregado'];
+const ORDER_STEP_INDEX = { pending: 0, accepted: 0, preparing: 1, ready: 2, delivered: 3 };
+
 export default function Orders() {
   const phone = useProfileStore(s => s.phone);
   const [orders, setOrders] = useState([]);
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('delivery');
+  const tab = 'delivery';
 
   useEffect(() => {
     if (!phone) { setLoading(false); return; }
@@ -51,23 +57,14 @@ export default function Orders() {
     </div>
   );
 
+  const activeOrder = orders.find(o => ACTIVE_STATUSES.includes(o.order_status));
+  const pastOrders = orders.filter(o => PAST_STATUSES.includes(o.order_status));
+  const activeStatus = activeOrder && (ORDER_STATUS_LABEL[activeOrder.order_status] || ORDER_STATUS_LABEL.pending);
+  const activeStep = activeOrder ? (ORDER_STEP_INDEX[activeOrder.order_status] ?? 0) : 0;
   const empty = tab === 'delivery' ? orders.length === 0 : trips.length === 0;
 
   return (
     <div className="px-4 py-4">
-      {/* Tabs */}
-      <div className="flex bg-white rounded-xl p-1 mb-4 border border-neutral-100">
-        {[
-          ['delivery', ShoppingBag, 'Delivery'],
-          // ['remises', Car, 'Remises'], // Remises: deshabilitado temporalmente
-        ].map(([key, Icon, label]) => (
-          <button key={key} onClick={() => setTab(key)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all ${tab === key ? 'bg-primary text-white shadow' : 'text-gray-500 hover:text-gray-700'}`}>
-            <Icon size={15} /> {label}
-          </button>
-        ))}
-      </div>
-
       {loading ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => <div key={i} className="card h-24 animate-pulse bg-gray-200" />)}
@@ -78,28 +75,83 @@ export default function Orders() {
           <p className="mt-3 text-gray-500 font-medium">Sin {tab === 'delivery' ? 'pedidos' : 'viajes'} aún</p>
         </div>
       ) : tab === 'delivery' ? (
-        <div className="space-y-3">
-          {orders.map(order => {
-            const st = ORDER_STATUS_LABEL[order.order_status] || ORDER_STATUS_LABEL.pending;
-            return (
-              <Link key={order.id} to={`/pedido/${order.id}`} className="card flex items-center gap-4 p-4 hover:shadow-card-hover transition-all">
-                <div className="w-11 h-11 bg-primary-bg rounded-xl flex items-center justify-center shrink-0">
-                  <ShoppingBag className="text-primary" size={20} />
+        <div className="space-y-6">
+          {activeOrder && (
+            <section>
+              <h2 className="text-sm font-extrabold text-gray-900 mb-2 px-1">Pedido en curso</h2>
+              <Link to={`/pedido/${activeOrder.id}`} className="card block p-4 hover:shadow-card-hover transition-all">
+                <div className="flex items-center gap-4">
+                  <div className="w-11 h-11 bg-primary-bg rounded-xl flex items-center justify-center shrink-0">
+                    <ShoppingBag className="text-primary" size={20} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm">{activeOrder.restaurants?.name || 'Restaurante'}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {new Date(activeOrder.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    <span className={`badge text-xs mt-1 ${activeStatus.color}`}>{activeStatus.label}</span>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-primary">${activeOrder.total?.toLocaleString('es-AR')}</p>
+                    <ChevronRight size={16} className="text-gray-300 ml-auto mt-1" />
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm">{order.restaurants?.name || 'Restaurante'}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {new Date(order.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                  <span className={`badge text-xs mt-1 ${st.color}`}>{st.label}</span>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-bold text-primary">${order.total?.toLocaleString('es-AR')}</p>
-                  <ChevronRight size={16} className="text-gray-300 ml-auto mt-1" />
+
+                {/* Barra de progreso */}
+                <div className="mt-4">
+                  <div className="flex items-center">
+                    {ORDER_STEPS.map((_, idx) => (
+                      <Fragment key={idx}>
+                        <div
+                          className="w-2.5 h-2.5 rounded-full shrink-0 transition-colors duration-300"
+                          style={{ background: idx <= activeStep ? '#e31b23' : '#E5E7EB' }}
+                        />
+                        {idx < ORDER_STEPS.length - 1 && (
+                          <div
+                            className="flex-1 h-1 rounded-full mx-1 transition-colors duration-300"
+                            style={{ background: idx < activeStep ? '#e31b23' : '#E5E7EB' }}
+                          />
+                        )}
+                      </Fragment>
+                    ))}
+                  </div>
+                  <div className="flex justify-between mt-1.5">
+                    {ORDER_STEPS.map((label, idx) => (
+                      <span key={label} className="text-[9px] font-bold" style={{ color: idx <= activeStep ? '#111' : '#9CA3AF' }}>
+                        {label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </Link>
-            );
-          })}
+            </section>
+          )}
+
+          {pastOrders.length > 0 && (
+            <section>
+              <h2 className="text-sm font-extrabold text-gray-900 mb-2 px-1">Pedidos anteriores</h2>
+              <div className="space-y-2 grayscale">
+                {pastOrders.map(order => {
+                  const st = ORDER_STATUS_LABEL[order.order_status] || ORDER_STATUS_LABEL.pending;
+                  return (
+                    <Link key={order.id} to={`/pedido/${order.id}`} className="card flex items-center gap-3 p-3 hover:shadow-card-hover transition-all">
+                      <div className="w-9 h-9 bg-primary-bg rounded-lg flex items-center justify-center shrink-0">
+                        <ShoppingBag className="text-primary" size={16} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate">{order.restaurants?.name || 'Restaurante'}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {new Date(order.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                        <span className={`badge text-xs mt-1 ${st.color}`}>{st.label}</span>
+                      </div>
+                      <p className="font-bold text-sm text-primary shrink-0">${order.total?.toLocaleString('es-AR')}</p>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
