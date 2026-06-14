@@ -104,7 +104,6 @@ export default function Profile() {
       <div className="card divide-y divide-neutral-100">
         {[
           { label: 'Mis direcciones',  desc: 'Guardá tus lugares favoritos',  href: '/direcciones',  emoji: '📍' },
-          { label: 'Panel de negocio', desc: 'Gestión de pedidos y menú',     href: '/admin/login',  emoji: '🏪' },
           // { label: 'Panel conductor', desc: 'Activarte y recibir viajes', href: '/driver/login', emoji: '🚗' }, // Remises: deshabilitado temporalmente
           { label: 'Legal',            desc: 'Privacidad y términos de uso',  href: '/legal',        emoji: '📄' },
         ].map(item => (
