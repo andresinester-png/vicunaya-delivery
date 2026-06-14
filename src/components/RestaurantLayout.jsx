@@ -25,7 +25,7 @@ export default function RestaurantLayout({ children }) {
     <div className="min-h-screen bg-gray-100 flex">
 
       {/* ── Sidebar (desktop only) ── */}
-      <aside className="hidden md:flex w-56 bg-white shadow-nav flex-col shrink-0 sticky top-0 h-screen">
+      <aside className="hidden lg:flex w-56 bg-white shadow-nav flex-col shrink-0 sticky top-0 h-screen">
         <div className="px-5 py-5 border-b border-neutral-100">
           <span className="text-primary font-extrabold text-xl">Vicuña</span>
           <span className="bg-primary text-white font-extrabold text-xl px-1 rounded-md ml-0.5">Ya</span>
@@ -59,20 +59,20 @@ export default function RestaurantLayout({ children }) {
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Mobile header */}
-        <header className="md:hidden sticky top-0 z-30 bg-white border-b border-neutral-100 px-4 py-3 flex items-center shrink-0">
+        <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-neutral-100 px-4 py-3 flex items-center shrink-0">
           <span className="text-primary font-extrabold text-lg">Vicuña</span>
           <span className="bg-primary text-white font-extrabold text-lg px-1 rounded-md ml-0.5">Ya</span>
           <span className="ml-2 text-xs text-gray-400 font-medium truncate">{restaurant?.name || 'Mi restaurante'}</span>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-auto pb-24 md:pb-6">
+        <main className="flex-1 p-4 lg:p-6 overflow-auto pb-24 lg:pb-6">
           {children}
         </main>
       </div>
 
       {/* ── Bottom nav (mobile only) ── */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-neutral-100 flex items-stretch"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-neutral-100 flex items-stretch"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {navItems.map(({ to, icon: Icon, label }) => (
