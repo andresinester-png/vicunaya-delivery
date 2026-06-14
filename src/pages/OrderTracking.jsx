@@ -349,7 +349,7 @@ export default function OrderTracking() {
                 </div>
                 {order.restaurants?.pickup_address && (
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.restaurants.pickup_address)}`}
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${order.restaurants.pickup_address}, Vicuña Mackenna, Córdoba`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-3 flex items-center justify-center gap-2 w-full rounded-xl border border-gray-200 py-2.5 text-sm font-bold text-gray-900 hover:bg-gray-50 transition-colors"
