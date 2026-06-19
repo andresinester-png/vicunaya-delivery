@@ -5,7 +5,20 @@ import { ChevronLeft, MapPin, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 import useProfileStore from '../store/profileStore.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { subscribeToPush } from '../lib/pushNotifications.js';
 import { CATEGORY_INFO } from './Turnos.jsx';
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.148 17.64 11.84 17.64 9.2z" fill="#fff"/>
+      <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#fff" opacity="0.85"/>
+      <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#fff" opacity="0.7"/>
+      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#fff" opacity="0.55"/>
+    </svg>
+  );
+}
 
 const STEP_LABELS = ['Servicio', 'Día', 'Horario', 'Confirmar'];
 const DAYS_AHEAD = 14;
@@ -86,6 +99,7 @@ export default function TurnoNegocio() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { name: profileName, phone: profilePhone } = useProfileStore();
+  const { session } = useAuth();
 
   const [business, setBusiness] = useState(null);
   const [services, setServices] = useState([]);
@@ -101,6 +115,38 @@ export default function TurnoNegocio() {
   const [form, setForm] = useState({ name: '', phone: '', notes: '' });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const [loginMode, setLoginMode] = useState(null); // null | 'email'
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [loginSubmitting, setLoginSubmitting] = useState(false);
+
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) toast.error('No se pudo conectar con Google');
+  };
+
+  const handleEmailLogin = async (e) => {
+    e.preventDefault();
+    if (!loginForm.email.trim() || !loginForm.password.trim()) {
+      toast.error('Completá email y contraseña');
+      return;
+    }
+    setLoginSubmitting(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: loginForm.email.trim(),
+        password: loginForm.password,
+      });
+      if (error) throw error;
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoginSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     setForm(f => ({ ...f, name: f.name || profileName || '', phone: f.phone || profilePhone || '' }));
@@ -199,9 +245,13 @@ export default function TurnoNegocio() {
         end_time: endTime,
         status: 'pending',
         notes: form.notes.trim() || null,
+        customer_user_id: session?.user?.id ?? null,
       });
       if (error) throw error;
       setSuccess(true);
+      if (session?.user?.id) {
+        subscribeToPush(session.user.id, supabase).catch(() => {});
+      }
     } catch (err) {
       toast.error('Error al reservar: ' + err.message);
     } finally {
@@ -425,66 +475,126 @@ export default function TurnoNegocio() {
 
             {step === 4 && (
               <>
-                <div className="card p-5 space-y-3">
-                  <h2 className="font-bold text-base">Tus datos</h2>
-                  <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1 block">Tu nombre</label>
-                    <input
-                      value={form.name}
-                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      placeholder="Juan García"
-                      className="input"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1 block">Teléfono</label>
-                    <input
-                      value={form.phone}
-                      onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                      placeholder="3571-123456"
-                      className="input"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1 block">Notas (opcional)</label>
-                    <input
-                      value={form.notes}
-                      onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                      placeholder="Algo que quieras avisar..."
-                      className="input"
-                    />
-                  </div>
-                </div>
+                {!session ? (
+                  <div className="card p-5 space-y-4">
+                    <div>
+                      <h2 className="font-bold text-base">Iniciá sesión para confirmar</h2>
+                      <p className="text-sm text-gray-500 mt-1">Guardamos tu turno en tu cuenta y te avisamos 2hs antes.</p>
+                    </div>
 
-                <div className="card p-5">
-                  <h2 className="font-bold text-base mb-3">Resumen</h2>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Negocio</span>
-                      <span className="font-semibold text-right">{business.name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Servicio</span>
-                      <span className="font-semibold text-right">{selectedService?.name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Día</span>
-                      <span className="font-semibold text-right capitalize">
-                        {selectedDay?.date.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Horario</span>
-                      <span className="font-semibold text-right">{fmtTime(selectedTime)}</span>
-                    </div>
-                    {selectedService?.price != null && (
-                      <div className="border-t border-neutral-100 mt-2 pt-2 flex justify-between font-bold text-base">
-                        <span>Precio</span>
-                        <span className="text-primary">${Number(selectedService.price).toLocaleString('es-AR')}</span>
+                    {loginMode !== 'email' ? (
+                      <div className="space-y-3">
+                        <button
+                          type="button"
+                          onClick={handleGoogleLogin}
+                          className="btn-primary w-full flex items-center justify-center gap-2"
+                        >
+                          <GoogleIcon /> Continuar con Google
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLoginMode('email')}
+                          className="w-full py-2 text-sm font-bold text-primary text-center"
+                        >
+                          Usar email y contraseña
+                        </button>
                       </div>
+                    ) : (
+                      <form onSubmit={handleEmailLogin} className="space-y-3">
+                        <input
+                          type="email"
+                          required
+                          value={loginForm.email}
+                          onChange={e => setLoginForm(f => ({ ...f, email: e.target.value }))}
+                          placeholder="Email"
+                          className="input"
+                          autoCapitalize="none"
+                        />
+                        <input
+                          type="password"
+                          required
+                          value={loginForm.password}
+                          onChange={e => setLoginForm(f => ({ ...f, password: e.target.value }))}
+                          placeholder="Contraseña"
+                          className="input"
+                        />
+                        <button type="submit" disabled={loginSubmitting} className="btn-primary w-full">
+                          {loginSubmitting ? 'Un momento...' : 'Iniciar sesión'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLoginMode(null)}
+                          className="w-full py-1 text-sm font-bold text-gray-400 text-center"
+                        >
+                          Volver
+                        </button>
+                      </form>
                     )}
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="card p-5 space-y-3">
+                      <h2 className="font-bold text-base">Tus datos</h2>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600 mb-1 block">Tu nombre</label>
+                        <input
+                          value={form.name}
+                          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                          placeholder="Juan García"
+                          className="input"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600 mb-1 block">Teléfono</label>
+                        <input
+                          value={form.phone}
+                          onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                          placeholder="3571-123456"
+                          className="input"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600 mb-1 block">Notas (opcional)</label>
+                        <input
+                          value={form.notes}
+                          onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                          placeholder="Algo que quieras avisar..."
+                          className="input"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="card p-5">
+                      <h2 className="font-bold text-base mb-3">Resumen</h2>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Negocio</span>
+                          <span className="font-semibold text-right">{business.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Servicio</span>
+                          <span className="font-semibold text-right">{selectedService?.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Día</span>
+                          <span className="font-semibold text-right capitalize">
+                            {selectedDay?.date.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Horario</span>
+                          <span className="font-semibold text-right">{fmtTime(selectedTime)}</span>
+                        </div>
+                        {selectedService?.price != null && (
+                          <div className="border-t border-neutral-100 mt-2 pt-2 flex justify-between font-bold text-base">
+                            <span>Precio</span>
+                            <span className="text-primary">${Number(selectedService.price).toLocaleString('es-AR')}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
               </>
             )}
           </motion.div>
@@ -505,7 +615,7 @@ export default function TurnoNegocio() {
             <button
               type="button"
               onClick={handleConfirm}
-              disabled={submitting || !form.name.trim() || !form.phone.trim()}
+              disabled={submitting || !session || !form.name.trim() || !form.phone.trim()}
               className="btn-primary w-full"
             >
               {submitting ? 'Reservando...' : 'Confirmar turno'}
