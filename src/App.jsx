@@ -28,6 +28,7 @@ import Checkout from './pages/Checkout.jsx';
 import OrderTracking from './pages/OrderTracking.jsx';
 import Turnos from './pages/Turnos.jsx';
 import TurnoNegocio from './pages/TurnoNegocio.jsx';
+import MisTurnos from './pages/MisTurnos.jsx';
 
 // Remises: deshabilitado temporalmente
 // import RequestTrip from './pages/RequestTrip.jsx';
@@ -76,8 +77,9 @@ export default function App() {
             <Route path="/" element={<Home />} />
             {/* <Route path="/remises" element={<RemisesPage />} /> */}
             <Route path="/pedidos" element={<Orders />} />
-            <Route path="/turnos" element={<Turnos />} />
-            <Route path="/perfil" element={<Profile />} />
+            <Route path="/turnos"     element={<Turnos />}     />
+            <Route path="/mis-turnos" element={<MisTurnos />}  />
+            <Route path="/perfil"     element={<Profile />}    />
             <Route path="/direcciones" element={<Addresses />} />
           </Route>
 
