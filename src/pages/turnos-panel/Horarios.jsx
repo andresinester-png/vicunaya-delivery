@@ -175,6 +175,7 @@ export default function Horarios() {
   const [daySlots, setDaySlots]             = useState([]);
   const [loadingSlots, setLoadingSlots]     = useState(false);
   const [cancellingShift, setCancellingShift] = useState(null);
+  const [confirmDialog, setConfirmDialog]     = useState(null);
 
   // Specific dates
   const [dateRows, setDateRows]     = useState([]);
@@ -310,22 +311,35 @@ export default function Horarios() {
     setLoadingSlots(false);
   }
 
-  async function cancelShiftSlots(shift) {
-    const band = shift === 'morning' ? morning : afternoon;
+  function requestBulkCancel(type) {
     const targets = daySlots.filter(s => {
+      if (!s.is_active) return false;
       const t = String(s.start_time).slice(0, 5);
-      return t >= band.start_time && t < band.end_time && s.is_active;
+      if (type === 'morning')   return t >= morning.start_time   && t < morning.end_time;
+      if (type === 'afternoon') return t >= afternoon.start_time && t < afternoon.end_time;
+      return true;
     });
     if (!targets.length) { toast.error('No hay turnos activos para cancelar'); return; }
-    setCancellingShift(shift);
+    const label = type === 'morning' ? 'mañana completa' : type === 'afternoon' ? 'tarde completa' : 'todo el día';
+    setConfirmDialog({ type, label, count: targets.length });
+  }
+
+  async function cancelBulkSlots(type) {
+    const targets = daySlots.filter(s => {
+      if (!s.is_active) return false;
+      const t = String(s.start_time).slice(0, 5);
+      if (type === 'morning')   return t >= morning.start_time   && t < morning.end_time;
+      if (type === 'afternoon') return t >= afternoon.start_time && t < afternoon.end_time;
+      return true;
+    });
+    if (!targets.length) return;
     const { error } = await supabase
       .from('appointment_slots')
       .update({ is_active: false })
       .in('id', targets.map(s => s.id));
-    setCancellingShift(null);
     if (error) { toast.error('Error al cancelar'); return; }
     setDaySlots(prev => prev.map(s => targets.find(t => t.id === s.id) ? { ...s, is_active: false } : s));
-    toast.success('Franja cancelada para ese día');
+    toast.success(`${targets.length} turno${targets.length !== 1 ? 's' : ''} cancelado${targets.length !== 1 ? 's' : ''}`);
   }
 
   async function cancelSingleSlot(slotId) {
@@ -663,6 +677,42 @@ export default function Horarios() {
                               <p className="text-xs text-gray-400 py-2">No hay slots generados para este día todavía. Usá "Generar turnos" primero.</p>
                             ) : (
                               <>
+                                {/* Bulk cancel buttons */}
+                                {(() => {
+                                  const activeMorning   = mSlots.filter(s => s.is_active).length;
+                                  const activeAfternoon = aSlots.filter(s => s.is_active).length;
+                                  const activeAll = activeMorning + activeAfternoon;
+                                  if (!activeAll) return null;
+                                  return (
+                                    <div className="flex gap-1.5 flex-wrap">
+                                      {item.hasMorning && activeMorning > 0 && (
+                                        <button
+                                          onClick={() => requestBulkCancel('morning')}
+                                          className="flex items-center gap-1 text-xs border border-red-200 text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-semibold transition-colors"
+                                        >
+                                          <Sun size={11} /> Cancelar mañana ({activeMorning})
+                                        </button>
+                                      )}
+                                      {item.hasAfternoon && activeAfternoon > 0 && (
+                                        <button
+                                          onClick={() => requestBulkCancel('afternoon')}
+                                          className="flex items-center gap-1 text-xs border border-red-200 text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-semibold transition-colors"
+                                        >
+                                          <Sunset size={11} /> Cancelar tarde ({activeAfternoon})
+                                        </button>
+                                      )}
+                                      {item.hasMorning && item.hasAfternoon && activeAll > 0 && (
+                                        <button
+                                          onClick={() => requestBulkCancel('all')}
+                                          className="flex items-center gap-1 text-xs border border-red-300 text-red-700 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-semibold transition-colors"
+                                        >
+                                          Cancelar todo el día ({activeAll})
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
+
                                 {item.hasMorning && mSlots.length > 0 && (
                                   <div className="space-y-1.5">
                                     <div className="flex items-center gap-1.5">
@@ -731,6 +781,40 @@ export default function Horarios() {
             "Guardar" guarda la plantilla semanal. "Generar turnos" la convierte en slots para los próximos 28 días. Hacé click en un día de la vista previa para cancelar sus turnos puntuales.
           </p>
         </>
+      )}
+
+      {/* Confirmation modal */}
+      {confirmDialog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setConfirmDialog(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl p-6 mx-4 max-w-sm w-full"
+            onClick={e => e.stopPropagation()}
+          >
+            <p className="font-bold text-gray-900 text-base">
+              ¿Cancelar {confirmDialog.label}?
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Se cancelarán <strong>{confirmDialog.count}</strong> turno{confirmDialog.count !== 1 ? 's' : ''}. Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-2 mt-5 justify-end">
+              <button
+                onClick={() => setConfirmDialog(null)}
+                className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                No, volver
+              </button>
+              <button
+                onClick={() => { const d = confirmDialog; setConfirmDialog(null); cancelBulkSlots(d.type); }}
+                className="px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors"
+              >
+                Sí, cancelar {confirmDialog.count} turno{confirmDialog.count !== 1 ? 's' : ''}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
