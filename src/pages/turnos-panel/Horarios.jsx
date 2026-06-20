@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { useTurnosNegocio } from '../../contexts/TurnosNegocioContext.js';
 import toast from 'react-hot-toast';
-import { Zap, CalendarDays, CalendarPlus, Sun, Sunset, Clock, ChevronDown, ChevronUp, Trash2, Plus, X } from 'lucide-react';
+import { CalendarDays, CalendarPlus, Sun, Sunset, Clock, ChevronDown, ChevronUp, Trash2, Plus, X } from 'lucide-react';
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DAY_LABEL = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 0: 'Dom' };
@@ -38,7 +38,7 @@ function generateSlotsForShift(shift, date, dur, negocioId, profId) {
     slots.push({
       business_id: negocioId,
       professional_id: profId,
-      specific_date: date.toISOString().slice(0, 10),
+      specific_date: localDateStr(date),
       start_time: `${sH}:${sM}`,
       end_time: `${eH}:${eM}`,
       is_active: true,
@@ -62,7 +62,10 @@ function groupDateSchedules(rows) {
 }
 
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-const todayISO = () => new Date().toISOString().slice(0, 10);
+function localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+const todayISO = () => localDateStr(new Date());
 
 // ── Day toggle button ──────────────────────────────────────────────────────
 function DayButton({ dow, active, disabled, onClick, color }) {
@@ -181,7 +184,6 @@ export default function Horarios() {
 
   const [loading, setLoading]       = useState(false);
   const [saving, setSaving]         = useState(false);
-  const [generating, setGenerating] = useState(false);
 
   // ── Professionals ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -238,16 +240,58 @@ export default function Horarios() {
     const dur = parseInt(duration, 10);
     if (!dur || dur <= 0) { toast.error('Ingresá una duración válida'); return; }
     setSaving(true);
-    const rows = [
+
+    // 1. Save bands
+    const bandRows = [
       { business_id: negocio.id, professional_id: selectedProf, type: 'morning',   slot_duration_minutes: dur, ...morning },
       { business_id: negocio.id, professional_id: selectedProf, type: 'afternoon', slot_duration_minutes: dur, ...afternoon },
     ];
-    const { error } = await supabase
+    const { error: bandErr } = await supabase
       .from('appointment_bands')
-      .upsert(rows, { onConflict: 'professional_id,type' });
+      .upsert(bandRows, { onConflict: 'professional_id,type' });
+    if (bandErr) { setSaving(false); toast.error('Error al guardar horario'); return; }
+
+    // 2. Delete existing future slots and regenerate fresh with correct duration
+    const todayStr = todayISO();
+    await supabase
+      .from('appointment_slots')
+      .delete()
+      .eq('professional_id', selectedProf)
+      .gte('specific_date', todayStr);
+
+    // 3. Build new slots for next 28 days
+    const today = new Date();
+    const slotsToInsert = [];
+    for (let offset = 0; offset < 28; offset++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + offset);
+      const dow = date.getDay();
+      if (morning.is_active && morning.days_of_week.includes(dow))
+        slotsToInsert.push(...generateSlotsForShift(morning, date, dur, negocio.id, selectedProf));
+      if (afternoon.is_active && afternoon.days_of_week.includes(dow))
+        slotsToInsert.push(...generateSlotsForShift(afternoon, date, dur, negocio.id, selectedProf));
+    }
+    Object.entries(groupedDates).forEach(([dateStr, shifts]) => {
+      if (dateStr < todayStr) return;
+      const d = new Date(dateStr + 'T12:00:00');
+      ['morning', 'afternoon'].forEach(s => {
+        const sh = shifts[s];
+        if (sh?.is_active) slotsToInsert.push(...generateSlotsForShift(sh, d, dur, negocio.id, selectedProf));
+      });
+    });
+
+    // 4. Insert all new slots
+    if (slotsToInsert.length > 0) {
+      const { error: slotErr } = await supabase.from('appointment_slots').insert(slotsToInsert);
+      if (slotErr) {
+        setSaving(false);
+        toast.error('Horario guardado, error al generar turnos');
+        return;
+      }
+    }
+
     setSaving(false);
-    if (error) { toast.error('Error al guardar'); return; }
-    toast.success('Horario guardado');
+    toast.success(`Horario guardado · ${slotsToInsert.length} turnos generados`);
   }
 
   // ── Slot cancellation ────────────────────────────────────────────────────
@@ -347,7 +391,7 @@ export default function Horarios() {
       const date = new Date(today);
       date.setDate(today.getDate() + offset);
       const dow = date.getDay();
-      const dateStr = date.toISOString().slice(0, 10);
+      const dateStr = localDateStr(date);
       weeklySet.add(dateStr);
 
       const hasMorning   = morning.is_active   && morning.days_of_week.includes(dow);
@@ -383,47 +427,6 @@ export default function Horarios() {
 
     return result.sort((a, b) => a.dateStr.localeCompare(b.dateStr));
   }, [morning, afternoon, dur, groupedDates]);
-
-  // ── Generate slots ───────────────────────────────────────────────────────
-  async function generateSlots() {
-    if (!dur) { toast.error('Ingresá una duración válida'); return; }
-    setGenerating(true);
-    const today = new Date();
-    const slotsToInsert = [];
-
-    for (let offset = 0; offset < 28; offset++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + offset);
-      const dow = date.getDay();
-      if (morning.is_active   && morning.days_of_week.includes(dow))
-        slotsToInsert.push(...generateSlotsForShift(morning,   date, dur, negocio.id, selectedProf));
-      if (afternoon.is_active && afternoon.days_of_week.includes(dow))
-        slotsToInsert.push(...generateSlotsForShift(afternoon, date, dur, negocio.id, selectedProf));
-    }
-
-    const todayStr = today.toISOString().slice(0, 10);
-    Object.entries(groupedDates).forEach(([dateStr, shifts]) => {
-      if (dateStr < todayStr) return;
-      const d = new Date(dateStr + 'T12:00:00');
-      ['morning', 'afternoon'].forEach(s => {
-        const sh = shifts[s];
-        if (sh?.is_active) slotsToInsert.push(...generateSlotsForShift(sh, d, dur, negocio.id, selectedProf));
-      });
-    });
-
-    const { data: existing } = await supabase
-      .from('appointment_slots').select('specific_date, start_time')
-      .eq('professional_id', selectedProf).gte('specific_date', todayStr);
-    const existingSet = new Set((existing || []).map(s => `${s.specific_date}_${String(s.start_time).slice(0, 5)}`));
-    const newSlots = slotsToInsert.filter(s => !existingSet.has(`${s.specific_date}_${s.start_time}`));
-
-    if (newSlots.length > 0) {
-      const { error } = await supabase.from('appointment_slots').insert(newSlots);
-      if (error) { toast.error('Error al generar turnos'); setGenerating(false); return; }
-    }
-    setGenerating(false);
-    toast.success(`${newSlots.length} turnos generados`);
-  }
 
   // ── Empty state ──────────────────────────────────────────────────────────
   if (professionals.length === 0 && !loading) {
@@ -489,23 +492,13 @@ export default function Horarios() {
             <ShiftCard label="Turno Tarde"   color="indigo" shift={afternoon} dur={dur} onChange={setAfternoon} />
           </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={saveSchedule}
-              disabled={saving}
-              className="flex-1 bg-[#e31b23] hover:bg-[#c41520] disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
-            >
-              {saving ? 'Guardando...' : 'Guardar horario'}
-            </button>
-            <button
-              onClick={generateSlots}
-              disabled={generating || !dur}
-              className="flex-1 flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
-            >
-              <Zap size={14} />
-              {generating ? 'Generando...' : 'Generar turnos (4 sem.)'}
-            </button>
-          </div>
+          <button
+            onClick={saveSchedule}
+            disabled={saving}
+            className="w-full bg-[#e31b23] hover:bg-[#c41520] disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
+          >
+            {saving ? 'Guardando y generando turnos...' : 'Guardar horario'}
+          </button>
 
           {/* ── Fechas específicas ────────────────────────────────────────── */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">

@@ -181,39 +181,29 @@ export default function TurnoNegocio() {
   }, [success, navigate]);
 
   const availableDays = useMemo(() => {
-    return getNextDays().filter(day => slots.some(s =>
-      s.specific_date ? s.specific_date === day.iso : s.day_of_week === day.dow
-    ));
+    return getNextDays().filter(day => slots.some(s => s.specific_date === day.iso));
   }, [slots]);
 
   const timeSlots = useMemo(() => {
     if (!selectedDay || !selectedService) return [];
-    const dayBlocks = slots.filter(s =>
-      s.specific_date ? s.specific_date === selectedDay.iso : s.day_of_week === selectedDay.dow
-    );
+    const daySlots = slots.filter(s => s.specific_date === selectedDay.iso);
     const duration = selectedService.duration_minutes;
-    const times = new Set();
-    for (const block of dayBlocks) {
-      const start = timeToMin(block.start_time);
-      const end = timeToMin(block.end_time);
-      for (let t = start; t + duration <= end; t += duration) {
-        times.add(minToTime(t));
-      }
-    }
-
     const isToday = selectedDay.iso === toISODate(new Date());
     const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
 
-    return [...times].sort().filter(t => {
-      const tMin = timeToMin(t);
-      if (isToday && tMin <= nowMin) return false;
-      const tEnd = tMin + duration;
-      return !booked.some(a => {
-        const aStart = timeToMin(a.start_time);
-        const aEnd = timeToMin(a.end_time);
-        return tMin < aEnd && aStart < tEnd;
-      });
-    });
+    // Each slot's start_time is a valid booking start; service runs for `duration` minutes from there
+    return [...new Set(daySlots.map(s => minToTime(timeToMin(s.start_time))))]
+      .filter(t => {
+        const tMin = timeToMin(t);
+        if (isToday && tMin <= nowMin) return false;
+        const tEnd = tMin + duration;
+        return !booked.some(a => {
+          const aStart = timeToMin(a.start_time);
+          const aEnd = timeToMin(a.end_time);
+          return tMin < aEnd && aStart < tEnd;
+        });
+      })
+      .sort();
   }, [slots, selectedDay, selectedService, booked]);
 
   const handleBack = () => {
