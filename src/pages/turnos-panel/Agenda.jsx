@@ -41,6 +41,17 @@ export default function Agenda() {
     setSelectedAppt(null);
   }, [date]);
 
+  // Auto-refresh every 30s and on tab focus
+  useEffect(() => {
+    const interval = setInterval(loadDayData, 30000);
+    const onVisible = () => { if (document.visibilityState === 'visible') loadDayData(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [date]);
+
   async function loadDayData() {
     setLoading(true);
     const [{ data: slotsData }, { data: apptData }] = await Promise.all([

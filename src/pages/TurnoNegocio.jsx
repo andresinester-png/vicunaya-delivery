@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, MapPin, CheckCircle } from 'lucide-react';
+import { ChevronLeft, MapPin, CheckCircle, UserCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 import useProfileStore from '../store/profileStore.js';
@@ -20,8 +20,8 @@ function GoogleIcon() {
   );
 }
 
-const STEP_LABELS = ['Servicio', 'Día', 'Horario', 'Confirmar'];
-const DAYS_AHEAD = 14;
+const STEP_LABELS = ['Servicio', 'Profesional', 'Día', 'Horario', 'Confirmar'];
+const DAYS_AHEAD = 28;
 
 function pad(n) { return String(n).padStart(2, '0'); }
 function toISODate(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
@@ -41,7 +41,7 @@ function getNextDays() {
   return days;
 }
 
-function SuccessScreen({ business, service, day, time }) {
+function SuccessScreen({ business, service, professional, day, time }) {
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center"
@@ -88,6 +88,7 @@ function SuccessScreen({ business, service, day, time }) {
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7, duration: 0.4, ease: 'easeOut' }}
       >
         {business?.name} · {service?.name}
+        {professional && ` · ${professional.name}`}
         <br />
         {day?.date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })} a las {fmtTime(time)}
       </motion.p>
@@ -101,23 +102,25 @@ export default function TurnoNegocio() {
   const { name: profileName, phone: profilePhone } = useProfileStore();
   const { session } = useAuth();
 
-  const [business, setBusiness] = useState(null);
-  const [services, setServices] = useState([]);
-  const [slots, setSlots] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [business, setBusiness]           = useState(null);
+  const [services, setServices]           = useState([]);
+  const [professionals, setProfessionals] = useState([]);
+  const [slots, setSlots]                 = useState([]);
+  const [loading, setLoading]             = useState(true);
 
-  const [step, setStep] = useState(1);
-  const [selectedService, setSelectedService] = useState(null);
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [booked, setBooked] = useState([]);
+  const [step, setStep]                               = useState(1);
+  const [selectedService, setSelectedService]         = useState(null);
+  const [selectedProfessional, setSelectedProfessional] = useState(null);
+  const [selectedDay, setSelectedDay]                 = useState(null);
+  const [selectedTime, setSelectedTime]               = useState(null);
+  const [booked, setBooked]                           = useState([]);
 
-  const [form, setForm] = useState({ name: '', phone: '', notes: '' });
+  const [form, setForm]           = useState({ name: '', phone: '', notes: '' });
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess]     = useState(false);
 
-  const [loginMode, setLoginMode] = useState(null); // null | 'email'
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [loginMode, setLoginMode]           = useState(null);
+  const [loginForm, setLoginForm]           = useState({ email: '', password: '' });
   const [loginSubmitting, setLoginSubmitting] = useState(false);
 
   const handleGoogleLogin = async () => {
@@ -152,27 +155,43 @@ export default function TurnoNegocio() {
     setForm(f => ({ ...f, name: f.name || profileName || '', phone: f.phone || profilePhone || '' }));
   }, [profileName, profilePhone]);
 
+  // Load all data upfront
   useEffect(() => {
     Promise.all([
       supabase.from('appointment_businesses').select('*').eq('id', id).single(),
       supabase.from('appointment_services').select('*').eq('business_id', id).order('price'),
       supabase.from('appointment_slots').select('*').eq('business_id', id).eq('is_active', true),
-    ]).then(([b, s, sl]) => {
+      supabase.from('appointment_professionals').select('id, name, avatar_url')
+        .eq('business_id', id).eq('is_active', true).order('name'),
+    ]).then(([b, s, sl, pr]) => {
       setBusiness(b.data);
       setServices(s.data || []);
       setSlots(sl.data || []);
+      const profs = pr.data || [];
+      setProfessionals(profs);
+      // Auto-select if only one professional (skip the step)
+      if (profs.length === 1) setSelectedProfessional(profs[0]);
       setLoading(false);
     });
   }, [id]);
 
+  // Reset day/time when professional changes
   useEffect(() => {
-    if (!selectedDay) { setBooked([]); return; }
-    supabase.from('appointments').select('start_time, end_time, status')
+    setSelectedDay(null);
+    setSelectedTime(null);
+  }, [selectedProfessional]);
+
+  // Load booked appointments for selected day + professional
+  useEffect(() => {
+    if (!selectedDay || !selectedProfessional) { setBooked([]); return; }
+    supabase.from('appointments')
+      .select('start_time, end_time, status')
       .eq('business_id', id)
+      .eq('professional_id', selectedProfessional.id)
       .eq('date', selectedDay.iso)
       .neq('status', 'cancelled')
       .then(({ data }) => setBooked(data || []));
-  }, [id, selectedDay]);
+  }, [id, selectedDay, selectedProfessional]);
 
   useEffect(() => {
     if (!success) return;
@@ -180,18 +199,24 @@ export default function TurnoNegocio() {
     return () => clearTimeout(t);
   }, [success, navigate]);
 
+  // Days that have at least one active slot for the selected professional
   const availableDays = useMemo(() => {
-    return getNextDays().filter(day => slots.some(s => s.specific_date === day.iso));
-  }, [slots]);
+    if (!selectedProfessional) return [];
+    return getNextDays().filter(day =>
+      slots.some(s => s.specific_date === day.iso && s.professional_id === selectedProfessional.id)
+    );
+  }, [slots, selectedProfessional]);
 
+  // Available booking times: each slot's start_time is a valid booking start
   const timeSlots = useMemo(() => {
-    if (!selectedDay || !selectedService) return [];
-    const daySlots = slots.filter(s => s.specific_date === selectedDay.iso);
+    if (!selectedDay || !selectedService || !selectedProfessional) return [];
+    const daySlots = slots.filter(s =>
+      s.specific_date === selectedDay.iso && s.professional_id === selectedProfessional.id
+    );
     const duration = selectedService.duration_minutes;
     const isToday = selectedDay.iso === toISODate(new Date());
     const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
 
-    // Each slot's start_time is a valid booking start; service runs for `duration` minutes from there
     return [...new Set(daySlots.map(s => minToTime(timeToMin(s.start_time))))]
       .filter(t => {
         const tMin = timeToMin(t);
@@ -204,7 +229,7 @@ export default function TurnoNegocio() {
         });
       })
       .sort();
-  }, [slots, selectedDay, selectedService, booked]);
+  }, [slots, selectedDay, selectedService, selectedProfessional, booked]);
 
   const handleBack = () => {
     if (step > 1) setStep(s => s - 1);
@@ -213,9 +238,19 @@ export default function TurnoNegocio() {
 
   const canContinue =
     step === 1 ? !!selectedService :
-    step === 2 ? !!selectedDay :
-    step === 3 ? !!selectedTime :
+    step === 2 ? !!selectedProfessional :
+    step === 3 ? !!selectedDay :
+    step === 4 ? !!selectedTime :
     true;
+
+  // When pressing Continuar on step 1, if only 1 professional skip to step 3
+  const handleContinue = () => {
+    if (step === 1 && professionals.length === 1) {
+      setStep(3);
+    } else {
+      setStep(s => s + 1);
+    }
+  };
 
   const handleConfirm = async () => {
     if (!form.name.trim() || !form.phone.trim()) {
@@ -227,6 +262,7 @@ export default function TurnoNegocio() {
       const endTime = minToTime(timeToMin(selectedTime) + selectedService.duration_minutes);
       const { error } = await supabase.from('appointments').insert({
         business_id: business.id,
+        professional_id: selectedProfessional.id,
         service_id: selectedService.id,
         customer_name: form.name.trim(),
         customer_phone: form.phone.trim(),
@@ -249,7 +285,15 @@ export default function TurnoNegocio() {
     }
   };
 
-  if (success) return <SuccessScreen business={business} service={selectedService} day={selectedDay} time={selectedTime} />;
+  if (success) return (
+    <SuccessScreen
+      business={business}
+      service={selectedService}
+      professional={selectedProfessional}
+      day={selectedDay}
+      time={selectedTime}
+    />
+  );
 
   if (loading) {
     return (
@@ -288,6 +332,12 @@ export default function TurnoNegocio() {
   }
 
   const catInfo = CATEGORY_INFO[business.category] || CATEGORY_INFO.otro;
+  // Visible step labels: if only 1 professional, hide the Profesional step from indicator
+  const visibleLabels = professionals.length === 1
+    ? STEP_LABELS.filter(l => l !== 'Profesional')
+    : STEP_LABELS;
+  // Map real step to indicator position
+  const indicatorStep = (professionals.length === 1 && step >= 3) ? step - 1 : step;
 
   return (
     <div className="min-h-screen bg-gray-100" style={{ paddingBottom: 100 }}>
@@ -328,24 +378,24 @@ export default function TurnoNegocio() {
         {/* Indicador de pasos */}
         <div className="card p-4">
           <div className="flex items-center">
-            {STEP_LABELS.map((_, idx) => (
+            {visibleLabels.map((_, idx) => (
               <Fragment key={idx}>
                 <div
                   className="w-2.5 h-2.5 rounded-full shrink-0 transition-colors duration-300"
-                  style={{ background: idx <= step - 1 ? '#e31b23' : '#E5E7EB' }}
+                  style={{ background: idx <= indicatorStep - 1 ? '#e31b23' : '#E5E7EB' }}
                 />
-                {idx < STEP_LABELS.length - 1 && (
+                {idx < visibleLabels.length - 1 && (
                   <div
                     className="flex-1 h-1 rounded-full mx-1 transition-colors duration-300"
-                    style={{ background: idx < step - 1 ? '#e31b23' : '#E5E7EB' }}
+                    style={{ background: idx < indicatorStep - 1 ? '#e31b23' : '#E5E7EB' }}
                   />
                 )}
               </Fragment>
             ))}
           </div>
           <div className="flex justify-between mt-1.5">
-            {STEP_LABELS.map((label, idx) => (
-              <span key={label} className="text-[9px] font-bold" style={{ color: idx <= step - 1 ? '#111' : '#9CA3AF' }}>
+            {visibleLabels.map((label, idx) => (
+              <span key={label} className="text-[9px] font-bold" style={{ color: idx <= indicatorStep - 1 ? '#111' : '#9CA3AF' }}>
                 {label}
               </span>
             ))}
@@ -362,6 +412,7 @@ export default function TurnoNegocio() {
             transition={{ duration: 0.2 }}
             className="space-y-4"
           >
+            {/* Paso 1: Servicio */}
             {step === 1 && (
               <div className="card p-5 space-y-3">
                 <h2 className="font-bold text-base">Elegí el servicio</h2>
@@ -391,11 +442,39 @@ export default function TurnoNegocio() {
               </div>
             )}
 
+            {/* Paso 2: Profesional */}
             {step === 2 && (
+              <div className="card p-5 space-y-3">
+                <h2 className="font-bold text-base">Elegí el profesional</h2>
+                {professionals.length === 0 ? (
+                  <p className="text-sm text-gray-400">No hay profesionales disponibles.</p>
+                ) : professionals.map(prof => {
+                  const active = selectedProfessional?.id === prof.id;
+                  return (
+                    <button
+                      key={prof.id}
+                      type="button"
+                      onClick={() => setSelectedProfessional(prof)}
+                      className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
+                      style={{ borderColor: active ? '#e31b23' : '#E5E7EB', background: active ? '#fef2f2' : '#fff' }}
+                    >
+                      {prof.avatar_url
+                        ? <img src={prof.avatar_url} alt={prof.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                        : <UserCircle size={40} className="text-gray-300 shrink-0" />}
+                      <span className="font-semibold text-sm flex-1">{prof.name}</span>
+                      {active && <CheckCircle size={18} className="text-primary shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Paso 3: Día */}
+            {step === 3 && (
               <div className="card p-5 space-y-3">
                 <h2 className="font-bold text-base">Elegí el día</h2>
                 {availableDays.length === 0 ? (
-                  <p className="text-sm text-gray-400">No hay días disponibles por el momento.</p>
+                  <p className="text-sm text-gray-400">No hay días disponibles para este profesional.</p>
                 ) : (
                   <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                     {availableDays.map(day => {
@@ -428,12 +507,14 @@ export default function TurnoNegocio() {
               </div>
             )}
 
-            {step === 3 && (
+            {/* Paso 4: Horario */}
+            {step === 4 && (
               <div className="card p-5 space-y-3">
                 <h2 className="font-bold text-base">Elegí el horario</h2>
                 {selectedDay && (
                   <p className="text-xs text-gray-500 capitalize">
                     {selectedDay.date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    {selectedProfessional && ` · ${selectedProfessional.name}`}
                   </p>
                 )}
                 {timeSlots.length === 0 ? (
@@ -463,7 +544,8 @@ export default function TurnoNegocio() {
               </div>
             )}
 
-            {step === 4 && (
+            {/* Paso 5: Confirmar */}
+            {step === 5 && (
               <>
                 {!session ? (
                   <div className="card p-5 space-y-4">
@@ -565,6 +647,12 @@ export default function TurnoNegocio() {
                           <span className="text-gray-500">Servicio</span>
                           <span className="font-semibold text-right">{selectedService?.name}</span>
                         </div>
+                        {selectedProfessional && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Profesional</span>
+                            <span className="font-semibold text-right">{selectedProfessional.name}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between">
                           <span className="text-gray-500">Día</span>
                           <span className="font-semibold text-right capitalize">
@@ -597,8 +685,8 @@ export default function TurnoNegocio() {
         style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.10)', padding: '12px 16px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
       >
         <div className="max-w-2xl mx-auto">
-          {step < 4 ? (
-            <button type="button" onClick={() => setStep(s => s + 1)} disabled={!canContinue} className="btn-primary w-full">
+          {step < 5 ? (
+            <button type="button" onClick={handleContinue} disabled={!canContinue} className="btn-primary w-full">
               Continuar
             </button>
           ) : (
