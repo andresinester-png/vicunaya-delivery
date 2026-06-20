@@ -202,8 +202,15 @@ export default function TurnoNegocio() {
   // Days that have at least one active slot for the selected professional
   const availableDays = useMemo(() => {
     if (!selectedProfessional) return [];
+    const nowIso = toISODate(new Date());
+    const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
     return getNextDays().filter(day =>
-      slots.some(s => s.specific_date === day.iso && s.professional_id === selectedProfessional.id)
+      slots.some(s => {
+        if (s.specific_date !== day.iso || s.professional_id !== selectedProfessional.id) return false;
+        // Exclude slots that have already started today
+        if (day.iso === nowIso && timeToMin(s.start_time) <= nowMin) return false;
+        return true;
+      })
     );
   }, [slots, selectedProfessional]);
 

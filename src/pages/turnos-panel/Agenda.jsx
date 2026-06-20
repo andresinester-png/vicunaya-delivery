@@ -13,9 +13,14 @@ const STATUS_COLORS = {
 const FREE_CARD   = 'bg-gray-50 border border-gray-100';
 const CLOSED_CARD = 'bg-gray-100 border border-dashed border-gray-200 opacity-40';
 
+function localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function timeToMin(t) { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; }
+
 export default function Agenda() {
   const negocio = useTurnosNegocio();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateStr(new Date());
 
   const [date, setDate]                   = useState(today);
   const [professionals, setProfessionals] = useState([]);
@@ -182,12 +187,14 @@ export default function Agenda() {
                         );
                       }
 
-                      // Free slot
+                      // Free slot (past or future)
                       if (!appt) {
+                        const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+                        const isPast = date === today && timeToMin(st) <= nowMin;
                         return (
-                          <div key={slot.id} className={`rounded-xl px-2 py-2.5 ${FREE_CARD}`}>
-                            <p className="text-xs font-semibold text-gray-400">{st}</p>
-                            <p className="text-xs text-gray-300 mt-0.5">Libre</p>
+                          <div key={slot.id} className={`rounded-xl px-2 py-2.5 ${isPast ? 'bg-gray-50 border border-gray-100 opacity-50' : FREE_CARD}`}>
+                            <p className={`text-xs font-semibold ${isPast ? 'text-gray-300' : 'text-gray-400'}`}>{st}</p>
+                            <p className="text-xs text-gray-300 mt-0.5">{isPast ? 'Pasado' : 'Libre'}</p>
                           </div>
                         );
                       }
