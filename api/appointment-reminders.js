@@ -13,17 +13,16 @@ export default async function handler(req, res) {
     { auth: { persistSession: false } }
   );
 
-  // Window: appointments starting between now+1h45m and now+2h15m
-  // Argentina is UTC-3 — stored times are local, so suffix -03:00 when building comparison timestamps
-  const now = new Date();
-  const windowStart = new Date(now.getTime() + 105 * 60 * 1000); // +1h45m
-  const windowEnd   = new Date(now.getTime() + 135 * 60 * 1000); // +2h15m
+  // Get today's date in Argentina time (UTC-3)
+  const nowArgentina = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  const todayDate = nowArgentina.toISOString().slice(0, 10); // "YYYY-MM-DD"
 
   const { data: appointments, error } = await supabase
     .from('appointments')
     .select('id, date, start_time, customer_user_id, appointment_businesses(name)')
     .in('status', ['pending', 'confirmed'])
     .eq('reminder_sent', false)
+    .eq('date', todayDate)
     .not('customer_user_id', 'is', null);
 
   if (error) {
@@ -31,13 +30,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: error.message });
   }
 
-  // Filter by time window, treating stored times as Argentina local (UTC-3)
-  const due = (appointments || []).filter(appt => {
-    const apptDateTime = new Date(`${appt.date}T${appt.start_time}-03:00`);
-    return apptDateTime >= windowStart && apptDateTime <= windowEnd;
-  });
-
-  if (due.length === 0) {
+  if (!appointments || appointments.length === 0) {
     return res.status(200).json({ sent: 0, total: 0 });
   }
 
@@ -50,7 +43,7 @@ export default async function handler(req, res) {
   let sent = 0;
   const results = [];
 
-  for (const appt of due) {
+  for (const appt of appointments) {
     const { data: sub } = await supabase
       .from('push_subscriptions')
       .select('subscription')
@@ -70,7 +63,7 @@ export default async function handler(req, res) {
 
     const payload = JSON.stringify({
       title: 'Recordatorio de turno',
-      body: `Tenés un turno en ${businessName} a las ${time}. ¿Confirmás o cancelás?`,
+      body: `Tenés un turno hoy a las ${time} en ${businessName}.`,
       data: { url: '/mis-turnos' },
     });
 
@@ -87,5 +80,5 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(200).json({ sent, total: due.length, results });
+  return res.status(200).json({ sent, total: appointments.length, results });
 }
