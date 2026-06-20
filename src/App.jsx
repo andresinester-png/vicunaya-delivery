@@ -8,6 +8,7 @@ import MainLayout from './components/MainLayout.jsx';
 import AdminGuard from './components/AdminGuard.jsx';
 // import DriverGuard from './components/DriverGuard.jsx'; // Remises: deshabilitado temporalmente
 import RestaurantGuard from './components/RestaurantGuard.jsx';
+import TurnosPanelGuard from './components/TurnosPanelGuard.jsx';
 
 import Welcome from './pages/Welcome.jsx';
 import CompleteProfile from './pages/CompleteProfile.jsx';
@@ -47,6 +48,13 @@ import RestaurantDashboard from './pages/restaurant/Dashboard.jsx';
 import RestaurantMenu from './pages/restaurant/Menu.jsx';
 import RestaurantProfile from './pages/restaurant/Profile.jsx';
 import RestaurantEarnings from './pages/restaurant/Earnings.jsx';
+
+import TurnosPanelLogin from './pages/turnos-panel/TurnosPanelLogin.jsx';
+import TurnosPanelAgenda from './pages/turnos-panel/Agenda.jsx';
+import TurnosPanelServicios from './pages/turnos-panel/Servicios.jsx';
+import TurnosPanelProfesionales from './pages/turnos-panel/Profesionales.jsx';
+import TurnosPanelHorarios from './pages/turnos-panel/Horarios.jsx';
+import TurnosPanelMiNegocio from './pages/turnos-panel/MiNegocio.jsx';
 
 // Remises: deshabilitado temporalmente
 // import DriverLogin from './pages/driver/DriverLogin.jsx';
@@ -130,6 +138,17 @@ export default function App() {
           <Route index element={<DriverDashboard />} />
         </Route>
         ── */}
+
+        {/* ── Panel de turnos (dueños de negocio) ── */}
+        <Route path="/turnos/panel/login" element={<TurnosPanelLogin />} />
+        <Route path="/turnos/panel" element={<TurnosPanelGuard />}>
+          <Route index element={<Navigate to="/turnos/panel/agenda" replace />} />
+          <Route path="agenda"        element={<TurnosPanelAgenda />} />
+          <Route path="servicios"     element={<TurnosPanelServicios />} />
+          <Route path="profesionales" element={<TurnosPanelProfesionales />} />
+          <Route path="horarios"      element={<TurnosPanelHorarios />} />
+          <Route path="mi-negocio"    element={<TurnosPanelMiNegocio />} />
+        </Route>
 
         {/* ── OAuth callback ── */}
         <Route path="/auth/callback" element={<GoogleCallback />} />
