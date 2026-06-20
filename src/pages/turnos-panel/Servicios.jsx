@@ -14,6 +14,7 @@ export default function Servicios() {
   const [editId, setEditId] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => { fetchServices(); }, []);
 
@@ -57,10 +58,17 @@ export default function Servicios() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('¿Eliminar este servicio?')) return;
+    setDeletingId(id);
+  }
+
+  async function confirmDelete(id) {
     const { error } = await supabase.from('appointment_services').delete().eq('id', id);
-    if (error) { toast.error('Error al eliminar'); return; }
-    toast.success('Eliminado');
+    setDeletingId(null);
+    if (error) {
+      toast.error(`No se pudo eliminar: ${error.message}`);
+      return;
+    }
+    toast.success('Servicio eliminado');
     fetchServices();
   }
 
@@ -115,13 +123,23 @@ export default function Servicios() {
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Servicio</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Duración</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Precio</th>
-                <th className="px-4 py-3 w-20" />
+                <th className="px-4 py-3 w-24" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {services.map(svc => (
                 <tr key={svc.id} className="hover:bg-gray-50/50">
-                  {editId === svc.id ? (
+                  {deletingId === svc.id ? (
+                    <td colSpan={4} className="px-4 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-600">¿Eliminar <strong>{svc.name}</strong>?</span>
+                        <div className="flex gap-2">
+                          <button onClick={() => confirmDelete(svc.id)} className="text-xs bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">Eliminar</button>
+                          <button onClick={() => setDeletingId(null)} className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold px-3 py-1.5 rounded-lg transition-colors">Cancelar</button>
+                        </div>
+                      </div>
+                    </td>
+                  ) : editId === svc.id ? (
                     <>
                       <td className="px-4 py-2">
                         <input className="border border-gray-200 rounded-lg px-2 py-1 text-sm w-full focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
