@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { useTurnosNegocio } from '../../contexts/TurnosNegocioContext.js';
 import toast from 'react-hot-toast';
-import { Zap, Sun, Sunset } from 'lucide-react';
+import { Zap, Sun, Sunset, CalendarDays } from 'lucide-react';
 
 const DAYS = [
   { value: 1, label: 'Lunes' },
@@ -53,6 +53,16 @@ function generateSlotsForShift(shift, date, duration, negocioId, profId) {
   }
   return slots;
 }
+
+function slotCount(shift, dur) {
+  if (!shift.is_active) return 0;
+  const [sh, sm] = shift.start_time.split(':').map(Number);
+  const [eh, em] = shift.end_time.split(':').map(Number);
+  const total = (eh * 60 + em) - (sh * 60 + sm);
+  return total > 0 ? Math.floor(total / dur) : 0;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
 export default function Horarios() {
   const negocio = useTurnosNegocio();
@@ -115,6 +125,26 @@ export default function Horarios() {
     }));
   }
 
+  // Vista previa: fechas concretas de las próximas 4 semanas
+  const preview = useMemo(() => {
+    const today = new Date();
+    const result = [];
+    for (let offset = 0; offset < 28; offset++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + offset);
+      const dow = date.getDay();
+      const day = schedule[dow];
+      if (!day.morning.is_active && !day.afternoon.is_active) continue;
+      result.push({
+        label: cap(date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })),
+        morning:   day.morning,
+        afternoon: day.afternoon,
+        totalSlots: slotCount(day.morning, duration) + slotCount(day.afternoon, duration),
+      });
+    }
+    return result;
+  }, [schedule, duration]);
+
   async function saveSchedule() {
     if (!selectedProf) return;
     setSaving(true);
@@ -151,7 +181,6 @@ export default function Horarios() {
       date.setDate(today.getDate() + offset);
       const dow = date.getDay();
       const daySchedule = schedule[dow];
-
       slotsToInsert.push(
         ...generateSlotsForShift(daySchedule.morning,   date, duration, negocio.id, selectedProf),
         ...generateSlotsForShift(daySchedule.afternoon, date, duration, negocio.id, selectedProf),
@@ -208,7 +237,7 @@ export default function Horarios() {
       </div>
 
       {/* Duración global */}
-      <div className="bg-white rounded-2xl px-5 py-4 shadow-sm flex items-center gap-4">
+      <div className="bg-white rounded-2xl px-5 py-4 shadow-sm flex items-center gap-4 flex-wrap">
         <span className="text-sm font-semibold text-gray-700 shrink-0">Duración del turno</span>
         <select
           value={duration}
@@ -227,115 +256,159 @@ export default function Horarios() {
           <div className="w-6 h-6 border-2 border-[#e31b23] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="divide-y divide-gray-100">
-            {DAYS.map(({ value: dow, label }) => {
-              const day = schedule[dow];
-              const dayActive = day.morning.is_active || day.afternoon.is_active;
-              return (
-                <div key={dow} className={`px-4 py-4 ${!dayActive ? 'opacity-60' : ''}`}>
-                  <p className="text-sm font-bold text-gray-800 mb-3">{label}</p>
-                  <div className="space-y-2 pl-1">
+        <>
+          {/* Configuración semanal */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="divide-y divide-gray-100">
+              {DAYS.map(({ value: dow, label }) => {
+                const day = schedule[dow];
+                const dayActive = day.morning.is_active || day.afternoon.is_active;
+                return (
+                  <div key={dow} className={`px-4 py-4 ${!dayActive ? 'opacity-60' : ''}`}>
+                    <p className="text-sm font-bold text-gray-800 mb-3">{label}</p>
+                    <div className="space-y-2 pl-1">
 
-                    {/* Turno Mañana */}
-                    <div className={`flex items-center gap-3 flex-wrap rounded-xl px-3 py-2 transition-colors ${
-                      day.morning.is_active ? 'bg-amber-50' : 'bg-gray-50'
-                    }`}>
-                      <label className="flex items-center gap-2 cursor-pointer w-32 shrink-0">
-                        <input
-                          type="checkbox"
-                          checked={day.morning.is_active}
-                          onChange={e => updateShift(dow, 'morning', 'is_active', e.target.checked)}
-                          className="w-4 h-4 accent-[#e31b23]"
-                        />
-                        <Sun size={13} className={day.morning.is_active ? 'text-amber-500' : 'text-gray-400'} />
-                        <span className={`text-xs font-semibold ${day.morning.is_active ? 'text-amber-700' : 'text-gray-400'}`}>
-                          Mañana
-                        </span>
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="time"
-                          value={day.morning.start_time}
-                          disabled={!day.morning.is_active}
-                          onChange={e => updateShift(dow, 'morning', 'start_time', e.target.value)}
-                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 disabled:bg-white disabled:text-gray-300 w-[110px]"
-                        />
-                        <span className="text-gray-400 text-sm">–</span>
-                        <input
-                          type="time"
-                          value={day.morning.end_time}
-                          disabled={!day.morning.is_active}
-                          onChange={e => updateShift(dow, 'morning', 'end_time', e.target.value)}
-                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 disabled:bg-white disabled:text-gray-300 w-[110px]"
-                        />
+                      {/* Turno Mañana */}
+                      <div className={`flex items-center gap-3 flex-wrap rounded-xl px-3 py-2 transition-colors ${day.morning.is_active ? 'bg-amber-50' : 'bg-gray-50'}`}>
+                        <label className="flex items-center gap-2 cursor-pointer w-32 shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={day.morning.is_active}
+                            onChange={e => updateShift(dow, 'morning', 'is_active', e.target.checked)}
+                            className="w-4 h-4 accent-[#e31b23]"
+                          />
+                          <Sun size={13} className={day.morning.is_active ? 'text-amber-500' : 'text-gray-400'} />
+                          <span className={`text-xs font-semibold ${day.morning.is_active ? 'text-amber-700' : 'text-gray-400'}`}>Mañana</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input type="time" value={day.morning.start_time} disabled={!day.morning.is_active}
+                            onChange={e => updateShift(dow, 'morning', 'start_time', e.target.value)}
+                            className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 disabled:bg-white disabled:text-gray-300 w-[110px]" />
+                          <span className="text-gray-400 text-sm">–</span>
+                          <input type="time" value={day.morning.end_time} disabled={!day.morning.is_active}
+                            onChange={e => updateShift(dow, 'morning', 'end_time', e.target.value)}
+                            className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 disabled:bg-white disabled:text-gray-300 w-[110px]" />
+                        </div>
+                        {day.morning.is_active && slotCount(day.morning, duration) > 0 && (
+                          <span className="text-xs text-amber-600 font-medium ml-auto">
+                            {slotCount(day.morning, duration)} turnos
+                          </span>
+                        )}
                       </div>
-                    </div>
 
-                    {/* Turno Tarde */}
-                    <div className={`flex items-center gap-3 flex-wrap rounded-xl px-3 py-2 transition-colors ${
-                      day.afternoon.is_active ? 'bg-indigo-50' : 'bg-gray-50'
-                    }`}>
-                      <label className="flex items-center gap-2 cursor-pointer w-32 shrink-0">
-                        <input
-                          type="checkbox"
-                          checked={day.afternoon.is_active}
-                          onChange={e => updateShift(dow, 'afternoon', 'is_active', e.target.checked)}
-                          className="w-4 h-4 accent-[#e31b23]"
-                        />
-                        <Sunset size={13} className={day.afternoon.is_active ? 'text-indigo-500' : 'text-gray-400'} />
-                        <span className={`text-xs font-semibold ${day.afternoon.is_active ? 'text-indigo-700' : 'text-gray-400'}`}>
-                          Tarde
-                        </span>
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="time"
-                          value={day.afternoon.start_time}
-                          disabled={!day.afternoon.is_active}
-                          onChange={e => updateShift(dow, 'afternoon', 'start_time', e.target.value)}
-                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 disabled:bg-white disabled:text-gray-300 w-[110px]"
-                        />
-                        <span className="text-gray-400 text-sm">–</span>
-                        <input
-                          type="time"
-                          value={day.afternoon.end_time}
-                          disabled={!day.afternoon.is_active}
-                          onChange={e => updateShift(dow, 'afternoon', 'end_time', e.target.value)}
-                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 disabled:bg-white disabled:text-gray-300 w-[110px]"
-                        />
+                      {/* Turno Tarde */}
+                      <div className={`flex items-center gap-3 flex-wrap rounded-xl px-3 py-2 transition-colors ${day.afternoon.is_active ? 'bg-indigo-50' : 'bg-gray-50'}`}>
+                        <label className="flex items-center gap-2 cursor-pointer w-32 shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={day.afternoon.is_active}
+                            onChange={e => updateShift(dow, 'afternoon', 'is_active', e.target.checked)}
+                            className="w-4 h-4 accent-[#e31b23]"
+                          />
+                          <Sunset size={13} className={day.afternoon.is_active ? 'text-indigo-500' : 'text-gray-400'} />
+                          <span className={`text-xs font-semibold ${day.afternoon.is_active ? 'text-indigo-700' : 'text-gray-400'}`}>Tarde</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input type="time" value={day.afternoon.start_time} disabled={!day.afternoon.is_active}
+                            onChange={e => updateShift(dow, 'afternoon', 'start_time', e.target.value)}
+                            className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 disabled:bg-white disabled:text-gray-300 w-[110px]" />
+                          <span className="text-gray-400 text-sm">–</span>
+                          <input type="time" value={day.afternoon.end_time} disabled={!day.afternoon.is_active}
+                            onChange={e => updateShift(dow, 'afternoon', 'end_time', e.target.value)}
+                            className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 disabled:bg-white disabled:text-gray-300 w-[110px]" />
+                        </div>
+                        {day.afternoon.is_active && slotCount(day.afternoon, duration) > 0 && (
+                          <span className="text-xs text-indigo-600 font-medium ml-auto">
+                            {slotCount(day.afternoon, duration)} turnos
+                          </span>
+                        )}
                       </div>
-                    </div>
 
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+
+            <div className="px-4 py-4 border-t border-gray-100 flex items-center gap-3 flex-wrap">
+              <button
+                onClick={saveSchedule}
+                disabled={saving}
+                className="flex-1 sm:flex-none bg-[#e31b23] hover:bg-[#c41520] disabled:opacity-50 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+              >
+                {saving ? 'Guardando...' : 'Guardar horario'}
+              </button>
+              <button
+                onClick={generateSlots}
+                disabled={generating}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+              >
+                <Zap size={14} />
+                {generating ? 'Generando...' : 'Generar turnos (4 semanas)'}
+              </button>
+            </div>
+          </div>
+
+          {/* Vista previa de fechas concretas */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <CalendarDays size={16} className="text-gray-400" />
+              <h2 className="text-sm font-semibold text-gray-700">
+                Vista previa — próximas 4 semanas
+              </h2>
+              {preview.length > 0 && (
+                <span className="ml-auto text-xs text-gray-400">
+                  {preview.length} días · {preview.reduce((a, d) => a + d.totalSlots, 0)} turnos totales
+                </span>
+              )}
+            </div>
+
+            {preview.length === 0 ? (
+              <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
+                <CalendarDays size={28} className="mx-auto text-gray-200 mb-2" />
+                <p className="text-gray-400 text-sm">Activá al menos una franja para ver las fechas habilitadas</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="divide-y divide-gray-50">
+                  {preview.map((item, i) => (
+                    <div key={i} className="px-4 py-3 flex items-start gap-4">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-900">{item.label}</p>
+                        <div className="flex gap-3 mt-1.5 flex-wrap">
+                          {item.morning.is_active && (
+                            <span className="inline-flex items-center gap-1.5 text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg font-medium">
+                              <Sun size={11} />
+                              {item.morning.start_time} – {item.morning.end_time}
+                              <span className="text-amber-400 font-normal">·</span>
+                              {slotCount(item.morning, duration)} turnos
+                            </span>
+                          )}
+                          {item.afternoon.is_active && (
+                            <span className="inline-flex items-center gap-1.5 text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg font-medium">
+                              <Sunset size={11} />
+                              {item.afternoon.start_time} – {item.afternoon.end_time}
+                              <span className="text-indigo-400 font-normal">·</span>
+                              {slotCount(item.afternoon, duration)} turnos
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="shrink-0 text-xs font-semibold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">
+                        {item.totalSlots} total
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
 
-          <div className="px-4 py-4 border-t border-gray-100 flex items-center gap-3 flex-wrap">
-            <button
-              onClick={saveSchedule}
-              disabled={saving}
-              className="flex-1 sm:flex-none bg-[#e31b23] hover:bg-[#c41520] disabled:opacity-50 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
-            >
-              {saving ? 'Guardando...' : 'Guardar horario'}
-            </button>
-            <button
-              onClick={generateSlots}
-              disabled={generating}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
-            >
-              <Zap size={14} />
-              {generating ? 'Generando...' : 'Generar turnos (4 semanas)'}
-            </button>
-          </div>
-        </div>
+          <p className="text-xs text-gray-400 px-1">
+            La vista previa se actualiza en tiempo real. "Guardar" guarda la plantilla. "Generar turnos" la convierte en slots disponibles en el sistema.
+          </p>
+        </>
       )}
-
-      <p className="text-xs text-gray-400 px-1">
-        "Guardar horario" guarda la plantilla semanal. "Generar turnos" crea los slots disponibles para las próximas 4 semanas sin duplicar los existentes.
-      </p>
     </div>
   );
 }
