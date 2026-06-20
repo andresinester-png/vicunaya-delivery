@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { useTurnosNegocio } from '../../contexts/TurnosNegocioContext.js';
 import toast from 'react-hot-toast';
-import { Zap, CalendarDays, CalendarPlus, Sun, Sunset, Clock, ChevronDown, ChevronUp, Trash2, Plus, X, BanIcon } from 'lucide-react';
+import { Zap, CalendarDays, CalendarPlus, Sun, Sunset, Clock, ChevronDown, ChevronUp, Trash2, Plus, X } from 'lucide-react';
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DAY_LABEL = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 0: 'Dom' };
@@ -193,12 +193,17 @@ export default function Horarios() {
       .order('name')
       .then(({ data }) => {
         setProfessionals(data || []);
-        if (data?.length) setSelectedProf(data[0].id);
+        if (data?.length) {
+          const saved = localStorage.getItem(`hn_prof_${negocio.id}`);
+          const found = saved ? data.find(p => p.id === saved) : null;
+          setSelectedProf(found ? found.id : data[0].id);
+        }
       });
   }, []);
 
   useEffect(() => {
     if (!selectedProf) return;
+    localStorage.setItem(`hn_prof_${negocio.id}`, selectedProf);
     loadShifts();
     loadDateSchedules();
   }, [selectedProf]);
@@ -277,6 +282,15 @@ export default function Horarios() {
     if (error) { toast.error('Error al cancelar'); return; }
     setDaySlots(prev => prev.map(s => targets.find(t => t.id === s.id) ? { ...s, is_active: false } : s));
     toast.success('Franja cancelada para ese día');
+  }
+
+  async function cancelSingleSlot(slotId) {
+    const { error } = await supabase
+      .from('appointment_slots')
+      .update({ is_active: false })
+      .eq('id', slotId);
+    if (error) { toast.error('Error al cancelar'); return; }
+    setDaySlots(prev => prev.map(s => s.id === slotId ? { ...s, is_active: false } : s));
   }
 
   // ── Specific dates ───────────────────────────────────────────────────────
@@ -608,8 +622,8 @@ export default function Horarios() {
                 <div className="divide-y divide-gray-50">
                   {preview.map((item) => {
                     const isExpanded = expandedDay === item.dateStr;
-                    const mSummary = isExpanded ? shiftSlotSummary('morning')   : null;
-                    const aSummary = isExpanded ? shiftSlotSummary('afternoon') : null;
+                    const mSlots = isExpanded ? daySlots.filter(s => { const t = String(s.start_time).slice(0, 5); return t >= morning.start_time && t < morning.end_time; }) : [];
+                    const aSlots = isExpanded ? daySlots.filter(s => { const t = String(s.start_time).slice(0, 5); return t >= afternoon.start_time && t < afternoon.end_time; }) : [];
                     return (
                       <div key={item.dateStr} className={`${item.isSpecific ? 'bg-purple-50/40' : ''}`}>
                         {/* Day row */}
@@ -646,7 +660,7 @@ export default function Horarios() {
 
                         {/* Expanded slot cancellation panel */}
                         {isExpanded && (
-                          <div className="px-4 pb-3 pt-1 bg-gray-50 border-t border-gray-100 space-y-2">
+                          <div className="px-4 pb-3 pt-1 bg-gray-50 border-t border-gray-100 space-y-3">
                             {loadingSlots ? (
                               <div className="flex items-center gap-2 py-2">
                                 <div className="w-4 h-4 border-2 border-[#e31b23] border-t-transparent rounded-full animate-spin" />
@@ -656,42 +670,56 @@ export default function Horarios() {
                               <p className="text-xs text-gray-400 py-2">No hay slots generados para este día todavía. Usá "Generar turnos" primero.</p>
                             ) : (
                               <>
-                                {item.hasMorning && mSummary && (
-                                  <div className="flex items-center justify-between gap-3 py-1">
-                                    <div className="flex items-center gap-2">
-                                      <Sun size={13} className="text-amber-500 shrink-0" />
+                                {item.hasMorning && mSlots.length > 0 && (
+                                  <div className="space-y-1.5">
+                                    <div className="flex items-center gap-1.5">
+                                      <Sun size={11} className="text-amber-500" />
                                       <span className="text-xs font-semibold text-amber-700">Mañana</span>
-                                      <span className="text-xs text-gray-400">
-                                        {mSummary.active} activo{mSummary.active !== 1 ? 's' : ''} de {mSummary.total}
+                                      <span className="text-xs text-gray-400 ml-1">
+                                        {mSlots.filter(s => s.is_active).length}/{mSlots.length} activos
                                       </span>
                                     </div>
-                                    <button
-                                      onClick={() => cancelShiftSlots('morning')}
-                                      disabled={cancellingShift === 'morning' || mSummary.active === 0}
-                                      className="flex items-center gap-1 text-xs bg-white border border-red-200 text-red-500 hover:bg-red-50 font-semibold px-2.5 py-1 rounded-lg disabled:opacity-40 transition-colors shrink-0"
-                                    >
-                                      <BanIcon size={11} />
-                                      {cancellingShift === 'morning' ? 'Cancelando...' : 'Cancelar mañana'}
-                                    </button>
+                                    <div className="grid grid-cols-3 gap-1">
+                                      {mSlots.map(slot => {
+                                        const st = String(slot.start_time).slice(0, 5);
+                                        return (
+                                          <div key={slot.id} className={`flex items-center justify-between px-2 py-1 rounded-lg ${slot.is_active ? 'bg-white border border-amber-100' : 'bg-gray-100 opacity-50'}`}>
+                                            <span className={`text-xs font-mono font-semibold ${slot.is_active ? 'text-amber-800' : 'text-gray-400 line-through'}`}>{st}</span>
+                                            {slot.is_active && (
+                                              <button onClick={() => cancelSingleSlot(slot.id)} className="text-red-400 hover:text-red-600 ml-1 transition-colors" title="Cancelar">
+                                                <X size={11} />
+                                              </button>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
                                   </div>
                                 )}
-                                {item.hasAfternoon && aSummary && (
-                                  <div className="flex items-center justify-between gap-3 py-1">
-                                    <div className="flex items-center gap-2">
-                                      <Sunset size={13} className="text-indigo-500 shrink-0" />
+                                {item.hasAfternoon && aSlots.length > 0 && (
+                                  <div className="space-y-1.5">
+                                    <div className="flex items-center gap-1.5">
+                                      <Sunset size={11} className="text-indigo-500" />
                                       <span className="text-xs font-semibold text-indigo-700">Tarde</span>
-                                      <span className="text-xs text-gray-400">
-                                        {aSummary.active} activo{aSummary.active !== 1 ? 's' : ''} de {aSummary.total}
+                                      <span className="text-xs text-gray-400 ml-1">
+                                        {aSlots.filter(s => s.is_active).length}/{aSlots.length} activos
                                       </span>
                                     </div>
-                                    <button
-                                      onClick={() => cancelShiftSlots('afternoon')}
-                                      disabled={cancellingShift === 'afternoon' || aSummary.active === 0}
-                                      className="flex items-center gap-1 text-xs bg-white border border-red-200 text-red-500 hover:bg-red-50 font-semibold px-2.5 py-1 rounded-lg disabled:opacity-40 transition-colors shrink-0"
-                                    >
-                                      <BanIcon size={11} />
-                                      {cancellingShift === 'afternoon' ? 'Cancelando...' : 'Cancelar tarde'}
-                                    </button>
+                                    <div className="grid grid-cols-3 gap-1">
+                                      {aSlots.map(slot => {
+                                        const st = String(slot.start_time).slice(0, 5);
+                                        return (
+                                          <div key={slot.id} className={`flex items-center justify-between px-2 py-1 rounded-lg ${slot.is_active ? 'bg-white border border-indigo-100' : 'bg-gray-100 opacity-50'}`}>
+                                            <span className={`text-xs font-mono font-semibold ${slot.is_active ? 'text-indigo-800' : 'text-gray-400 line-through'}`}>{st}</span>
+                                            {slot.is_active && (
+                                              <button onClick={() => cancelSingleSlot(slot.id)} className="text-red-400 hover:text-red-600 ml-1 transition-colors" title="Cancelar">
+                                                <X size={11} />
+                                              </button>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
                                   </div>
                                 )}
                               </>
