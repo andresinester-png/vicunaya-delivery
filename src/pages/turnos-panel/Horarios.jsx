@@ -4,8 +4,9 @@ import { useTurnosNegocio } from '../../contexts/TurnosNegocioContext.js';
 import toast from 'react-hot-toast';
 import { CalendarDays, CalendarPlus, Sun, Sunset, Clock, ChevronDown, ChevronUp, Trash2, Plus, X } from 'lucide-react';
 
-const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
-const DAY_LABEL = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 0: 'Dom' };
+const DAY_ORDER      = [1, 2, 3, 4, 5, 6, 0];
+const DAY_LABEL_SHORT = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 0: 'Dom' };
+const DAY_LABEL_FULL  = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 0: 'Domingo' };
 
 const DEFAULT_MORNING   = { is_active: false, start_time: '09:00', end_time: '13:00', days_of_week: [] };
 const DEFAULT_AFTERNOON = { is_active: false, start_time: '17:00', end_time: '21:00', days_of_week: [] };
@@ -67,126 +68,127 @@ function localDateStr(d) {
 }
 const todayISO = () => localDateStr(new Date());
 
-// ── Day toggle button ──────────────────────────────────────────────────────
-function DayButton({ dow, active, disabled, onClick, color }) {
-  const on = active;
-  const base = 'w-9 h-9 rounded-lg text-xs font-bold transition-colors shrink-0';
-  const off = 'bg-gray-100 text-gray-400';
-  const onStyle = color === 'amber'
-    ? 'bg-amber-500 text-white'
-    : 'bg-indigo-500 text-white';
-  const hov = disabled ? 'cursor-not-allowed opacity-40' : (color === 'amber' ? 'hover:bg-amber-100' : 'hover:bg-indigo-100');
-  return (
-    <button type="button" disabled={disabled} onClick={onClick}
-      className={`${base} ${on ? onStyle : `${off} ${hov}`}`}>
-      {DAY_LABEL[dow]}
-    </button>
-  );
-}
+// ── Per-day row ────────────────────────────────────────────────────────────
+function DayRow({ dow, morning, setMorning, afternoon, setAfternoon, dur }) {
+  const inMorning   = morning.days_of_week.includes(dow);
+  const inAfternoon = afternoon.days_of_week.includes(dow);
+  const isActive    = inMorning || inAfternoon;
+  const showPlus    = !inMorning || !inAfternoon;
 
-// ── Shift card (Mañana / Tarde) ────────────────────────────────────────────
-function ShiftCard({ label, color, shift, dur, onChange }) {
-  const isAmber = color === 'amber';
-  const Icon = isAmber ? Sun : Sunset;
-  const activeBg = isAmber ? 'bg-amber-50 border-amber-200' : 'bg-indigo-50 border-indigo-200';
-  const activeLabel = isAmber ? 'text-amber-800' : 'text-indigo-800';
-
-  function toggleDay(dow) {
-    const days = shift.days_of_week.includes(dow)
-      ? shift.days_of_week.filter(d => d !== dow)
-      : [...shift.days_of_week, dow];
-    onChange({ ...shift, days_of_week: days });
+  function toggleDay() {
+    if (isActive) {
+      setMorning(m => { const d = m.days_of_week.filter(x => x !== dow); return { ...m, days_of_week: d, is_active: d.length > 0 }; });
+      setAfternoon(a => { const d = a.days_of_week.filter(x => x !== dow); return { ...a, days_of_week: d, is_active: d.length > 0 }; });
+    } else {
+      setMorning(m => ({ ...m, is_active: true, days_of_week: [...m.days_of_week, dow] }));
+    }
   }
 
+  function removeMorning() {
+    setMorning(m => { const d = m.days_of_week.filter(x => x !== dow); return { ...m, days_of_week: d, is_active: d.length > 0 }; });
+  }
+
+  function removeAfternoon() {
+    setAfternoon(a => { const d = a.days_of_week.filter(x => x !== dow); return { ...a, days_of_week: d, is_active: d.length > 0 }; });
+  }
+
+  function addBand() {
+    if (!inMorning) setMorning(m => ({ ...m, is_active: true, days_of_week: [...m.days_of_week, dow] }));
+    else            setAfternoon(a => ({ ...a, is_active: true, days_of_week: [...a.days_of_week, dow] }));
+  }
+
+  const totalSlots =
+    (inMorning   && dur > 0 ? slotCount(morning.start_time,   morning.end_time,   dur) : 0) +
+    (inAfternoon && dur > 0 ? slotCount(afternoon.start_time, afternoon.end_time, dur) : 0);
+
   return (
-    <div className={`rounded-2xl border ${shift.is_active ? activeBg : 'bg-white border-gray-200'} p-4 space-y-4 transition-colors`}>
-      {/* Header: checkbox + label + time range */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <label className="flex items-center gap-2 cursor-pointer shrink-0">
-          <input
-            type="checkbox"
-            checked={shift.is_active}
-            onChange={e => onChange({ ...shift, is_active: e.target.checked })}
-            className="w-4 h-4 accent-[#e31b23]"
-          />
-          <Icon size={15} className={shift.is_active ? (isAmber ? 'text-amber-500' : 'text-indigo-500') : 'text-gray-300'} />
-          <span className={`text-sm font-bold ${shift.is_active ? activeLabel : 'text-gray-400'}`}>{label}</span>
-        </label>
-        <div className="flex items-center gap-2 ml-1">
-          <input
-            type="time"
-            value={shift.start_time}
-            disabled={!shift.is_active}
-            onChange={e => onChange({ ...shift, start_time: e.target.value })}
-            className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 disabled:text-gray-300 disabled:bg-white w-[110px]"
-          />
-          <span className="text-gray-400 text-sm">–</span>
-          <input
-            type="time"
-            value={shift.end_time}
-            disabled={!shift.is_active}
-            onChange={e => onChange({ ...shift, end_time: e.target.value })}
-            className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 disabled:text-gray-300 disabled:bg-white w-[110px]"
-          />
-        </div>
-        {shift.is_active && dur > 0 && (
-          <span className={`text-xs font-medium ml-auto ${isAmber ? 'text-amber-600' : 'text-indigo-600'}`}>
-            {slotCount(shift.start_time, shift.end_time, dur)} turnos/día
+    <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/40 transition-colors">
+      {/* Toggle */}
+      <button
+        type="button"
+        onClick={toggleDay}
+        className="relative w-9 h-5 rounded-full transition-colors shrink-0 focus:outline-none"
+        style={{ background: isActive ? '#e31b23' : '#D1D5DB' }}
+      >
+        <span
+          className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all"
+          style={{ left: isActive ? '18px' : '2px' }}
+        />
+      </button>
+
+      {/* Day name */}
+      <span className={`text-sm font-semibold w-24 shrink-0 ${isActive ? 'text-gray-800' : 'text-gray-400'}`}>
+        {DAY_LABEL_FULL[dow]}
+      </span>
+
+      {/* Band pills */}
+      <div className="flex items-center gap-1.5 flex-1 flex-wrap min-w-0">
+        {inMorning && (
+          <span className="inline-flex items-center gap-1 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap">
+            <Sun size={10} className="shrink-0" />
+            {morning.start_time}–{morning.end_time}
+            <button type="button" onClick={removeMorning} className="text-amber-400 hover:text-amber-700 transition-colors ml-0.5">
+              <X size={10} />
+            </button>
           </span>
         )}
+        {inAfternoon && (
+          <span className="inline-flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap">
+            <Sunset size={10} className="shrink-0" />
+            {afternoon.start_time}–{afternoon.end_time}
+            <button type="button" onClick={removeAfternoon} className="text-indigo-400 hover:text-indigo-700 transition-colors ml-0.5">
+              <X size={10} />
+            </button>
+          </span>
+        )}
+        {!isActive && <span className="text-xs text-gray-300">Sin turnos</span>}
       </div>
 
-      {/* Day toggles */}
-      <div className="flex gap-1.5 flex-wrap">
-        {DAY_ORDER.map(dow => (
-          <DayButton
-            key={dow}
-            dow={dow}
-            active={shift.days_of_week.includes(dow)}
-            disabled={!shift.is_active}
-            onClick={() => toggleDay(dow)}
-            color={color}
-          />
-        ))}
-      </div>
+      {/* Slot count */}
+      {isActive && dur > 0 && (
+        <span className="text-xs text-gray-400 shrink-0">{totalSlots} t.</span>
+      )}
 
-      {shift.is_active && shift.days_of_week.length > 0 && dur > 0 && (
-        <p className={`text-xs ${isAmber ? 'text-amber-600' : 'text-indigo-600'}`}>
-          Activo: {shift.days_of_week.map(d => DAY_LABEL[d]).join(', ')} · {slotCount(shift.start_time, shift.end_time, dur) * shift.days_of_week.length} turnos/semana
-        </p>
+      {/* Add band */}
+      {showPlus && (
+        <button
+          type="button"
+          onClick={addBand}
+          title="Agregar franja"
+          className="w-6 h-6 rounded-full border border-dashed border-gray-300 text-gray-400 hover:border-[#e31b23] hover:text-[#e31b23] flex items-center justify-center transition-colors shrink-0"
+        >
+          <Plus size={11} />
+        </button>
       )}
     </div>
   );
 }
 
+// ── Main component ─────────────────────────────────────────────────────────
 export default function Horarios() {
   const negocio = useTurnosNegocio();
 
   const [professionals, setProfessionals] = useState([]);
-  const [selectedProf, setSelectedProf] = useState('');
+  const [selectedProf, setSelectedProf]   = useState('');
 
-  // Fixed two-shift system
   const [morning,   setMorning]   = useState({ ...DEFAULT_MORNING });
   const [afternoon, setAfternoon] = useState({ ...DEFAULT_AFTERNOON });
   const [duration, setDuration]   = useState('30');
 
-  // Slot cancellation
-  const [expandedDay, setExpandedDay]       = useState(null);
-  const [daySlots, setDaySlots]             = useState([]);
-  const [loadingSlots, setLoadingSlots]     = useState(false);
-  const [cancellingShift, setCancellingShift] = useState(null);
-  const [confirmDialog, setConfirmDialog]     = useState(null);
+  const [expandedDay, setExpandedDay]           = useState(null);
+  const [daySlots, setDaySlots]                 = useState([]);
+  const [loadingSlots, setLoadingSlots]         = useState(false);
+  const [confirmDialog, setConfirmDialog]       = useState(null);
 
-  // Specific dates
-  const [dateRows, setDateRows]     = useState([]);
-  const [dateForm, setDateForm]     = useState(null);
-  const [savingDate, setSavingDate] = useState(false);
+  const [dateRows, setDateRows]         = useState([]);
+  const [dateForm, setDateForm]         = useState(null);
+  const [savingDate, setSavingDate]     = useState(false);
   const [deletingDate, setDeletingDate] = useState(null);
 
-  const [loading, setLoading]       = useState(false);
-  const [saving, setSaving]         = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving]   = useState(false);
 
-  // ── Professionals ────────────────────────────────────────────────────────
+  // ── Professionals ──────────────────────────────────────────────────────
   useEffect(() => {
     supabase
       .from('appointment_professionals')
@@ -211,17 +213,12 @@ export default function Horarios() {
     loadDateSchedules();
   }, [selectedProf]);
 
-  // ── Load / save shifts ───────────────────────────────────────────────────
+  // ── Load / save shifts ─────────────────────────────────────────────────
   async function loadShifts() {
     setLoading(true);
     setMorning({ ...DEFAULT_MORNING });
     setAfternoon({ ...DEFAULT_AFTERNOON });
-
-    const { data } = await supabase
-      .from('appointment_bands')
-      .select('*')
-      .eq('professional_id', selectedProf);
-
+    const { data } = await supabase.from('appointment_bands').select('*').eq('professional_id', selectedProf);
     (data || []).forEach(row => {
       const band = {
         is_active:    row.is_active ?? true,
@@ -233,7 +230,6 @@ export default function Horarios() {
       if (row.type === 'afternoon') setAfternoon(band);
       setDuration(String(row.slot_duration_minutes || 30));
     });
-
     setLoading(false);
   }
 
@@ -242,25 +238,16 @@ export default function Horarios() {
     if (!dur || dur <= 0) { toast.error('Ingresá una duración válida'); return; }
     setSaving(true);
 
-    // 1. Save bands
     const bandRows = [
       { business_id: negocio.id, professional_id: selectedProf, type: 'morning',   slot_duration_minutes: dur, ...morning },
       { business_id: negocio.id, professional_id: selectedProf, type: 'afternoon', slot_duration_minutes: dur, ...afternoon },
     ];
-    const { error: bandErr } = await supabase
-      .from('appointment_bands')
-      .upsert(bandRows, { onConflict: 'professional_id,type' });
+    const { error: bandErr } = await supabase.from('appointment_bands').upsert(bandRows, { onConflict: 'professional_id,type' });
     if (bandErr) { setSaving(false); toast.error('Error al guardar horario'); return; }
 
-    // 2. Delete existing future slots and regenerate fresh with correct duration
     const todayStr = todayISO();
-    await supabase
-      .from('appointment_slots')
-      .delete()
-      .eq('professional_id', selectedProf)
-      .gte('specific_date', todayStr);
+    await supabase.from('appointment_slots').delete().eq('professional_id', selectedProf).gte('specific_date', todayStr);
 
-    // 3. Build new slots for next 28 days
     const today = new Date();
     const slotsToInsert = [];
     for (let offset = 0; offset < 28; offset++) {
@@ -281,21 +268,16 @@ export default function Horarios() {
       });
     });
 
-    // 4. Insert all new slots
     if (slotsToInsert.length > 0) {
       const { error: slotErr } = await supabase.from('appointment_slots').insert(slotsToInsert);
-      if (slotErr) {
-        setSaving(false);
-        toast.error('Horario guardado, error al generar turnos');
-        return;
-      }
+      if (slotErr) { setSaving(false); toast.error('Horario guardado, error al generar turnos'); return; }
     }
 
     setSaving(false);
     toast.success(`Horario guardado · ${slotsToInsert.length} turnos generados`);
   }
 
-  // ── Slot cancellation ────────────────────────────────────────────────────
+  // ── Slot cancellation ──────────────────────────────────────────────────
   async function toggleExpandDay(dateStr) {
     if (expandedDay === dateStr) { setExpandedDay(null); setDaySlots([]); return; }
     setExpandedDay(dateStr);
@@ -333,25 +315,19 @@ export default function Horarios() {
       return true;
     });
     if (!targets.length) return;
-    const { error } = await supabase
-      .from('appointment_slots')
-      .update({ is_active: false })
-      .in('id', targets.map(s => s.id));
+    const { error } = await supabase.from('appointment_slots').update({ is_active: false }).in('id', targets.map(s => s.id));
     if (error) { toast.error('Error al cancelar'); return; }
     setDaySlots(prev => prev.map(s => targets.find(t => t.id === s.id) ? { ...s, is_active: false } : s));
     toast.success(`${targets.length} turno${targets.length !== 1 ? 's' : ''} cancelado${targets.length !== 1 ? 's' : ''}`);
   }
 
   async function cancelSingleSlot(slotId) {
-    const { error } = await supabase
-      .from('appointment_slots')
-      .update({ is_active: false })
-      .eq('id', slotId);
+    const { error } = await supabase.from('appointment_slots').update({ is_active: false }).eq('id', slotId);
     if (error) { toast.error('Error al cancelar'); return; }
     setDaySlots(prev => prev.map(s => s.id === slotId ? { ...s, is_active: false } : s));
   }
 
-  // ── Specific dates ───────────────────────────────────────────────────────
+  // ── Specific dates ─────────────────────────────────────────────────────
   async function loadDateSchedules() {
     const { data } = await supabase
       .from('appointment_date_schedules')
@@ -371,9 +347,7 @@ export default function Horarios() {
       specific_date: dateForm.date, shift: s,
       is_active: dateForm[s].is_active, start_time: dateForm[s].start_time, end_time: dateForm[s].end_time,
     }));
-    const { error } = await supabase
-      .from('appointment_date_schedules')
-      .upsert(rows, { onConflict: 'professional_id,specific_date,shift' });
+    const { error } = await supabase.from('appointment_date_schedules').upsert(rows, { onConflict: 'professional_id,specific_date,shift' });
     setSavingDate(false);
     if (error) { toast.error('Error al guardar'); return; }
     setDateForm(null);
@@ -383,16 +357,24 @@ export default function Horarios() {
 
   async function deleteSpecificDate(dateStr) {
     setDeletingDate(dateStr);
-    await supabase.from('appointment_date_schedules').delete()
-      .eq('professional_id', selectedProf).eq('specific_date', dateStr);
+    await supabase.from('appointment_date_schedules').delete().eq('professional_id', selectedProf).eq('specific_date', dateStr);
     setDeletingDate(null);
     toast.success('Fecha eliminada');
     loadDateSchedules();
   }
 
-  // ── Derived ──────────────────────────────────────────────────────────────
+  // ── Derived ────────────────────────────────────────────────────────────
   const groupedDates = useMemo(() => groupDateSchedules(dateRows), [dateRows]);
   const dur = parseInt(duration, 10) || 0;
+
+  const weeklySlotTotal = useMemo(() => {
+    return DAY_ORDER.reduce((sum, dow) => {
+      const inM = morning.days_of_week.includes(dow);
+      const inA = afternoon.days_of_week.includes(dow);
+      return sum + (inM && dur > 0 ? slotCount(morning.start_time, morning.end_time, dur) : 0)
+                 + (inA && dur > 0 ? slotCount(afternoon.start_time, afternoon.end_time, dur) : 0);
+    }, 0);
+  }, [morning, afternoon, dur]);
 
   const preview = useMemo(() => {
     if (!dur) return [];
@@ -442,7 +424,7 @@ export default function Horarios() {
     return result.sort((a, b) => a.dateStr.localeCompare(b.dateStr));
   }, [morning, afternoon, dur, groupedDates]);
 
-  // ── Empty state ──────────────────────────────────────────────────────────
+  // ── Empty state ────────────────────────────────────────────────────────
   if (professionals.length === 0 && !loading) {
     return (
       <div className="max-w-2xl mx-auto">
@@ -454,18 +436,9 @@ export default function Horarios() {
     );
   }
 
-  // ── Helper: slot counts for expanded day ─────────────────────────────────
-  function shiftSlotSummary(shift) {
-    const band = shift === 'morning' ? morning : afternoon;
-    if (!band.is_active) return null;
-    const all    = daySlots.filter(s => { const t = String(s.start_time).slice(0, 5); return t >= band.start_time && t < band.end_time; });
-    const active = all.filter(s => s.is_active);
-    return { total: all.length, active: active.length };
-  }
-
-  // ── Render ───────────────────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-5">
 
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -478,43 +451,111 @@ export default function Horarios() {
         )}
       </div>
 
-      {/* Duration */}
-      <div className="bg-white rounded-2xl px-5 py-4 shadow-sm flex items-center gap-4 flex-wrap">
-        <Clock size={15} className="text-gray-400 shrink-0" />
-        <span className="text-sm font-semibold text-gray-700 shrink-0">Duración del turno</span>
-        <div className="flex items-center gap-2">
-          <input
-            type="number" min="1" max="480" placeholder="ej: 30"
-            value={duration}
-            onChange={e => setDuration(e.target.value)}
-            onBlur={() => { const v = parseInt(duration, 10); setDuration(v > 0 ? String(v) : ''); }}
-            className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[#e31b23]/30"
-          />
-          <span className="text-sm text-gray-500">minutos</span>
-        </div>
-      </div>
-
       {loading ? (
         <div className="flex justify-center py-12">
           <div className="w-6 h-6 border-2 border-[#e31b23] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <>
-          {/* ── Two fixed shifts ─────────────────────────────────────────── */}
-          <div className="space-y-3">
-            <ShiftCard label="Turno Mañana"  color="amber"  shift={morning}   dur={dur} onChange={setMorning} />
-            <ShiftCard label="Turno Tarde"   color="indigo" shift={afternoon} dur={dur} onChange={setAfternoon} />
+          {/* ── Days of the week ────────────────────────────────────────── */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-800">Días de atención</span>
+              {dur > 0 && weeklySlotTotal > 0 && (
+                <span className="text-xs text-gray-400">{weeklySlotTotal} turnos/semana</span>
+              )}
+            </div>
+            {DAY_ORDER.map(dow => (
+              <DayRow
+                key={dow} dow={dow}
+                morning={morning}   setMorning={setMorning}
+                afternoon={afternoon} setAfternoon={setAfternoon}
+                dur={dur}
+              />
+            ))}
           </div>
 
+          {/* ── Band time ranges ─────────────────────────────────────────── */}
+          <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-800">Horarios de las franjas</h3>
+
+            {/* Franja 1 – morning */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5 w-28 shrink-0">
+                <Sun size={14} className="text-amber-500 shrink-0" />
+                <span className="text-xs font-semibold text-amber-700">Franja 1</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="time" value={morning.start_time}
+                  onChange={e => setMorning(m => ({ ...m, start_time: e.target.value }))}
+                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 w-[108px]"
+                />
+                <span className="text-gray-400 text-sm">–</span>
+                <input
+                  type="time" value={morning.end_time}
+                  onChange={e => setMorning(m => ({ ...m, end_time: e.target.value }))}
+                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 w-[108px]"
+                />
+                {dur > 0 && (
+                  <span className="text-xs text-gray-400">{slotCount(morning.start_time, morning.end_time, dur)} turnos/día</span>
+                )}
+              </div>
+            </div>
+
+            {/* Franja 2 – afternoon */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5 w-28 shrink-0">
+                <Sunset size={14} className="text-indigo-500 shrink-0" />
+                <span className="text-xs font-semibold text-indigo-700">Franja 2</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="time" value={afternoon.start_time}
+                  onChange={e => setAfternoon(a => ({ ...a, start_time: e.target.value }))}
+                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 w-[108px]"
+                />
+                <span className="text-gray-400 text-sm">–</span>
+                <input
+                  type="time" value={afternoon.end_time}
+                  onChange={e => setAfternoon(a => ({ ...a, end_time: e.target.value }))}
+                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 w-[108px]"
+                />
+                {dur > 0 && (
+                  <span className="text-xs text-gray-400">{slotCount(afternoon.start_time, afternoon.end_time, dur)} turnos/día</span>
+                )}
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-400">Los horarios aplican a todos los días que tengan esa franja activada.</p>
+          </div>
+
+          {/* ── Duration ─────────────────────────────────────────────────── */}
+          <div className="bg-white rounded-2xl px-5 py-4 shadow-sm flex items-center gap-4 flex-wrap">
+            <Clock size={15} className="text-gray-400 shrink-0" />
+            <span className="text-sm font-semibold text-gray-700 shrink-0">Duración del turno</span>
+            <div className="flex items-center gap-2">
+              <input
+                type="number" min="1" max="480" placeholder="ej: 30"
+                value={duration}
+                onChange={e => setDuration(e.target.value)}
+                onBlur={() => { const v = parseInt(duration, 10); setDuration(v > 0 ? String(v) : ''); }}
+                className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[#e31b23]/30"
+              />
+              <span className="text-sm text-gray-500">minutos</span>
+            </div>
+          </div>
+
+          {/* ── Save button ───────────────────────────────────────────────── */}
           <button
             onClick={saveSchedule}
             disabled={saving}
-            className="w-full bg-[#e31b23] hover:bg-[#c41520] disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
+            className="w-full bg-[#e31b23] hover:bg-[#c41520] disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
           >
             {saving ? 'Guardando y generando turnos...' : 'Guardar horario'}
           </button>
 
-          {/* ── Fechas específicas ────────────────────────────────────────── */}
+          {/* ── Specific dates ────────────────────────────────────────────── */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
             <div className="px-4 py-4 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -605,7 +646,7 @@ export default function Horarios() {
             )}
           </div>
 
-          {/* ── Vista previa ──────────────────────────────────────────────── */}
+          {/* ── Preview ───────────────────────────────────────────────────── */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <CalendarDays size={16} className="text-gray-400" />
@@ -621,7 +662,7 @@ export default function Horarios() {
               <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
                 <CalendarDays size={28} className="mx-auto text-gray-200 mb-2" />
                 <p className="text-gray-400 text-sm">
-                  {!dur ? 'Ingresá una duración para ver la vista previa' : 'Activá al menos un turno y elegí días'}
+                  {!dur ? 'Ingresá una duración para ver la vista previa' : 'Activá al menos un día en el horario semanal'}
                 </p>
               </div>
             ) : (
@@ -632,8 +673,7 @@ export default function Horarios() {
                     const mSlots = isExpanded ? daySlots.filter(s => { const t = String(s.start_time).slice(0, 5); return t >= morning.start_time && t < morning.end_time; }) : [];
                     const aSlots = isExpanded ? daySlots.filter(s => { const t = String(s.start_time).slice(0, 5); return t >= afternoon.start_time && t < afternoon.end_time; }) : [];
                     return (
-                      <div key={item.dateStr} className={`${item.isSpecific ? 'bg-purple-50/40' : ''}`}>
-                        {/* Day row */}
+                      <div key={item.dateStr} className={item.isSpecific ? 'bg-purple-50/40' : ''}>
                         <button
                           onClick={() => toggleExpandDay(item.dateStr)}
                           className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-50/60 transition-colors"
@@ -660,12 +700,9 @@ export default function Horarios() {
                               )}
                             </div>
                           </div>
-                          {isExpanded
-                            ? <ChevronUp size={14} className="text-gray-400 shrink-0" />
-                            : <ChevronDown size={14} className="text-gray-400 shrink-0" />}
+                          {isExpanded ? <ChevronUp size={14} className="text-gray-400 shrink-0" /> : <ChevronDown size={14} className="text-gray-400 shrink-0" />}
                         </button>
 
-                        {/* Expanded slot cancellation panel */}
                         {isExpanded && (
                           <div className="px-4 pb-3 pt-1 bg-gray-50 border-t border-gray-100 space-y-3">
                             {loadingSlots ? (
@@ -674,7 +711,7 @@ export default function Horarios() {
                                 <span className="text-xs text-gray-400">Cargando slots...</span>
                               </div>
                             ) : daySlots.length === 0 ? (
-                              <p className="text-xs text-gray-400 py-2">No hay slots generados para este día todavía. Usá "Generar turnos" primero.</p>
+                              <p className="text-xs text-gray-400 py-2">No hay slots generados para este día. Guardá el horario primero.</p>
                             ) : (
                               <>
                                 {/* Bulk cancel buttons */}
@@ -686,26 +723,20 @@ export default function Horarios() {
                                   return (
                                     <div className="flex gap-1.5 flex-wrap">
                                       {item.hasMorning && activeMorning > 0 && (
-                                        <button
-                                          onClick={() => requestBulkCancel('morning')}
-                                          className="flex items-center gap-1 text-xs border border-red-200 text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-semibold transition-colors"
-                                        >
+                                        <button onClick={() => requestBulkCancel('morning')}
+                                          className="flex items-center gap-1 text-xs border border-red-200 text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-semibold transition-colors">
                                           <Sun size={11} /> Cancelar mañana ({activeMorning})
                                         </button>
                                       )}
                                       {item.hasAfternoon && activeAfternoon > 0 && (
-                                        <button
-                                          onClick={() => requestBulkCancel('afternoon')}
-                                          className="flex items-center gap-1 text-xs border border-red-200 text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-semibold transition-colors"
-                                        >
+                                        <button onClick={() => requestBulkCancel('afternoon')}
+                                          className="flex items-center gap-1 text-xs border border-red-200 text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-semibold transition-colors">
                                           <Sunset size={11} /> Cancelar tarde ({activeAfternoon})
                                         </button>
                                       )}
                                       {item.hasMorning && item.hasAfternoon && activeAll > 0 && (
-                                        <button
-                                          onClick={() => requestBulkCancel('all')}
-                                          className="flex items-center gap-1 text-xs border border-red-300 text-red-700 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-semibold transition-colors"
-                                        >
+                                        <button onClick={() => requestBulkCancel('all')}
+                                          className="flex items-center gap-1 text-xs border border-red-300 text-red-700 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-semibold transition-colors">
                                           Cancelar todo el día ({activeAll})
                                         </button>
                                       )}
@@ -718,9 +749,7 @@ export default function Horarios() {
                                     <div className="flex items-center gap-1.5">
                                       <Sun size={11} className="text-amber-500" />
                                       <span className="text-xs font-semibold text-amber-700">Mañana</span>
-                                      <span className="text-xs text-gray-400 ml-1">
-                                        {mSlots.filter(s => s.is_active).length}/{mSlots.length} activos
-                                      </span>
+                                      <span className="text-xs text-gray-400 ml-1">{mSlots.filter(s => s.is_active).length}/{mSlots.length} activos</span>
                                     </div>
                                     <div className="grid grid-cols-3 gap-1">
                                       {mSlots.map(slot => {
@@ -729,9 +758,7 @@ export default function Horarios() {
                                           <div key={slot.id} className={`flex items-center justify-between px-2 py-1 rounded-lg ${slot.is_active ? 'bg-white border border-amber-100' : 'bg-gray-100 opacity-50'}`}>
                                             <span className={`text-xs font-mono font-semibold ${slot.is_active ? 'text-amber-800' : 'text-gray-400 line-through'}`}>{st}</span>
                                             {slot.is_active && (
-                                              <button onClick={() => cancelSingleSlot(slot.id)} className="text-red-400 hover:text-red-600 ml-1 transition-colors" title="Cancelar">
-                                                <X size={11} />
-                                              </button>
+                                              <button onClick={() => cancelSingleSlot(slot.id)} className="text-red-400 hover:text-red-600 ml-1 transition-colors"><X size={11} /></button>
                                             )}
                                           </div>
                                         );
@@ -744,9 +771,7 @@ export default function Horarios() {
                                     <div className="flex items-center gap-1.5">
                                       <Sunset size={11} className="text-indigo-500" />
                                       <span className="text-xs font-semibold text-indigo-700">Tarde</span>
-                                      <span className="text-xs text-gray-400 ml-1">
-                                        {aSlots.filter(s => s.is_active).length}/{aSlots.length} activos
-                                      </span>
+                                      <span className="text-xs text-gray-400 ml-1">{aSlots.filter(s => s.is_active).length}/{aSlots.length} activos</span>
                                     </div>
                                     <div className="grid grid-cols-3 gap-1">
                                       {aSlots.map(slot => {
@@ -755,9 +780,7 @@ export default function Horarios() {
                                           <div key={slot.id} className={`flex items-center justify-between px-2 py-1 rounded-lg ${slot.is_active ? 'bg-white border border-indigo-100' : 'bg-gray-100 opacity-50'}`}>
                                             <span className={`text-xs font-mono font-semibold ${slot.is_active ? 'text-indigo-800' : 'text-gray-400 line-through'}`}>{st}</span>
                                             {slot.is_active && (
-                                              <button onClick={() => cancelSingleSlot(slot.id)} className="text-red-400 hover:text-red-600 ml-1 transition-colors" title="Cancelar">
-                                                <X size={11} />
-                                              </button>
+                                              <button onClick={() => cancelSingleSlot(slot.id)} className="text-red-400 hover:text-red-600 ml-1 transition-colors"><X size={11} /></button>
                                             )}
                                           </div>
                                         );
@@ -778,32 +801,21 @@ export default function Horarios() {
           </div>
 
           <p className="text-xs text-gray-400 px-1">
-            "Guardar" guarda la plantilla semanal. "Generar turnos" la convierte en slots para los próximos 28 días. Hacé click en un día de la vista previa para cancelar sus turnos puntuales.
+            "Guardar horario" convierte la plantilla semanal en turnos para los próximos 28 días. Hacé click en un día de la vista previa para cancelar turnos puntuales.
           </p>
         </>
       )}
 
       {/* Confirmation modal */}
       {confirmDialog && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => setConfirmDialog(null)}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-xl p-6 mx-4 max-w-sm w-full"
-            onClick={e => e.stopPropagation()}
-          >
-            <p className="font-bold text-gray-900 text-base">
-              ¿Cancelar {confirmDialog.label}?
-            </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setConfirmDialog(null)}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 mx-4 max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <p className="font-bold text-gray-900 text-base">¿Cancelar {confirmDialog.label}?</p>
             <p className="text-sm text-gray-500 mt-2">
               Se cancelarán <strong>{confirmDialog.count}</strong> turno{confirmDialog.count !== 1 ? 's' : ''}. Esta acción no se puede deshacer.
             </p>
             <div className="flex gap-2 mt-5 justify-end">
-              <button
-                onClick={() => setConfirmDialog(null)}
-                className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-              >
+              <button onClick={() => setConfirmDialog(null)} className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                 No, volver
               </button>
               <button
