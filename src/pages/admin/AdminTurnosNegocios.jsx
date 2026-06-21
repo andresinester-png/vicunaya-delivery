@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Calendar, Pencil, Upload, X, Loader2, Check, ToggleLeft, ToggleRight, Image, Plus, Key, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabaseAdmin } from '../../lib/supabase.js';
-import { CreateAccessModal, ResetPasswordModal } from '../../components/OwnerAccessModal.jsx';
+import { CreateAccessModal, ResetPasswordModal, ViewPasswordModal } from '../../components/OwnerAccessModal.jsx';
 
 const BUCKET = 'IMAGES';
 
@@ -277,7 +277,8 @@ export default function AdminTurnosNegocios() {
   const [modal,       setModal]       = useState(null); // null | 'new' | business object
   const [ownerMap,    setOwnerMap]    = useState({}); // { userId: email }
   const [createModal, setCreateModal] = useState(null); // { id, name }
-  const [resetModal,  setResetModal]  = useState(null); // { id, userId, email }
+  const [resetModal,  setResetModal]  = useState(null); // { id, userId, email, businessType }
+  const [viewModal,   setViewModal]   = useState(null); // { id, email }
 
   const load = async () => {
     setLoading(true);
@@ -411,12 +412,21 @@ export default function AdminTurnosNegocios() {
                         {ownerMap[neg.owner_id]}
                       </span>
                     )}
-                    <button
-                      onClick={() => setResetModal({ id: neg.id, userId: neg.owner_id, email: ownerMap[neg.owner_id] || '' })}
-                      className="ml-auto shrink-0 text-xs text-primary font-semibold hover:underline"
-                    >
-                      Resetear
-                    </button>
+                    <div className="ml-auto shrink-0 flex items-center gap-2">
+                      <button
+                        onClick={() => setViewModal({ id: neg.id, email: ownerMap[neg.owner_id] || '' })}
+                        className="text-xs text-gray-500 font-semibold hover:underline"
+                      >
+                        Ver clave
+                      </button>
+                      <span className="text-gray-200 select-none">|</span>
+                      <button
+                        onClick={() => setResetModal({ id: neg.id, userId: neg.owner_id, email: ownerMap[neg.owner_id] || '', businessType: 'turnos' })}
+                        className="text-xs text-primary font-semibold hover:underline"
+                      >
+                        Resetear
+                      </button>
+                    </div>
                   </>
                 ) : (
                   <button
@@ -454,7 +464,17 @@ export default function AdminTurnosNegocios() {
         <ResetPasswordModal
           userId={resetModal.userId}
           email={resetModal.email}
+          businessId={resetModal.id}
+          businessType={resetModal.businessType}
           onClose={() => setResetModal(null)}
+        />
+      )}
+
+      {viewModal && (
+        <ViewPasswordModal
+          businessId={viewModal.id}
+          email={viewModal.email}
+          onClose={() => setViewModal(null)}
         />
       )}
     </div>
