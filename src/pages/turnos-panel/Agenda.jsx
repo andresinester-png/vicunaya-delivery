@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { useTurnosNegocio } from '../../contexts/TurnosNegocioContext.js';
 import toast from 'react-hot-toast';
-import { Calendar, UserCircle, CheckCircle, XCircle, Check } from 'lucide-react';
+import { Calendar, UserCircle, CheckCircle, XCircle, Check, Phone, Copy, MessageCircle } from 'lucide-react';
 
 const STATUS_COLORS = {
   pending:   { card: 'bg-amber-50  border border-amber-200',  label: 'text-amber-800',  badge: 'bg-amber-100  text-amber-800',  text: 'Pendiente'  },
@@ -10,13 +10,18 @@ const STATUS_COLORS = {
   completed: { card: 'bg-blue-50   border border-blue-200',   label: 'text-blue-800',   badge: 'bg-blue-100   text-blue-800',   text: 'Completado' },
 };
 
-const FREE_CARD   = 'bg-gray-50 border border-gray-100';
-const CLOSED_CARD = 'bg-gray-100 border border-dashed border-gray-200 opacity-40';
+const FREE_CARD = 'bg-white border border-gray-300';
 
 function localDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function timeToMin(t) { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; }
+
+function formatWANumber(phone) {
+  const digits = phone.replace(/\D/g, '');
+  const noLeadingZero = digits.startsWith('0') ? digits.slice(1) : digits;
+  return noLeadingZero.startsWith('54') ? noLeadingZero : `54${noLeadingZero}`;
+}
 
 export default function Agenda() {
   const negocio = useTurnosNegocio();
@@ -83,10 +88,10 @@ export default function Agenda() {
     if (error) { toast.error('Error al actualizar'); return; }
     setAppointments(prev => prev.map(a => a.id === apptId ? { ...a, status } : a));
     if (selectedAppt?.appt.id === apptId) setSelectedAppt(prev => ({ ...prev, appt: { ...prev.appt, status } }));
-    toast.success('Estado actualizado');
+    toast.success(status === 'completed' ? 'Marcado como atendido' : 'Estado actualizado');
   }
 
-  // Build per-professional appointment map keyed by start_time string
+  // Build per-professional appointment map keyed by start_time HH:MM
   const apptByProf = useMemo(() => {
     const map = {};
     appointments.forEach(a => {
@@ -101,8 +106,6 @@ export default function Agenda() {
   });
 
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-
-  // Total booked today
   const totalBooked = appointments.length;
 
   return (
@@ -141,9 +144,13 @@ export default function Agenda() {
       ) : (
         <div className="space-y-4">
           {professionals.map(prof => {
-            const profSlots  = slots.filter(s => s.professional_id === prof.id);
+            const profSlots   = slots.filter(s => s.professional_id === prof.id);
             const profApptMap = apptByProf[prof.id] || {};
-            const profBooked = Object.keys(profApptMap).length;
+            const profBooked  = Object.keys(profApptMap).length;
+            // Count visible slots: active ones + any with an appointment
+            const visibleCount = profSlots.filter(s =>
+              s.is_active || !!profApptMap[String(s.start_time).slice(0, 5)]
+            ).length;
 
             return (
               <div key={prof.id} className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -160,12 +167,12 @@ export default function Agenda() {
                         {profBooked} ocupado{profBooked !== 1 ? 's' : ''}
                       </span>
                     )}
-                    <span className="text-gray-400">{profSlots.length} turnos</span>
+                    <span className="text-gray-400">{visibleCount} turnos</span>
                   </div>
                 </div>
 
                 {/* Slot grid */}
-                {profSlots.length === 0 ? (
+                {visibleCount === 0 ? (
                   <div className="px-4 py-8 text-center">
                     <p className="text-gray-300 text-sm">Sin turnos generados para este día</p>
                     <p className="text-gray-300 text-xs mt-1">Configurá el horario y generá los turnos desde la sección Horarios</p>
@@ -177,42 +184,55 @@ export default function Agenda() {
                       const appt = profApptMap[st];
                       const isSelected = selectedAppt?.appt?.id === appt?.id;
 
-                      // Cancelled slot (is_active = false)
-                      if (!slot.is_active) {
+                      // Occupied slot — show regardless of is_active
+                      if (appt) {
+                        const sc = STATUS_COLORS[appt.status] || STATUS_COLORS.pending;
                         return (
-                          <div key={slot.id} className={`rounded-xl px-2 py-2.5 ${CLOSED_CARD}`}>
-                            <p className="text-xs font-semibold text-gray-400">{st}</p>
-                            <p className="text-xs text-gray-300 mt-0.5">Cancelado</p>
+                          <div
+                            key={slot.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setSelectedAppt(isSelected ? null : { profId: prof.id, appt })}
+                            onKeyDown={e => e.key === 'Enter' && setSelectedAppt(isSelected ? null : { profId: prof.id, appt })}
+                            className={`relative rounded-xl px-2 py-2.5 text-left transition-all cursor-pointer select-none ${sc.card} ${isSelected ? 'ring-2 ring-[#e31b23]/40' : 'hover:opacity-90'}`}
+                          >
+                            <p className={`text-xs font-bold pr-4 ${sc.label}`}>{st}</p>
+                            <p className={`text-xs font-semibold mt-0.5 truncate ${sc.label}`}>{appt.customer_name}</p>
+                            {appt.appointment_services?.name && (
+                              <p className={`text-xs mt-0.5 truncate opacity-60 ${sc.label}`}>{appt.appointment_services.name}</p>
+                            )}
+                            {/* Quick "Atendido" button */}
+                            {appt.status !== 'completed' ? (
+                              <button
+                                onClick={e => { e.stopPropagation(); updateStatus(appt.id, 'completed'); }}
+                                className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-md transition-colors"
+                                title="Marcar como atendido"
+                              >
+                                <Check size={10} />
+                              </button>
+                            ) : (
+                              <CheckCircle size={12} className="absolute top-1.5 right-1.5 text-blue-400" />
+                            )}
                           </div>
                         );
                       }
+
+                      // Cancelled slot with no appointment → hidden
+                      if (!slot.is_active) return null;
 
                       // Free slot (past or future)
-                      if (!appt) {
-                        const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
-                        const isPast = date === today && timeToMin(st) <= nowMin;
-                        return (
-                          <div key={slot.id} className={`rounded-xl px-2 py-2.5 ${isPast ? 'bg-gray-50 border border-gray-100 opacity-50' : FREE_CARD}`}>
-                            <p className={`text-xs font-semibold ${isPast ? 'text-gray-300' : 'text-gray-400'}`}>{st}</p>
-                            <p className="text-xs text-gray-300 mt-0.5">{isPast ? 'Pasado' : 'Libre'}</p>
-                          </div>
-                        );
-                      }
-
-                      // Occupied slot
-                      const sc = STATUS_COLORS[appt.status] || STATUS_COLORS.pending;
+                      const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+                      const isPast = date === today && timeToMin(st) <= nowMin;
                       return (
-                        <button
+                        <div
                           key={slot.id}
-                          onClick={() => setSelectedAppt(isSelected ? null : { profId: prof.id, appt })}
-                          className={`rounded-xl px-2 py-2.5 text-left transition-all ${sc.card} ${isSelected ? 'ring-2 ring-[#e31b23]/40' : 'hover:opacity-90'}`}
+                          className={`rounded-xl px-2 py-2.5 ${isPast ? 'bg-gray-50 border border-gray-100 opacity-50' : FREE_CARD}`}
                         >
-                          <p className={`text-xs font-bold ${sc.label}`}>{st}</p>
-                          <p className={`text-xs font-semibold mt-0.5 truncate ${sc.label}`}>{appt.customer_name}</p>
-                          {appt.appointment_services?.name && (
-                            <p className={`text-xs mt-0.5 truncate opacity-60 ${sc.label}`}>{appt.appointment_services.name}</p>
-                          )}
-                        </button>
+                          <p className={`text-xs font-semibold ${isPast ? 'text-gray-300' : 'text-gray-700'}`}>{st}</p>
+                          <p className={`text-xs mt-0.5 ${isPast ? 'text-gray-300' : 'text-gray-500'}`}>
+                            {isPast ? 'Pasado' : 'Libre'}
+                          </p>
+                        </div>
                       );
                     })}
                   </div>
@@ -220,7 +240,9 @@ export default function Agenda() {
 
                 {/* Detail panel for selected appointment of this professional */}
                 {selectedAppt?.profId === prof.id && (
-                  <div className="mx-3 mb-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                  <div className="mx-3 mb-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 space-y-3">
+
+                    {/* Time + status + name */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -232,12 +254,9 @@ export default function Agenda() {
                           </span>
                         </div>
                         <p className="text-sm font-semibold text-gray-900">{selectedAppt.appt.customer_name}</p>
-                        <div className="text-xs text-gray-500 flex gap-2 flex-wrap">
-                          {selectedAppt.appt.customer_phone && <span>{selectedAppt.appt.customer_phone}</span>}
-                          {selectedAppt.appt.appointment_services?.name && (
-                            <span className="text-gray-400">· {selectedAppt.appt.appointment_services.name}</span>
-                          )}
-                        </div>
+                        {selectedAppt.appt.appointment_services?.name && (
+                          <p className="text-xs text-gray-400">{selectedAppt.appt.appointment_services.name}</p>
+                        )}
                       </div>
 
                       {selectedAppt.appt.status !== 'completed' && (
@@ -254,7 +273,7 @@ export default function Agenda() {
                             onClick={() => updateStatus(selectedAppt.appt.id, 'completed')}
                             className="flex items-center gap-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg font-medium transition-colors"
                           >
-                            <Check size={12} /> Completado
+                            <Check size={12} /> Atendido
                           </button>
                           <button
                             onClick={() => updateStatus(selectedAppt.appt.id, 'cancelled')}
@@ -265,6 +284,31 @@ export default function Agenda() {
                         </div>
                       )}
                     </div>
+
+                    {/* Phone + contact buttons */}
+                    {selectedAppt.appt.customer_phone && (
+                      <div className="flex items-center gap-2 flex-wrap pt-0.5 border-t border-gray-200">
+                        <Phone size={13} className="text-gray-400 shrink-0" />
+                        <span className="text-sm font-medium text-gray-700">{selectedAppt.appt.customer_phone}</span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(selectedAppt.appt.customer_phone);
+                            toast.success('Teléfono copiado');
+                          }}
+                          className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 hover:bg-gray-200 px-2 py-1 rounded-lg transition-colors"
+                        >
+                          <Copy size={11} /> Copiar
+                        </button>
+                        <a
+                          href={`https://wa.me/${formatWANumber(selectedAppt.appt.customer_phone)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 px-2.5 py-1 rounded-lg transition-colors"
+                        >
+                          <MessageCircle size={11} /> WhatsApp
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
