@@ -39,6 +39,7 @@ import MisTurnos from './pages/MisTurnos.jsx';
 import AdminLogin from './pages/admin/AdminLogin.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import AdminRestaurants from './pages/admin/AdminRestaurants.jsx';
+import AdminTurnosNegocios from './pages/admin/AdminTurnosNegocios.jsx';
 import MenuManagement from './pages/admin/MenuManagement.jsx';
 import Earnings from './pages/admin/Earnings.jsx';
 import Banners from './pages/admin/Banners.jsx';
@@ -115,11 +116,12 @@ export default function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminGuard />}>
           <Route index element={<Navigate to="/admin/pedidos" replace />} />
-          <Route path="pedidos"      element={<AdminDashboard />} />
-          <Route path="restaurantes" element={<AdminRestaurants />} />
-          <Route path="menu"         element={<MenuManagement />} />
-          <Route path="ganancias"    element={<Earnings />} />
-          <Route path="banners"      element={<Banners />} />
+          <Route path="pedidos"          element={<AdminDashboard />} />
+          <Route path="restaurantes"     element={<AdminRestaurants />} />
+          <Route path="turnos-negocios"  element={<AdminTurnosNegocios />} />
+          <Route path="menu"             element={<MenuManagement />} />
+          <Route path="ganancias"        element={<Earnings />} />
+          <Route path="banners"          element={<Banners />} />
         </Route>
 
         {/* ── Panel restaurante ── */}
