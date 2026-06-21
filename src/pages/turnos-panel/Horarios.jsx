@@ -457,27 +457,9 @@ export default function Horarios() {
         </div>
       ) : (
         <>
-          {/* ── Days of the week ────────────────────────────────────────── */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-800">Días de atención</span>
-              {dur > 0 && weeklySlotTotal > 0 && (
-                <span className="text-xs text-gray-400">{weeklySlotTotal} turnos/semana</span>
-              )}
-            </div>
-            {DAY_ORDER.map(dow => (
-              <DayRow
-                key={dow} dow={dow}
-                morning={morning}   setMorning={setMorning}
-                afternoon={afternoon} setAfternoon={setAfternoon}
-                dur={dur}
-              />
-            ))}
-          </div>
-
           {/* ── Band time ranges ─────────────────────────────────────────── */}
           <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-gray-800">Horarios de las franjas</h3>
+            <h3 className="text-sm font-semibold text-gray-800">Franjas horarias</h3>
 
             {/* Franja 1 – morning */}
             <div className="flex items-center gap-3 flex-wrap">
@@ -546,14 +528,23 @@ export default function Horarios() {
             </div>
           </div>
 
-          {/* ── Save button ───────────────────────────────────────────────── */}
-          <button
-            onClick={saveSchedule}
-            disabled={saving}
-            className="w-full bg-[#e31b23] hover:bg-[#c41520] disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
-          >
-            {saving ? 'Guardando y generando turnos...' : 'Guardar horario'}
-          </button>
+          {/* ── Days of the week ────────────────────────────────────────── */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-800">Días de atención</span>
+              {dur > 0 && weeklySlotTotal > 0 && (
+                <span className="text-xs text-gray-400">{weeklySlotTotal} turnos/semana</span>
+              )}
+            </div>
+            {DAY_ORDER.map(dow => (
+              <DayRow
+                key={dow} dow={dow}
+                morning={morning}   setMorning={setMorning}
+                afternoon={afternoon} setAfternoon={setAfternoon}
+                dur={dur}
+              />
+            ))}
+          </div>
 
           {/* ── Specific dates ────────────────────────────────────────────── */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -645,6 +636,15 @@ export default function Horarios() {
               </div>
             )}
           </div>
+
+          {/* ── Save button ───────────────────────────────────────────────── */}
+          <button
+            onClick={saveSchedule}
+            disabled={saving}
+            className="w-full bg-[#e31b23] hover:bg-[#c41520] disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
+          >
+            {saving ? 'Guardando y generando turnos...' : 'Guardar horario'}
+          </button>
 
           {/* ── Preview ───────────────────────────────────────────────────── */}
           <div className="space-y-3">

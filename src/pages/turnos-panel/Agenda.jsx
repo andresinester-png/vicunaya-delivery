@@ -2,13 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { useTurnosNegocio } from '../../contexts/TurnosNegocioContext.js';
 import toast from 'react-hot-toast';
-import { Calendar, UserCircle, CheckCircle, XCircle, Check, Phone, Copy, MessageCircle, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
-
-const STATUS_STYLES = {
-  pending:   { borderColor: '#f59e0b', bg: '#fffbeb', badge: 'bg-amber-100 text-amber-700',  text: 'Pendiente'  },
-  confirmed: { borderColor: '#22c55e', bg: '#f0fdf4', badge: 'bg-green-100 text-green-700',  text: 'Confirmado' },
-  completed: { borderColor: '#93c5fd', bg: '#eff6ff', badge: 'bg-blue-100 text-blue-600',    text: 'Completado' },
-};
+import { Calendar, UserCircle, CheckCircle, Phone, MessageCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 function localDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -27,6 +21,11 @@ function shiftDate(dateStr, delta) {
   return localDateStr(d);
 }
 
+function cardStyle(status) {
+  if (status === 'completed') return { borderColor: '#d1d5db', bg: '#f9fafb' };
+  return { borderColor: '#4ade80', bg: '#f0fdf4' };
+}
+
 export default function Agenda() {
   const negocio = useTurnosNegocio();
   const today = localDateStr(new Date());
@@ -37,7 +36,15 @@ export default function Agenda() {
   const [slots, setSlots]                   = useState([]);
   const [appointments, setAppointments]     = useState([]);
   const [loading, setLoading]               = useState(true);
-  const [openMenuId, setOpenMenuId]         = useState(null);
+  const [services, setServices]             = useState([]);
+
+  // Occupied slot modal
+  const [selectedAppt, setSelectedAppt] = useState(null); // { slot, appt }
+
+  // Free slot assignment modal
+  const [assignModal, setAssignModal]   = useState(null); // { slot }
+  const [assignForm, setAssignForm]     = useState({ name: '', phone: '', serviceId: '' });
+  const [assignSaving, setAssignSaving] = useState(false);
 
   // Load professionals once
   useEffect(() => {
@@ -53,10 +60,19 @@ export default function Agenda() {
       });
   }, []);
 
+  // Load services once
+  useEffect(() => {
+    supabase
+      .from('appointment_services')
+      .select('id, name, duration_minutes')
+      .eq('business_id', negocio.id)
+      .order('name')
+      .then(({ data }) => setServices(data || []));
+  }, []);
+
   // Reload when date changes
   useEffect(() => {
     loadDayData();
-    setOpenMenuId(null);
   }, [date]);
 
   // Auto-refresh every 30s and on tab focus
@@ -92,7 +108,44 @@ export default function Agenda() {
     const { error } = await supabase.from('appointments').update({ status }).eq('id', apptId);
     if (error) { toast.error('Error al actualizar'); return; }
     setAppointments(prev => prev.map(a => a.id === apptId ? { ...a, status } : a));
+    if (selectedAppt?.appt?.id === apptId) {
+      setSelectedAppt(prev => ({ ...prev, appt: { ...prev.appt, status } }));
+    }
     toast.success(status === 'completed' ? 'Marcado como atendido' : 'Estado actualizado');
+  }
+
+  async function handleAssignSave(e) {
+    e.preventDefault();
+    if (!assignForm.name.trim()) { toast.error('Ingresá el nombre del cliente'); return; }
+    if (!assignForm.serviceId) { toast.error('Seleccioná un servicio'); return; }
+    setAssignSaving(true);
+
+    const slot = assignModal.slot;
+    const svc  = services.find(s => s.id === assignForm.serviceId);
+    const startStr = String(slot.start_time).slice(0, 5);
+    const startMin = timeToMin(startStr);
+    const endMin   = startMin + (svc?.duration_minutes || 30);
+    const endStr   = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
+
+    const { error } = await supabase.from('appointments').insert({
+      business_id: negocio.id,
+      professional_id: selectedProfId,
+      service_id: assignForm.serviceId,
+      customer_name: assignForm.name.trim(),
+      customer_phone: assignForm.phone.trim() || null,
+      date: date,
+      start_time: startStr,
+      end_time: endStr,
+      status: 'confirmed',
+    });
+
+    setAssignSaving(false);
+    if (error) { toast.error('Error al guardar el turno'); return; }
+
+    setAssignModal(null);
+    setAssignForm({ name: '', phone: '', serviceId: '' });
+    toast.success('Turno asignado');
+    loadDayData();
   }
 
   // Per-professional appointment map: profId → { HH:MM → appt }
@@ -166,7 +219,7 @@ export default function Agenda() {
             return (
               <button
                 key={prof.id}
-                onClick={() => { setSelectedProfId(prof.id); setOpenMenuId(null); }}
+                onClick={() => setSelectedProfId(prof.id)}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap shrink-0 transition-colors"
                 style={{
                   background: isActive ? '#111' : '#fff',
@@ -236,84 +289,30 @@ export default function Agenda() {
 
                 // ── Occupied slot ──────────────────────────────────────
                 if (appt) {
-                  const ss     = STATUS_STYLES[appt.status] || STATUS_STYLES.pending;
-                  const isOpen = openMenuId === appt.id;
-
+                  const cs = cardStyle(appt.status);
                   return (
-                    <div key={slot.id}>
-                      <div
-                        className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 border-l-4"
-                        style={{ borderLeftColor: ss.borderColor, background: ss.bg }}
-                      >
-                        <span className="text-xs font-mono font-bold text-gray-500 w-11 shrink-0">{st}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate">{appt.customer_name}</p>
-                          {appt.appointment_services?.name && (
-                            <p className="text-xs text-gray-400 truncate mt-0.5">{appt.appointment_services.name}</p>
-                          )}
-                        </div>
-                        <span className={`hidden sm:inline-flex text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${ss.badge}`}>
-                          {ss.text}
-                        </span>
-                        <button
-                          onClick={() => setOpenMenuId(isOpen ? null : appt.id)}
-                          className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-white/60 rounded-lg transition-colors shrink-0"
-                        >
-                          <MoreVertical size={15} />
-                        </button>
+                    <div
+                      key={slot.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedAppt({ slot, appt })}
+                      onKeyDown={e => e.key === 'Enter' && setSelectedAppt({ slot, appt })}
+                      className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 border-l-4 cursor-pointer hover:brightness-[0.97] transition-all"
+                      style={{ borderLeftColor: cs.borderColor, background: cs.bg }}
+                    >
+                      <span className="text-xs font-mono font-bold text-gray-500 w-11 shrink-0">{st}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-semibold truncate ${appt.status === 'completed' ? 'text-gray-400' : 'text-gray-900'}`}>
+                          {appt.customer_name}
+                        </p>
+                        {appt.appointment_services?.name && (
+                          <p className={`text-xs truncate mt-0.5 ${appt.status === 'completed' ? 'text-gray-300' : 'text-gray-400'}`}>
+                            {appt.appointment_services.name}
+                          </p>
+                        )}
                       </div>
-
-                      {/* Expanded actions panel */}
-                      {isOpen && (
-                        <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 space-y-3">
-
-                          {/* Phone */}
-                          {appt.customer_phone && (
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Phone size={13} className="text-gray-400 shrink-0" />
-                              <span className="text-sm font-medium text-gray-700">{appt.customer_phone}</span>
-                              <button
-                                onClick={() => { navigator.clipboard.writeText(appt.customer_phone); toast.success('Teléfono copiado'); }}
-                                className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 hover:bg-gray-200 px-2 py-1 rounded-lg transition-colors"
-                              >
-                                <Copy size={11} /> Copiar
-                              </button>
-                              <a
-                                href={`https://wa.me/${formatWANumber(appt.customer_phone)}`}
-                                target="_blank" rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 px-2.5 py-1 rounded-lg transition-colors"
-                              >
-                                <MessageCircle size={11} /> WhatsApp
-                              </a>
-                            </div>
-                          )}
-
-                          {/* Action buttons */}
-                          <div className="flex gap-1.5 flex-wrap">
-                            {appt.status === 'pending' && (
-                              <button
-                                onClick={() => { updateStatus(appt.id, 'confirmed'); setOpenMenuId(null); }}
-                                className="flex items-center gap-1 text-xs bg-green-50 text-green-700 hover:bg-green-100 px-2.5 py-1.5 rounded-lg font-medium transition-colors"
-                              >
-                                <CheckCircle size={12} /> Confirmar
-                              </button>
-                            )}
-                            {appt.status !== 'completed' && (
-                              <button
-                                onClick={() => { updateStatus(appt.id, 'completed'); setOpenMenuId(null); }}
-                                className="flex items-center gap-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg font-medium transition-colors"
-                              >
-                                <Check size={12} /> Atendido
-                              </button>
-                            )}
-                            <button
-                              onClick={() => { updateStatus(appt.id, 'cancelled'); setOpenMenuId(null); }}
-                              className="flex items-center gap-1 text-xs bg-red-50 text-red-700 hover:bg-red-100 px-2.5 py-1.5 rounded-lg font-medium transition-colors"
-                            >
-                              <XCircle size={12} /> Cancelar
-                            </button>
-                          </div>
-                        </div>
+                      {appt.status === 'completed' && (
+                        <span className="text-xs text-gray-400 font-medium shrink-0">Atendido</span>
                       )}
                     </div>
                   );
@@ -324,16 +323,158 @@ export default function Agenda() {
                 return (
                   <div
                     key={slot.id}
-                    className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 border-l-4 ${isPast ? 'opacity-40' : ''}`}
+                    role={isPast ? undefined : 'button'}
+                    tabIndex={isPast ? undefined : 0}
+                    onClick={() => !isPast && setAssignModal({ slot })}
+                    onKeyDown={e => !isPast && e.key === 'Enter' && setAssignModal({ slot })}
+                    className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 border-l-4 ${isPast ? 'opacity-40' : 'cursor-pointer hover:bg-gray-50 transition-colors'}`}
                     style={{ borderLeftColor: 'transparent' }}
                   >
-                    <span className="text-xs font-mono text-gray-300 w-11 shrink-0">{st}</span>
-                    <span className="text-xs text-gray-300">{isPast ? 'Pasado' : 'Libre'}</span>
+                    <span className="text-sm font-bold text-gray-600 w-11 shrink-0">{st}</span>
+                    <span className="text-sm font-semibold text-gray-500">{isPast ? 'Sin agenda' : 'Libre'}</span>
+                    {!isPast && <span className="ml-auto text-xs text-gray-300">+ Asignar</span>}
                   </div>
                 );
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Occupied slot modal ─────────────────────────────────────────── */}
+      {selectedAppt && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setSelectedAppt(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between p-5 pb-4">
+              <div>
+                <p className="font-bold text-gray-900 text-base">{selectedAppt.appt.customer_name}</p>
+                {selectedAppt.appt.appointment_services?.name && (
+                  <p className="text-sm text-gray-400 mt-0.5">{selectedAppt.appt.appointment_services.name}</p>
+                )}
+                <p className="text-xs text-gray-300 mt-1">{String(selectedAppt.slot.start_time).slice(0,5)}</p>
+              </div>
+              <button
+                onClick={() => setSelectedAppt(null)}
+                className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-xl transition-colors shrink-0"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Phone + WhatsApp */}
+            {selectedAppt.appt.customer_phone && (
+              <div className="mx-5 mb-4 flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+                <Phone size={14} className="text-gray-400 shrink-0" />
+                <span className="text-sm font-medium text-gray-700 flex-1">{selectedAppt.appt.customer_phone}</span>
+                <a
+                  href={`https://wa.me/${formatWANumber(selectedAppt.appt.customer_phone)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-xl transition-colors"
+                >
+                  <MessageCircle size={13} /> WhatsApp
+                </a>
+              </div>
+            )}
+
+            {/* Mark as attended / already attended */}
+            <div className="px-5 pb-5">
+              {selectedAppt.appt.status !== 'completed' ? (
+                <button
+                  onClick={async () => {
+                    await updateStatus(selectedAppt.appt.id, 'completed');
+                    setSelectedAppt(null);
+                  }}
+                  className="w-full bg-gray-900 hover:bg-gray-700 text-white text-sm font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  <CheckCircle size={15} /> Marcar como atendido
+                </button>
+              ) : (
+                <div className="flex items-center justify-center gap-2 py-2 text-sm text-gray-400">
+                  <CheckCircle size={15} className="text-green-400" /> Ya fue atendido
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Assign free slot modal ──────────────────────────────────────── */}
+      {assignModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setAssignModal(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between p-5 pb-3">
+              <div>
+                <p className="font-bold text-gray-900 text-base">Asignar turno</p>
+                <p className="text-sm text-gray-400 mt-0.5">
+                  {String(assignModal.slot.start_time).slice(0,5)} — {String(assignModal.slot.end_time).slice(0,5)}
+                </p>
+              </div>
+              <button
+                onClick={() => setAssignModal(null)}
+                className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-xl transition-colors shrink-0"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAssignSave} className="px-5 pb-5 space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 block mb-1">Nombre del cliente *</label>
+                <input
+                  value={assignForm.name}
+                  onChange={e => setAssignForm(f => ({ ...f, name: e.target.value }))}
+                  placeholder="Juan García"
+                  required
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e31b23]/30"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 block mb-1">Teléfono</label>
+                <input
+                  value={assignForm.phone}
+                  onChange={e => setAssignForm(f => ({ ...f, phone: e.target.value }))}
+                  placeholder="3571-123456"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e31b23]/30"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 block mb-1">Servicio *</label>
+                <select
+                  value={assignForm.serviceId}
+                  onChange={e => setAssignForm(f => ({ ...f, serviceId: e.target.value }))}
+                  required
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e31b23]/30 bg-white"
+                >
+                  <option value="">Elegí un servicio</option>
+                  {services.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                disabled={assignSaving}
+                className="w-full bg-[#e31b23] hover:bg-[#c41520] disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors mt-1"
+              >
+                {assignSaving ? 'Guardando...' : 'Guardar turno'}
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </div>
