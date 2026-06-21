@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Pencil, Store, Upload, X, Loader2, Check, ToggleLeft, ToggleRight, Image, Move, Clock } from 'lucide-react';
+import { Pencil, Store, Upload, X, Loader2, Check, ToggleLeft, ToggleRight, Image, Move, Clock, Key, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase, supabaseAdmin } from '../../lib/supabase.js';
+import { CreateAccessModal, ResetPasswordModal } from '../../components/OwnerAccessModal.jsx';
 
 const BUCKET = 'IMAGES';
 
@@ -379,13 +380,25 @@ function EditModal({ restaurant, onClose, onSaved }) {
 
 export default function AdminRestaurants() {
   const [restaurants, setRestaurants] = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [editing, setEditing]         = useState(null);
+  const [loading,     setLoading]     = useState(true);
+  const [editing,     setEditing]     = useState(null);
+  const [ownerMap,    setOwnerMap]    = useState({}); // { userId: email }
+  const [createModal, setCreateModal] = useState(null); // { id, name }
+  const [resetModal,  setResetModal]  = useState(null); // { id, userId, email }
 
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase.from('restaurants').select('*').order('name');
-    if (!error) setRestaurants(data || []);
+    if (!error) {
+      setRestaurants(data || []);
+      const ownerIds = [...new Set((data || []).map(r => r.owner_id).filter(Boolean))];
+      if (ownerIds.length) {
+        const { data: usersData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+        const map = {};
+        usersData?.users?.forEach(u => { if (ownerIds.includes(u.id)) map[u.id] = u.email; });
+        setOwnerMap(map);
+      }
+    }
     setLoading(false);
   };
 
@@ -465,6 +478,34 @@ export default function AdminRestaurants() {
                 >
                   <Pencil size={14} /> Editar
                 </button>
+
+                {/* Owner access */}
+                <div className="mt-2 pt-2 border-t border-neutral-100 flex items-center gap-2 flex-wrap min-w-0">
+                  {r.owner_id ? (
+                    <>
+                      <ShieldCheck size={13} className="text-green-500 shrink-0" />
+                      <span className="text-xs text-green-600 font-semibold">Acceso activo</span>
+                      {ownerMap[r.owner_id] && (
+                        <span className="text-xs text-gray-400 font-mono truncate" title={ownerMap[r.owner_id]}>
+                          {ownerMap[r.owner_id]}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => setResetModal({ id: r.id, userId: r.owner_id, email: ownerMap[r.owner_id] || '' })}
+                        className="ml-auto shrink-0 text-xs text-primary font-semibold hover:underline"
+                      >
+                        Resetear
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setCreateModal({ id: r.id, name: r.name })}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:bg-gray-100 px-2.5 py-1.5 rounded-xl transition-colors"
+                    >
+                      <Key size={13} /> Crear acceso
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -476,6 +517,24 @@ export default function AdminRestaurants() {
           restaurant={editingRestaurant}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); load(); }}
+        />
+      )}
+
+      {createModal && (
+        <CreateAccessModal
+          entityId={createModal.id}
+          entityName={createModal.name}
+          table="restaurants"
+          onClose={() => { setCreateModal(null); load(); }}
+          onSaved={load}
+        />
+      )}
+
+      {resetModal && (
+        <ResetPasswordModal
+          userId={resetModal.userId}
+          email={resetModal.email}
+          onClose={() => setResetModal(null)}
         />
       )}
     </div>

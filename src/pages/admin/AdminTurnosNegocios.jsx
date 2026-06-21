@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
-import { Calendar, Pencil, Upload, X, Loader2, Check, ToggleLeft, ToggleRight, Image, Plus } from 'lucide-react';
+import { Calendar, Pencil, Upload, X, Loader2, Check, ToggleLeft, ToggleRight, Image, Plus, Key, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabaseAdmin } from '../../lib/supabase.js';
+import { CreateAccessModal, ResetPasswordModal } from '../../components/OwnerAccessModal.jsx';
 
 const BUCKET = 'IMAGES';
 
@@ -271,9 +272,12 @@ function BusinessModal({ business, onClose, onSaved }) {
 }
 
 export default function AdminTurnosNegocios() {
-  const [negocios, setNegocios] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [modal,    setModal]    = useState(null); // null | 'new' | business object
+  const [negocios,    setNegocios]    = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [modal,       setModal]       = useState(null); // null | 'new' | business object
+  const [ownerMap,    setOwnerMap]    = useState({}); // { userId: email }
+  const [createModal, setCreateModal] = useState(null); // { id, name }
+  const [resetModal,  setResetModal]  = useState(null); // { id, userId, email }
 
   const load = async () => {
     setLoading(true);
@@ -281,7 +285,16 @@ export default function AdminTurnosNegocios() {
       .from('appointment_businesses')
       .select('*')
       .order('name');
-    if (!error) setNegocios(data || []);
+    if (!error) {
+      setNegocios(data || []);
+      const ownerIds = [...new Set((data || []).map(n => n.owner_id).filter(Boolean))];
+      if (ownerIds.length) {
+        const { data: usersData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+        const map = {};
+        usersData?.users?.forEach(u => { if (ownerIds.includes(u.id)) map[u.id] = u.email; });
+        setOwnerMap(map);
+      }
+    }
     setLoading(false);
   };
 
@@ -386,6 +399,34 @@ export default function AdminTurnosNegocios() {
                   {neg.is_active ? 'Desactivar' : 'Activar'}
                 </button>
               </div>
+
+              {/* Owner access */}
+              <div className="flex items-center gap-2 pt-2 border-t border-neutral-100 flex-wrap min-w-0">
+                {neg.owner_id ? (
+                  <>
+                    <ShieldCheck size={13} className="text-green-500 shrink-0" />
+                    <span className="text-xs text-green-600 font-semibold">Acceso activo</span>
+                    {ownerMap[neg.owner_id] && (
+                      <span className="text-xs text-gray-400 font-mono truncate" title={ownerMap[neg.owner_id]}>
+                        {ownerMap[neg.owner_id]}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => setResetModal({ id: neg.id, userId: neg.owner_id, email: ownerMap[neg.owner_id] || '' })}
+                      className="ml-auto shrink-0 text-xs text-primary font-semibold hover:underline"
+                    >
+                      Resetear
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setCreateModal({ id: neg.id, name: neg.name })}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:bg-gray-100 px-2.5 py-1.5 rounded-xl transition-colors"
+                  >
+                    <Key size={13} /> Crear acceso
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -396,6 +437,24 @@ export default function AdminTurnosNegocios() {
           business={modal === 'new' ? null : modal}
           onClose={() => setModal(null)}
           onSaved={() => { setModal(null); load(); }}
+        />
+      )}
+
+      {createModal && (
+        <CreateAccessModal
+          entityId={createModal.id}
+          entityName={createModal.name}
+          table="appointment_businesses"
+          onClose={() => { setCreateModal(null); load(); }}
+          onSaved={load}
+        />
+      )}
+
+      {resetModal && (
+        <ResetPasswordModal
+          userId={resetModal.userId}
+          email={resetModal.email}
+          onClose={() => setResetModal(null)}
         />
       )}
     </div>
