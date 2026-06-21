@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { X, Loader2, RefreshCw, Key, Copy, Check, Eye } from 'lucide-react';
+import { useState } from 'react';
+import { X, Loader2, RefreshCw, Key, Copy, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabaseAdmin } from '../lib/supabase.js';
 
@@ -109,17 +109,8 @@ function ModalShell({ title, subtitle, onClose, children }) {
   );
 }
 
-async function saveCredential({ email, password, businessType, businessId }) {
-  await supabaseAdmin.from('owner_credentials').upsert(
-    { email, plain_password: password, business_type: businessType, business_id: businessId, updated_at: new Date().toISOString() },
-    { onConflict: 'business_id' }
-  );
-}
-
 // ── CreateAccessModal ────────────────────────────────────────────────────────
 export function CreateAccessModal({ entityId, entityName, table, onClose, onSaved }) {
-  const businessType = table === 'restaurants' ? 'restaurant' : 'turnos';
-
   const [email,       setEmail]       = useState('');
   const [password,    setPassword]    = useState('');
   const [saving,      setSaving]      = useState(false);
@@ -145,8 +136,6 @@ export function CreateAccessModal({ entityId, entityName, table, onClose, onSave
         .update({ owner_id: authData.user.id })
         .eq('id', entityId);
       if (dbErr) throw dbErr;
-
-      await saveCredential({ email: trimmed, password, businessType, businessId: entityId });
 
       setCredentials({ email: trimmed, password });
       onSaved();
@@ -196,7 +185,7 @@ export function CreateAccessModal({ entityId, entityName, table, onClose, onSave
 }
 
 // ── ResetPasswordModal ───────────────────────────────────────────────────────
-export function ResetPasswordModal({ userId, email, businessId, businessType, onClose }) {
+export function ResetPasswordModal({ userId, email, onClose }) {
   const [password,    setPassword]    = useState('');
   const [saving,      setSaving]      = useState(false);
   const [credentials, setCredentials] = useState(null);
@@ -209,11 +198,6 @@ export function ResetPasswordModal({ userId, email, businessId, businessType, on
     try {
       const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, { password });
       if (error) throw error;
-
-      if (businessId && businessType) {
-        await saveCredential({ email, password, businessType, businessId });
-      }
-
       setCredentials({ email, password });
     } catch (err) {
       toast.error('Error: ' + err.message);
@@ -252,60 +236,3 @@ export function ResetPasswordModal({ userId, email, businessId, businessType, on
   );
 }
 
-// ── ViewPasswordModal ────────────────────────────────────────────────────────
-export function ViewPasswordModal({ businessId, email, onClose }) {
-  const [cred,    setCred]    = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabaseAdmin
-      .from('owner_credentials')
-      .select('plain_password, updated_at')
-      .eq('business_id', businessId)
-      .single()
-      .then(({ data }) => { setCred(data); setLoading(false); });
-  }, [businessId]);
-
-  return (
-    <ModalShell title="Contraseña guardada" subtitle={email} onClose={onClose}>
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 size={24} className="animate-spin text-gray-300" />
-        </div>
-      ) : cred ? (
-        <div className="space-y-4">
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
-            <CopyField label="Email" value={email} />
-            <div className="border-t border-gray-200 pt-3">
-              <CopyField label="Contraseña" value={cred.plain_password} />
-            </div>
-          </div>
-          {cred.updated_at && (
-            <p className="text-xs text-gray-400 text-center">
-              Guardada el{' '}
-              {new Date(cred.updated_at).toLocaleDateString('es-AR', {
-                day: '2-digit', month: '2-digit', year: 'numeric',
-                hour: '2-digit', minute: '2-digit',
-              })}
-            </p>
-          )}
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(`Email: ${email}\nContraseña: ${cred.plain_password}`);
-              toast.success('Copiado al portapapeles');
-            }}
-            className="w-full flex items-center justify-center gap-2 border border-gray-200 hover:bg-gray-50 text-sm font-semibold text-gray-600 py-2.5 rounded-xl transition-colors"
-          >
-            <Copy size={14} /> Copiar todo
-          </button>
-        </div>
-      ) : (
-        <div className="text-center py-8 text-gray-400 space-y-1">
-          <Eye size={32} strokeWidth={1} className="mx-auto" />
-          <p className="text-sm font-semibold mt-2">Sin contraseña guardada</p>
-          <p className="text-xs">Usá "Resetear" para establecer una nueva.</p>
-        </div>
-      )}
-    </ModalShell>
-  );
-}
