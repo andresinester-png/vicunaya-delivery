@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, MapPin, CheckCircle, UserCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPin, CheckCircle, UserCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 import useProfileStore from '../store/profileStore.js';
@@ -20,14 +20,22 @@ function GoogleIcon() {
   );
 }
 
-const STEP_LABELS = ['Servicio', 'Profesional', 'Día', 'Horario', 'Confirmar'];
+const STEP_LABELS = ['Servicio', 'Profesional', 'Día y Horario', 'Confirmar'];
 const DAYS_AHEAD = 28;
 
 function pad(n) { return String(n).padStart(2, '0'); }
 function toISODate(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
-function timeToMin(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+function timeToMin(t) { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; }
 function minToTime(min) { return `${pad(Math.floor(min / 60))}:${pad(min % 60)}:00`; }
 function fmtTime(t) { return t ? t.slice(0, 5) : ''; }
+
+function getMondayOf(date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const dow = d.getDay(); // 0=Sun
+  d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow));
+  return d;
+}
 
 function getNextDays() {
   const days = [];
@@ -58,15 +66,12 @@ function SuccessScreen({ business, service, professional, day, time }) {
           100% { transform: scale(1); opacity: 1; }
         }
       `}</style>
-
-      <div
-        style={{
-          width: 140, height: 140, borderRadius: '50%', background: '#fff',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
-          animation: 'circlePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both',
-        }}
-      >
+      <div style={{
+        width: 140, height: 140, borderRadius: '50%', background: '#fff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
+        animation: 'circlePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+      }}>
         <svg viewBox="0 0 52 52" width={78} height={78} fill="none">
           <path
             d="M14 27 L22 35 L38 17"
@@ -75,7 +80,6 @@ function SuccessScreen({ business, service, professional, day, time }) {
           />
         </svg>
       </div>
-
       <motion.p
         className="text-3xl font-extrabold text-white mt-7 text-center px-8"
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55, duration: 0.4, ease: 'easeOut' }}
@@ -102,11 +106,11 @@ export default function TurnoNegocio() {
   const { name: profileName, phone: profilePhone } = useProfileStore();
   const { session } = useAuth();
 
-  const [business, setBusiness]           = useState(null);
-  const [services, setServices]           = useState([]);
-  const [professionals, setProfessionals] = useState([]);
-  const [slots, setSlots]                 = useState([]);
-  const [loading, setLoading]             = useState(true);
+  const [business, setBusiness]             = useState(null);
+  const [services, setServices]             = useState([]);
+  const [professionals, setProfessionals]   = useState([]);
+  const [slots, setSlots]                   = useState([]);
+  const [loading, setLoading]               = useState(true);
 
   const [step, setStep]                               = useState(1);
   const [selectedService, setSelectedService]         = useState(null);
@@ -114,6 +118,10 @@ export default function TurnoNegocio() {
   const [selectedDay, setSelectedDay]                 = useState(null);
   const [selectedTime, setSelectedTime]               = useState(null);
   const [booked, setBooked]                           = useState([]);
+  const [loadingBooked, setLoadingBooked]             = useState(false);
+
+  // Calendar week navigation
+  const [weekOffset, setWeekOffset] = useState(0);
 
   const [form, setForm]           = useState({ name: '', phone: '', notes: '' });
   const [submitting, setSubmitting] = useState(false);
@@ -169,28 +177,29 @@ export default function TurnoNegocio() {
       setSlots(sl.data || []);
       const profs = pr.data || [];
       setProfessionals(profs);
-      // Auto-select if only one professional (skip the step)
       if (profs.length === 1) setSelectedProfessional(profs[0]);
       setLoading(false);
     });
   }, [id]);
 
-  // Reset day/time when professional changes
+  // Reset calendar when professional changes
   useEffect(() => {
     setSelectedDay(null);
     setSelectedTime(null);
+    setWeekOffset(0);
   }, [selectedProfessional]);
 
   // Load booked appointments for selected day + professional
   useEffect(() => {
     if (!selectedDay || !selectedProfessional) { setBooked([]); return; }
+    setLoadingBooked(true);
     supabase.from('appointments')
       .select('start_time, end_time, status')
       .eq('business_id', id)
       .eq('professional_id', selectedProfessional.id)
       .eq('date', selectedDay.iso)
       .neq('status', 'cancelled')
-      .then(({ data }) => setBooked(data || []));
+      .then(({ data }) => { setBooked(data || []); setLoadingBooked(false); });
   }, [id, selectedDay, selectedProfessional]);
 
   useEffect(() => {
@@ -199,64 +208,123 @@ export default function TurnoNegocio() {
     return () => clearTimeout(t);
   }, [success, navigate]);
 
-  // Days that have at least one active slot for the selected professional
-  const availableDays = useMemo(() => {
-    if (!selectedProfessional) return [];
-    const nowIso = toISODate(new Date());
-    const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
-    return getNextDays().filter(day =>
+  // ── Calendar week computation ─────────────────────────────────────────────
+  const todayIso = toISODate(new Date());
+  const nowMin   = new Date().getHours() * 60 + new Date().getMinutes();
+
+  const weekStart = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const monday = getMondayOf(today);
+    monday.setDate(monday.getDate() + weekOffset * 7);
+    return monday;
+  }, [weekOffset]);
+
+  const weekDays = useMemo(() =>
+    Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      return { date: d, iso: toISODate(d), dow: d.getDay() };
+    }),
+  [weekStart]);
+
+  // Which days in the current week have at least one bookable slot
+  const weekDayAvailability = useMemo(() => {
+    if (!selectedProfessional) return {};
+    const result = {};
+    weekDays.forEach(day => {
+      result[day.iso] = slots.some(s => {
+        if (s.specific_date !== day.iso || s.professional_id !== selectedProfessional.id) return false;
+        if (day.iso === todayIso && timeToMin(s.start_time) <= nowMin) return false;
+        return true;
+      });
+    });
+    return result;
+  }, [slots, selectedProfessional, weekDays, todayIso, nowMin]);
+
+  const weekLabel = useMemo(() => {
+    const last = weekDays[6];
+    const startMonth = weekStart.toLocaleDateString('es-AR', { month: 'long' });
+    const endMonth   = last.date.toLocaleDateString('es-AR', { month: 'long' });
+    const year = weekStart.getFullYear();
+    return startMonth !== endMonth
+      ? `${startMonth} / ${endMonth} ${year}`
+      : `${startMonth} ${year}`;
+  }, [weekStart, weekDays]);
+
+  // Navigation limits
+  const canGoPrev = weekOffset > 0;
+  const canGoNext = useMemo(() => {
+    const nextMonday = new Date(weekStart);
+    nextMonday.setDate(nextMonday.getDate() + 7);
+    const limit = new Date();
+    limit.setDate(limit.getDate() + DAYS_AHEAD);
+    return nextMonday < limit;
+  }, [weekStart]);
+
+  // Auto-select first available day when entering step 3
+  useEffect(() => {
+    if (step !== 3 || !selectedProfessional || selectedDay) return;
+    const first = getNextDays().find(day =>
       slots.some(s => {
         if (s.specific_date !== day.iso || s.professional_id !== selectedProfessional.id) return false;
-        // Exclude slots that have already started today
-        if (day.iso === nowIso && timeToMin(s.start_time) <= nowMin) return false;
+        if (day.iso === todayIso && timeToMin(s.start_time) <= nowMin) return false;
         return true;
       })
     );
-  }, [slots, selectedProfessional]);
+    if (!first) return;
+    setSelectedDay(first);
+    const targetMonday = getMondayOf(first.date);
+    const thisMonday   = getMondayOf(new Date());
+    const diff = Math.round((targetMonday - thisMonday) / (7 * 24 * 60 * 60 * 1000));
+    setWeekOffset(Math.max(0, diff));
+  }, [step, selectedProfessional, selectedDay, slots, todayIso, nowMin]);
 
-  // Available booking times: each slot's start_time is a valid booking start
-  const timeSlots = useMemo(() => {
-    if (!selectedDay || !selectedService || !selectedProfessional) return [];
-    const daySlots = slots.filter(s =>
-      s.specific_date === selectedDay.iso && s.professional_id === selectedProfessional.id
-    );
-    const duration = selectedService.duration_minutes;
-    const isToday = selectedDay.iso === toISODate(new Date());
-    const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  // ── Slot states for the selected day ──────────────────────────────────────
+  const calendarSlots = useMemo(() => {
+    if (!selectedDay || !selectedProfessional) return [];
+    const dur = selectedService?.duration_minutes || 30;
+    const isToday = selectedDay.iso === todayIso;
 
-    return [...new Set(daySlots.map(s => minToTime(timeToMin(s.start_time))))]
-      .filter(t => {
-        const tMin = timeToMin(t);
-        if (isToday && tMin <= nowMin) return false;
-        const tEnd = tMin + duration;
-        return !booked.some(a => {
+    return slots
+      .filter(s => s.specific_date === selectedDay.iso && s.professional_id === selectedProfessional.id)
+      .map(slot => {
+        const tMin    = timeToMin(slot.start_time);
+        const timeStr = String(slot.start_time).slice(0, 5);
+        const isPast  = isToday && tMin <= nowMin;
+        const tEnd    = tMin + dur;
+        const isOccupied = !isPast && booked.some(a => {
           const aStart = timeToMin(a.start_time);
-          const aEnd = timeToMin(a.end_time);
+          const aEnd   = timeToMin(a.end_time);
           return tMin < aEnd && aStart < tEnd;
         });
+        const state = isPast ? 'past' : isOccupied ? 'booked' : 'available';
+        return { id: slot.id, timeStr, state };
       })
-      .sort();
-  }, [slots, selectedDay, selectedService, selectedProfessional, booked]);
+      .sort((a, b) => a.timeStr.localeCompare(b.timeStr));
+  }, [slots, selectedDay, selectedProfessional, booked, selectedService, todayIso, nowMin]);
 
+  // ── Navigation ────────────────────────────────────────────────────────────
   const handleBack = () => {
-    if (step > 1) setStep(s => s - 1);
-    else navigate(-1);
+    if (step === 1) {
+      navigate(-1);
+    } else if (step === 3) {
+      setSelectedDay(null);
+      setSelectedTime(null);
+      setStep(professionals.length === 1 ? 1 : 2);
+    } else {
+      setStep(s => s - 1);
+    }
   };
 
   const canContinue =
     step === 1 ? !!selectedService :
     step === 2 ? !!selectedProfessional :
-    step === 3 ? !!selectedDay :
-    step === 4 ? !!selectedTime :
     true;
 
-  // When pressing Continuar on step 1, if only 1 professional skip to step 3
   const handleContinue = () => {
-    if (step === 1 && professionals.length === 1) {
-      setStep(3);
-    } else {
-      setStep(s => s + 1);
-    }
+    if (step === 1 && professionals.length === 1) setStep(3);
+    else setStep(s => s + 1);
   };
 
   const handleConfirm = async () => {
@@ -282,9 +350,7 @@ export default function TurnoNegocio() {
       });
       if (error) throw error;
       setSuccess(true);
-      if (session?.user?.id) {
-        subscribeToPush(session.user.id, supabase).catch(() => {});
-      }
+      if (session?.user?.id) subscribeToPush(session.user.id, supabase).catch(() => {});
     } catch (err) {
       toast.error('Error al reservar: ' + err.message);
     } finally {
@@ -292,6 +358,7 @@ export default function TurnoNegocio() {
     }
   };
 
+  // ── Render guards ─────────────────────────────────────────────────────────
   if (success) return (
     <SuccessScreen
       business={business}
@@ -339,13 +406,12 @@ export default function TurnoNegocio() {
   }
 
   const catInfo = CATEGORY_INFO[business.category] || CATEGORY_INFO.otro;
-  // Visible step labels: if only 1 professional, hide the Profesional step from indicator
-  const visibleLabels = professionals.length === 1
+  const visibleLabels  = professionals.length === 1
     ? STEP_LABELS.filter(l => l !== 'Profesional')
     : STEP_LABELS;
-  // Map real step to indicator position
   const indicatorStep = (professionals.length === 1 && step >= 3) ? step - 1 : step;
 
+  // ── Main render ───────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-100" style={{ paddingBottom: 100 }}>
       <nav className="bg-white shadow-nav sticky top-0 z-40">
@@ -359,15 +425,15 @@ export default function TurnoNegocio() {
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
 
-        {/* Info del negocio */}
+        {/* Business info */}
         <div className="card p-4 flex items-center gap-3">
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 overflow-hidden"
             style={{ background: catInfo.bg }}
           >
-            {business.logo_url ? (
-              <img src={business.logo_url} alt={business.name} className="w-full h-full object-cover" />
-            ) : catInfo.emoji}
+            {business.logo_url
+              ? <img src={business.logo_url} alt={business.name} className="w-full h-full object-cover" />
+              : catInfo.emoji}
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-bold text-sm truncate">{business.name}</p>
@@ -382,7 +448,7 @@ export default function TurnoNegocio() {
           </span>
         </div>
 
-        {/* Indicador de pasos */}
+        {/* Step indicator */}
         <div className="card p-4">
           <div className="flex items-center">
             {visibleLabels.map((_, idx) => (
@@ -409,7 +475,7 @@ export default function TurnoNegocio() {
           </div>
         </div>
 
-        {/* Contenido del paso */}
+        {/* Step content */}
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={step}
@@ -419,7 +485,8 @@ export default function TurnoNegocio() {
             transition={{ duration: 0.2 }}
             className="space-y-4"
           >
-            {/* Paso 1: Servicio */}
+
+            {/* Step 1: Servicio */}
             {step === 1 && (
               <div className="card p-5 space-y-3">
                 <h2 className="font-bold text-base">Elegí el servicio</h2>
@@ -429,9 +496,7 @@ export default function TurnoNegocio() {
                   const active = selectedService?.id === s.id;
                   return (
                     <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => setSelectedService(s)}
+                      key={s.id} type="button" onClick={() => setSelectedService(s)}
                       className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
                       style={{ borderColor: active ? '#e31b23' : '#E5E7EB', background: active ? '#fef2f2' : '#fff' }}
                     >
@@ -449,7 +514,7 @@ export default function TurnoNegocio() {
               </div>
             )}
 
-            {/* Paso 2: Profesional */}
+            {/* Step 2: Profesional */}
             {step === 2 && (
               <div className="card p-5 space-y-3">
                 <h2 className="font-bold text-base">Elegí el profesional</h2>
@@ -459,9 +524,7 @@ export default function TurnoNegocio() {
                   const active = selectedProfessional?.id === prof.id;
                   return (
                     <button
-                      key={prof.id}
-                      type="button"
-                      onClick={() => setSelectedProfessional(prof)}
+                      key={prof.id} type="button" onClick={() => setSelectedProfessional(prof)}
                       className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
                       style={{ borderColor: active ? '#e31b23' : '#E5E7EB', background: active ? '#fef2f2' : '#fff' }}
                     >
@@ -476,83 +539,158 @@ export default function TurnoNegocio() {
               </div>
             )}
 
-            {/* Paso 3: Día */}
+            {/* Step 3: Día y Horario (combined calendar view) */}
             {step === 3 && (
-              <div className="card p-5 space-y-3">
-                <h2 className="font-bold text-base">Elegí el día</h2>
-                {availableDays.length === 0 ? (
-                  <p className="text-sm text-gray-400">No hay días disponibles para este profesional.</p>
-                ) : (
-                  <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                    {availableDays.map(day => {
-                      const active = selectedDay?.iso === day.iso;
+              <div className="space-y-3">
+
+                {/* Week calendar card */}
+                <div className="card p-4 space-y-3">
+
+                  {/* Month label + navigation arrows */}
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => setWeekOffset(w => w - 1)}
+                      disabled={!canGoPrev}
+                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span className="text-sm font-bold text-gray-800 capitalize">{weekLabel}</span>
+                    <button
+                      onClick={() => setWeekOffset(w => w + 1)}
+                      disabled={!canGoNext}
+                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+
+                  {/* 7-day row */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {weekDays.map(day => {
+                      const isPast      = day.iso < todayIso;
+                      const isAvailable = !isPast && weekDayAvailability[day.iso];
+                      const isSelected  = selectedDay?.iso === day.iso;
+                      const isDisabled  = isPast || !isAvailable;
+                      const dayAbbr     = day.date.toLocaleDateString('es-AR', { weekday: 'short' }).slice(0, 3).toUpperCase();
+
                       return (
                         <button
                           key={day.iso}
-                          type="button"
+                          disabled={isDisabled}
                           onClick={() => { setSelectedDay(day); setSelectedTime(null); }}
-                          className="shrink-0 flex flex-col items-center justify-center rounded-2xl border-2 transition-colors"
+                          className="flex flex-col items-center py-2.5 px-1 rounded-xl transition-all"
                           style={{
-                            width: 64, height: 72,
-                            borderColor: active ? '#e31b23' : '#E5E7EB',
-                            background: active ? '#e31b23' : '#fff',
-                            color: active ? '#fff' : '#111',
+                            background: isSelected ? '#111' : 'transparent',
+                            color: isSelected ? '#fff' : isDisabled ? '#D1D5DB' : '#374151',
+                            cursor: isDisabled ? 'not-allowed' : 'pointer',
                           }}
                         >
-                          <span className="text-[11px] font-bold uppercase" style={{ opacity: 0.8 }}>
-                            {day.date.toLocaleDateString('es-AR', { weekday: 'short' })}
-                          </span>
-                          <span className="text-lg font-extrabold mt-0.5">{day.date.getDate()}</span>
-                          <span className="text-[10px] font-semibold" style={{ opacity: 0.8 }}>
-                            {day.date.toLocaleDateString('es-AR', { month: 'short' })}
-                          </span>
+                          <span className="text-[10px] font-bold leading-none">{dayAbbr}</span>
+                          <span className="text-base font-extrabold leading-none mt-1">{day.date.getDate()}</span>
+                          {/* Dot indicator: has slots */}
+                          <span
+                            className="w-1 h-1 rounded-full mt-1"
+                            style={{ background: isSelected ? '#fff' : isAvailable ? '#22c55e' : 'transparent' }}
+                          />
                         </button>
                       );
                     })}
                   </div>
-                )}
+                </div>
+
+                {/* Slot grid card */}
+                <div className="card p-5 space-y-4">
+                  {selectedDay ? (
+                    <>
+                      <p className="text-sm font-semibold text-gray-800 capitalize">
+                        {selectedDay.date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        {selectedProfessional && professionals.length > 1 && (
+                          <span className="font-normal text-gray-400"> · {selectedProfessional.name}</span>
+                        )}
+                      </p>
+
+                      {loadingBooked ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="w-5 h-5 border-2 border-[#e31b23] border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      ) : calendarSlots.length === 0 ? (
+                        <p className="text-sm text-gray-400 py-4 text-center">
+                          No hay horarios para este día. Elegí otro día.
+                        </p>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          {calendarSlots.map(slot => {
+                            const isAvail  = slot.state === 'available';
+                            const isBooked = slot.state === 'booked';
+
+                            return (
+                              <button
+                                key={slot.id}
+                                disabled={!isAvail}
+                                onClick={() => {
+                                  setSelectedTime(slot.timeStr + ':00');
+                                  setStep(4);
+                                }}
+                                className="rounded-xl border py-3.5 text-sm font-bold transition-all flex flex-col items-center gap-0.5"
+                                style={
+                                  isAvail ? {
+                                    background: '#f0fdf4',
+                                    borderColor: '#86efac',
+                                    color: '#166534',
+                                    cursor: 'pointer',
+                                  } : isBooked ? {
+                                    background: '#fff1f2',
+                                    borderColor: '#fecaca',
+                                    color: '#f87171',
+                                    cursor: 'not-allowed',
+                                    opacity: 0.8,
+                                  } : {
+                                    background: '#f9fafb',
+                                    borderColor: '#e5e7eb',
+                                    color: '#9ca3af',
+                                    cursor: 'not-allowed',
+                                  }
+                                }
+                              >
+                                <span>{slot.timeStr}</span>
+                                {isBooked && <span className="text-[10px] font-normal opacity-70">Reservado</span>}
+                                {slot.state === 'past' && <span className="text-[10px] font-normal opacity-70">Pasado</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Legend */}
+                      {calendarSlots.length > 0 && (
+                        <div className="flex items-center gap-4 pt-1 border-t border-gray-100 flex-wrap">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 rounded" style={{ background: '#bbf7d0', border: '1px solid #86efac' }} />
+                            <span className="text-xs text-gray-400">Disponible</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 rounded" style={{ background: '#fee2e2', border: '1px solid #fecaca' }} />
+                            <span className="text-xs text-gray-400">Reservado</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 rounded" style={{ background: '#f3f4f6', border: '1px solid #e5e7eb' }} />
+                            <span className="text-xs text-gray-400">No disponible</span>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-400 text-center py-6">
+                      Seleccioná un día para ver los horarios disponibles
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 
-            {/* Paso 4: Horario */}
+            {/* Step 4: Confirmar */}
             {step === 4 && (
-              <div className="card p-5 space-y-3">
-                <h2 className="font-bold text-base">Elegí el horario</h2>
-                {selectedDay && (
-                  <p className="text-xs text-gray-500 capitalize">
-                    {selectedDay.date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                    {selectedProfessional && ` · ${selectedProfessional.name}`}
-                  </p>
-                )}
-                {timeSlots.length === 0 ? (
-                  <p className="text-sm text-gray-400">No quedan horarios disponibles este día. Probá otro día.</p>
-                ) : (
-                  <div className="grid grid-cols-4 gap-2">
-                    {timeSlots.map(t => {
-                      const active = selectedTime === t;
-                      return (
-                        <button
-                          key={t}
-                          type="button"
-                          onClick={() => setSelectedTime(t)}
-                          className="rounded-xl border-2 py-2.5 text-sm font-bold transition-colors"
-                          style={{
-                            borderColor: active ? '#e31b23' : '#E5E7EB',
-                            background: active ? '#e31b23' : '#fff',
-                            color: active ? '#fff' : '#374151',
-                          }}
-                        >
-                          {fmtTime(t)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Paso 5: Confirmar */}
-            {step === 5 && (
               <>
                 {!session ? (
                   <div className="card p-5 space-y-4">
@@ -560,51 +698,31 @@ export default function TurnoNegocio() {
                       <h2 className="font-bold text-base">Iniciá sesión para confirmar</h2>
                       <p className="text-sm text-gray-500 mt-1">Guardamos tu turno en tu cuenta y te avisamos 2hs antes.</p>
                     </div>
-
                     {loginMode !== 'email' ? (
                       <div className="space-y-3">
-                        <button
-                          type="button"
-                          onClick={handleGoogleLogin}
-                          className="btn-primary w-full flex items-center justify-center gap-2"
-                        >
+                        <button type="button" onClick={handleGoogleLogin} className="btn-primary w-full flex items-center justify-center gap-2">
                           <GoogleIcon /> Continuar con Google
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setLoginMode('email')}
-                          className="w-full py-2 text-sm font-bold text-primary text-center"
-                        >
+                        <button type="button" onClick={() => setLoginMode('email')} className="w-full py-2 text-sm font-bold text-primary text-center">
                           Usar email y contraseña
                         </button>
                       </div>
                     ) : (
                       <form onSubmit={handleEmailLogin} className="space-y-3">
                         <input
-                          type="email"
-                          required
-                          value={loginForm.email}
+                          type="email" required value={loginForm.email} autoCapitalize="none"
                           onChange={e => setLoginForm(f => ({ ...f, email: e.target.value }))}
-                          placeholder="Email"
-                          className="input"
-                          autoCapitalize="none"
+                          placeholder="Email" className="input"
                         />
                         <input
-                          type="password"
-                          required
-                          value={loginForm.password}
+                          type="password" required value={loginForm.password}
                           onChange={e => setLoginForm(f => ({ ...f, password: e.target.value }))}
-                          placeholder="Contraseña"
-                          className="input"
+                          placeholder="Contraseña" className="input"
                         />
                         <button type="submit" disabled={loginSubmitting} className="btn-primary w-full">
                           {loginSubmitting ? 'Un momento...' : 'Iniciar sesión'}
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setLoginMode(null)}
-                          className="w-full py-1 text-sm font-bold text-gray-400 text-center"
-                        >
+                        <button type="button" onClick={() => setLoginMode(null)} className="w-full py-1 text-sm font-bold text-gray-400 text-center">
                           Volver
                         </button>
                       </form>
@@ -617,28 +735,22 @@ export default function TurnoNegocio() {
                       <div>
                         <label className="text-xs font-medium text-gray-600 mb-1 block">Tu nombre</label>
                         <input
-                          value={form.name}
+                          value={form.name} placeholder="Juan García" className="input"
                           onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                          placeholder="Juan García"
-                          className="input"
                         />
                       </div>
                       <div>
                         <label className="text-xs font-medium text-gray-600 mb-1 block">Teléfono</label>
                         <input
-                          value={form.phone}
+                          value={form.phone} placeholder="3571-123456" className="input"
                           onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                          placeholder="3571-123456"
-                          className="input"
                         />
                       </div>
                       <div>
                         <label className="text-xs font-medium text-gray-600 mb-1 block">Notas (opcional)</label>
                         <input
-                          value={form.notes}
+                          value={form.notes} placeholder="Algo que quieras avisar..." className="input"
                           onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                          placeholder="Algo que quieras avisar..."
-                          className="input"
                         />
                       </div>
                     </div>
@@ -682,17 +794,24 @@ export default function TurnoNegocio() {
                 )}
               </>
             )}
+
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Barra inferior fija */}
+      {/* Fixed bottom bar */}
       <div
         className="fixed bottom-0 left-0 right-0 z-50 bg-white"
         style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.10)', padding: '12px 16px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
       >
         <div className="max-w-2xl mx-auto">
-          {step < 5 ? (
+          {step === 3 ? (
+            <p className="text-center text-sm text-gray-400 py-1">
+              {selectedDay
+                ? 'Seleccioná un horario verde para continuar'
+                : 'Elegí un día en el calendario'}
+            </p>
+          ) : step < 4 ? (
             <button type="button" onClick={handleContinue} disabled={!canContinue} className="btn-primary w-full">
               Continuar
             </button>
