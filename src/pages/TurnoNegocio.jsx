@@ -1,7 +1,7 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, MapPin, CheckCircle, UserCircle } from 'lucide-react';
+import { ChevronLeft, MapPin, CheckCircle, UserCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 import useProfileStore from '../store/profileStore.js';
@@ -120,9 +120,6 @@ export default function TurnoNegocio() {
   const [booked, setBooked]                           = useState([]);
   const [loadingBooked, setLoadingBooked]             = useState(false);
 
-  // Calendar week navigation
-  const [weekOffset, setWeekOffset] = useState(0);
-
   const [form, setForm]           = useState({ name: '', phone: '', notes: '' });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess]     = useState(false);
@@ -186,7 +183,6 @@ export default function TurnoNegocio() {
   useEffect(() => {
     setSelectedDay(null);
     setSelectedTime(null);
-    setWeekOffset(0);
   }, [selectedProfessional]);
 
   // Load booked appointments for selected day + professional
@@ -208,31 +204,18 @@ export default function TurnoNegocio() {
     return () => clearTimeout(t);
   }, [success, navigate]);
 
-  // ── Calendar week computation ─────────────────────────────────────────────
+  // ── Calendar computation ──────────────────────────────────────────────────
   const todayIso = toISODate(new Date());
   const nowMin   = new Date().getHours() * 60 + new Date().getMinutes();
 
-  const weekStart = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const monday = getMondayOf(today);
-    monday.setDate(monday.getDate() + weekOffset * 7);
-    return monday;
-  }, [weekOffset]);
+  // All bookable days (28 days from today)
+  const allDays = useMemo(() => getNextDays(), []);
 
-  const weekDays = useMemo(() =>
-    Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(weekStart);
-      d.setDate(weekStart.getDate() + i);
-      return { date: d, iso: toISODate(d), dow: d.getDay() };
-    }),
-  [weekStart]);
-
-  // Which days in the current week have at least one bookable slot
-  const weekDayAvailability = useMemo(() => {
+  // Which days have at least one bookable slot
+  const dayAvailability = useMemo(() => {
     if (!selectedProfessional) return {};
     const result = {};
-    weekDays.forEach(day => {
+    allDays.forEach(day => {
       result[day.iso] = slots.some(s => {
         if (s.specific_date !== day.iso || s.professional_id !== selectedProfessional.id) return false;
         if (day.iso === todayIso && timeToMin(s.start_time) <= nowMin) return false;
@@ -240,45 +223,29 @@ export default function TurnoNegocio() {
       });
     });
     return result;
-  }, [slots, selectedProfessional, weekDays, todayIso, nowMin]);
+  }, [slots, selectedProfessional, allDays, todayIso, nowMin]);
 
-  const weekLabel = useMemo(() => {
-    const last = weekDays[6];
-    const startMonth = weekStart.toLocaleDateString('es-AR', { month: 'long' });
-    const endMonth   = last.date.toLocaleDateString('es-AR', { month: 'long' });
-    const year = weekStart.getFullYear();
-    return startMonth !== endMonth
-      ? `${startMonth} / ${endMonth} ${year}`
-      : `${startMonth} ${year}`;
-  }, [weekStart, weekDays]);
+  const dayPickerRef = useRef(null);
 
-  // Navigation limits
-  const canGoPrev = weekOffset > 0;
-  const canGoNext = useMemo(() => {
-    const nextMonday = new Date(weekStart);
-    nextMonday.setDate(nextMonday.getDate() + 7);
-    const limit = new Date();
-    limit.setDate(limit.getDate() + DAYS_AHEAD);
-    return nextMonday < limit;
-  }, [weekStart]);
+  // Auto-scroll day strip to keep selected day centered
+  useEffect(() => {
+    if (!selectedDay || !dayPickerRef.current) return;
+    const el = dayPickerRef.current.querySelector(`[data-date="${selectedDay.iso}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [selectedDay]);
 
   // Auto-select first available day when entering step 3
   useEffect(() => {
     if (step !== 3 || !selectedProfessional || selectedDay) return;
-    const first = getNextDays().find(day =>
+    const first = allDays.find(day =>
       slots.some(s => {
         if (s.specific_date !== day.iso || s.professional_id !== selectedProfessional.id) return false;
         if (day.iso === todayIso && timeToMin(s.start_time) <= nowMin) return false;
         return true;
       })
     );
-    if (!first) return;
-    setSelectedDay(first);
-    const targetMonday = getMondayOf(first.date);
-    const thisMonday   = getMondayOf(new Date());
-    const diff = Math.round((targetMonday - thisMonday) / (7 * 24 * 60 * 60 * 1000));
-    setWeekOffset(Math.max(0, diff));
-  }, [step, selectedProfessional, selectedDay, slots, todayIso, nowMin]);
+    if (first) setSelectedDay(first);
+  }, [step, selectedProfessional, selectedDay, slots, todayIso, nowMin, allDays]);
 
   // ── Slot states for the selected day ──────────────────────────────────────
   const calendarSlots = useMemo(() => {
@@ -301,6 +268,7 @@ export default function TurnoNegocio() {
         const state = isPast ? 'past' : isOccupied ? 'booked' : 'available';
         return { id: slot.id, timeStr, state };
       })
+      .filter(slot => slot.state !== 'past')
       .sort((a, b) => a.timeStr.localeCompare(b.timeStr));
   }, [slots, selectedDay, selectedProfessional, booked, selectedService, todayIso, nowMin]);
 
@@ -546,30 +514,22 @@ export default function TurnoNegocio() {
                 {/* Week calendar card */}
                 <div className="card p-4 space-y-3">
 
-                  {/* Month label + navigation arrows */}
-                  <div className="flex items-center justify-between gap-2">
-                    <button
-                      onClick={() => setWeekOffset(w => w - 1)}
-                      disabled={!canGoPrev}
-                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <span className="text-sm font-bold text-gray-800 capitalize">{weekLabel}</span>
-                    <button
-                      onClick={() => setWeekOffset(w => w + 1)}
-                      disabled={!canGoNext}
-                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
+                  {/* Month label - tracks selected day */}
+                  {selectedDay && (
+                    <p className="text-sm font-bold text-gray-800 capitalize">
+                      {selectedDay.date.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}
+                    </p>
+                  )}
 
-                  {/* 7-day row */}
-                  <div className="grid grid-cols-7 gap-1">
-                    {weekDays.map(day => {
+                  {/* Horizontally scrollable day strip */}
+                  <div
+                    ref={dayPickerRef}
+                    className="flex gap-1 overflow-x-auto -mx-4 px-4 pb-1"
+                    style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+                  >
+                    {allDays.map(day => {
                       const isPast      = day.iso < todayIso;
-                      const isAvailable = !isPast && weekDayAvailability[day.iso];
+                      const isAvailable = !isPast && dayAvailability[day.iso];
                       const isSelected  = selectedDay?.iso === day.iso;
                       const isDisabled  = isPast || !isAvailable;
                       const dayAbbr     = day.date.toLocaleDateString('es-AR', { weekday: 'short' }).slice(0, 3).toUpperCase();
@@ -577,10 +537,12 @@ export default function TurnoNegocio() {
                       return (
                         <button
                           key={day.iso}
+                          data-date={day.iso}
                           disabled={isDisabled}
                           onClick={() => { setSelectedDay(day); setSelectedTime(null); }}
-                          className="flex flex-col items-center py-2.5 px-1 rounded-xl transition-all"
+                          className="flex flex-col items-center py-2.5 rounded-xl transition-all shrink-0"
                           style={{
+                            minWidth: 44,
                             background: isSelected ? '#111' : 'transparent',
                             color: isSelected ? '#fff' : isDisabled ? '#D1D5DB' : '#374151',
                             cursor: isDisabled ? 'not-allowed' : 'pointer',
@@ -588,7 +550,6 @@ export default function TurnoNegocio() {
                         >
                           <span className="text-[10px] font-bold leading-none">{dayAbbr}</span>
                           <span className="text-base font-extrabold leading-none mt-1">{day.date.getDate()}</span>
-                          {/* Dot indicator: has slots */}
                           <span
                             className="w-1 h-1 rounded-full mt-1"
                             style={{ background: isSelected ? '#fff' : isAvailable ? '#22c55e' : 'transparent' }}
@@ -639,23 +600,17 @@ export default function TurnoNegocio() {
                                     borderColor: '#86efac',
                                     color: '#166534',
                                     cursor: 'pointer',
-                                  } : isBooked ? {
+                                  } : {
                                     background: '#fff1f2',
                                     borderColor: '#fecaca',
                                     color: '#f87171',
                                     cursor: 'not-allowed',
                                     opacity: 0.8,
-                                  } : {
-                                    background: '#f9fafb',
-                                    borderColor: '#e5e7eb',
-                                    color: '#9ca3af',
-                                    cursor: 'not-allowed',
                                   }
                                 }
                               >
                                 <span>{slot.timeStr}</span>
                                 {isBooked && <span className="text-[10px] font-normal opacity-70">Reservado</span>}
-                                {slot.state === 'past' && <span className="text-[10px] font-normal opacity-70">Pasado</span>}
                               </button>
                             );
                           })}
@@ -672,10 +627,6 @@ export default function TurnoNegocio() {
                           <div className="flex items-center gap-1.5">
                             <div className="w-3 h-3 rounded" style={{ background: '#fee2e2', border: '1px solid #fecaca' }} />
                             <span className="text-xs text-gray-400">Reservado</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded" style={{ background: '#f3f4f6', border: '1px solid #e5e7eb' }} />
-                            <span className="text-xs text-gray-400">No disponible</span>
                           </div>
                         </div>
                       )}
