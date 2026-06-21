@@ -38,12 +38,14 @@ function getMondayOf(date) {
 }
 
 function getNextDays() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const d = now.getDate();
   const days = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
   for (let i = 0; i < DAYS_AHEAD; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
+    // new Date(year, month, day) auto-advances month when day > month length
+    const date = new Date(y, m, d + i);
     days.push({ date, iso: toISODate(date), dow: date.getDay() });
   }
   return days;
@@ -524,8 +526,8 @@ export default function TurnoNegocio() {
                   {/* Horizontally scrollable day strip */}
                   <div
                     ref={dayPickerRef}
-                    className="flex gap-1 overflow-x-auto -mx-4 px-4 pb-1"
-                    style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+                    className="flex gap-1 overflow-x-auto pb-1"
+                    style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none' }}
                   >
                     {allDays.map(day => {
                       const isPast      = day.iso < todayIso;
