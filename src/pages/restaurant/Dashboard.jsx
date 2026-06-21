@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import {
   CheckCircle, XCircle, Clock, ChefHat, Bike, PackageCheck, Bell,
   DollarSign, ShoppingBag, BarChart3, Star, MapPin, Wallet, Timer,
+  Volume2, VolumeX,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase, supabaseAdmin } from '../../lib/supabase.js';
 import { useRestaurant } from '../../contexts/RestaurantContext.js';
 import { subscribeToPush } from '../../lib/pushNotifications.js';
+import { usePendingOrdersAlert } from '../../hooks/usePendingOrdersAlert.js';
 
 const STATUS_LABELS = {
   pending:   { label: 'Pendiente',  dot: 'bg-amber-400', bg: 'bg-amber-50',   text: 'text-amber-700' },
@@ -186,6 +188,8 @@ export default function Dashboard() {
   const inKitchenCount = orders.filter(o => ['accepted', 'preparing'].includes(o.order_status)).length;
   const onTheWayCount  = orders.filter(o => o.order_status === 'ready').length;
 
+  const { audioEnabled, muted, enableAudio, toggleMute } = usePendingOrdersAlert(pendingCount);
+
   const filtered = orders.filter(o => filter === 'all' ? true : o.order_status === filter);
 
   // Horas pico
@@ -228,6 +232,18 @@ export default function Dashboard() {
           </button>
 
           <button
+            onClick={audioEnabled ? toggleMute : enableAudio}
+            className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-colors ${
+              !audioEnabled ? 'bg-amber-50 border-amber-200' : 'bg-white border-neutral-200 hover:bg-gray-50'
+            }`}
+            title={!audioEnabled ? 'Activar alertas sonoras' : muted ? 'Activar sonido' : 'Silenciar alertas'}
+          >
+            {muted || !audioEnabled
+              ? <VolumeX size={18} className={!audioEnabled ? 'text-amber-500' : 'text-gray-400'} />
+              : <Volume2 size={18} className="text-gray-600" />}
+          </button>
+
+          <button
             onClick={() => setNewCount(0)}
             className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-neutral-200 hover:bg-gray-50 transition-colors"
           >
@@ -240,6 +256,22 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Banner activación de sonido */}
+      {!audioEnabled && (
+        <div className="mb-5 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+          <Volume2 size={16} className="text-amber-600 shrink-0" />
+          <p className="flex-1 text-sm font-semibold text-amber-800">
+            Activá el sonido para recibir alertas cuando entren pedidos nuevos
+          </p>
+          <button
+            onClick={enableAudio}
+            className="shrink-0 px-4 py-1.5 bg-amber-600 text-white text-xs font-bold rounded-xl hover:bg-amber-700 transition-colors whitespace-nowrap"
+          >
+            Activar sonido
+          </button>
+        </div>
+      )}
 
       {/* Métricas */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
