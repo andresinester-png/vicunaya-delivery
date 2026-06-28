@@ -6,9 +6,9 @@ import 'swiper/css/pagination';
 const SLIDES = [
   {
     id: 1,
-    from: '#e31b23',
-    mid: '#E8003C',
-    to:  '#FF6B35',
+    from: '#C42B22',
+    mid: '#E63A2E',
+    to:  '#F2772E',
     tag: '🎉 OFERTA ESPECIAL',
     title: '20%\nOFF',
     subtitle: 'En tu primer pedido',
@@ -21,9 +21,9 @@ const SLIDES = [
   },
   {
     id: 2,
-    from: '#6D28D9',
-    mid: '#8B5CF6',
-    to:  '#EC4899',
+    from: '#D98C0A',
+    mid: '#F2A516',
+    to:  '#E8590C',
     tag: '🛵 DELIVERY',
     title: 'Envío\nGRATIS',
     subtitle: 'Todos los viernes',
@@ -36,9 +36,9 @@ const SLIDES = [
   },
   {
     id: 3,
-    from: '#047857',
-    mid: '#10B981',
-    to:  '#0EA5E9',
+    from: '#14532D',
+    mid: '#1F9D55',
+    to:  '#54A53F',
     tag: '👨‍👩‍👧 PARA TODOS',
     title: 'Combo\nFamiliar',
     subtitle: 'Desde $3.500',
@@ -113,10 +113,11 @@ export default function HeroCarousel() {
 
                 <h2 style={{
                   color: '#fff',
+                  fontFamily: "'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif",
                   fontSize: 52,
-                  fontWeight: 900,
+                  fontWeight: 800,
                   lineHeight: 0.95,
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '-0.03em',
                   whiteSpace: 'pre-line',
                   marginBottom: 8,
                   textShadow: '0 2px 12px rgba(0,0,0,0.2)',

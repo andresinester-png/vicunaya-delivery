@@ -15,13 +15,7 @@ export default function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white pb-safe"
-      style={{
-        borderTop: '1px solid rgba(0,0,0,0.06)',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
-      }}
-    >
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white pb-safe border-t border-line shadow-nav">
       <div className="flex items-stretch h-16">
         {TABS.map(({ to, icon: Icon, label }) => {
           const active = to === '/'
@@ -58,13 +52,13 @@ export default function BottomNav() {
                 <Icon
                   size={22}
                   strokeWidth={active ? 2.5 : 1.8}
-                  className={active ? 'text-primary' : 'text-gray-400'}
+                  className={active ? 'text-primary' : 'text-ink-muted'}
                 />
               </motion.div>
 
               {/* Label */}
               <motion.span
-                animate={{ color: active ? '#e31b23' : '#9CA3AF' }}
+                animate={{ color: active ? '#E63A2E' : '#938A82' }}
                 transition={{ duration: 0.2 }}
                 className="text-[10px] font-bold mt-0.5 relative z-10 tracking-tight"
               >
