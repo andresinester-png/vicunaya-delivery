@@ -7,8 +7,8 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
     font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
-    background-color: #FBF6EF; /* surface (crema) */
-    color: #1F1815;            /* ink */
+    background-color: #F5F5F6; /* surface (gris claro) */
+    color: #1C1C1E;            /* ink */
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
   }
@@ -21,27 +21,27 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-white font-bold px-6 py-3 rounded-2xl
-           hover:bg-primary-dark active:scale-95
+    @apply bg-primary text-white font-semibold px-5 py-2.5 rounded-xl
+           hover:bg-primary-dark active:scale-[0.98]
            transition-all duration-150
-           disabled:opacity-50 disabled:cursor-not-allowed
-           shadow-cta;
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-outline {
-    @apply border-2 border-primary text-primary font-bold px-6 py-3 rounded-2xl
-           hover:bg-primary-bg active:scale-95 transition-all duration-150;
+    @apply border border-line text-ink font-semibold px-5 py-2.5 rounded-xl
+           bg-white hover:bg-surface active:scale-[0.98] transition-all duration-150;
   }
   .card {
-    @apply bg-white rounded-3xl shadow-card overflow-hidden;
+    @apply bg-white rounded-2xl shadow-card overflow-hidden;
   }
   .input {
-    @apply w-full border border-line rounded-2xl px-4 py-3 text-sm
+    @apply w-full border border-line rounded-xl px-4 py-3 text-sm
            bg-white text-ink
-           focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary
+           focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
            transition-all placeholder:text-ink-muted;
   }
   .badge {
-    @apply inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full;
+    @apply inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full
+           bg-surface text-ink-soft border border-line;
   }
   .section-title {
     @apply text-xl tracking-tight text-ink font-display;
@@ -55,21 +55,21 @@
   100% { background-position: 400px 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, #F1EAE0 25%, #E7DDD0 50%, #F1EAE0 75%);
+  background: linear-gradient(90deg, #ECECEE 25%, #E0E0E3 50%, #ECECEE 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }
 
 /* ── Swiper bullets ── */
 .swiper-pagination-bullet {
-  background: rgba(255,255,255,0.6) !important;
+  background: rgba(0,0,0,0.18) !important;
   opacity: 1 !important;
   width: 6px !important;
   height: 6px !important;
   transition: all 0.3s ease !important;
 }
 .swiper-pagination-bullet-active {
-  background: #ffffff !important;
+  background: #E63A2E !important;
   width: 20px !important;
   border-radius: 3px !important;
 }

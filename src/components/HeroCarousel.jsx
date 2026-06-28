@@ -1,153 +1,78 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
+import { ArrowRight } from 'lucide-react';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
 const SLIDES = [
   {
     id: 1,
-    from: '#C42B22',
-    mid: '#E63A2E',
-    to:  '#F2772E',
-    tag: '🎉 OFERTA ESPECIAL',
-    title: '20%\nOFF',
-    subtitle: 'En tu primer pedido',
-    note: 'Código: PRIMERO',
-    deco: [
-      { e: '🍕', rotate: '-12deg', top: '10%',  right: '8%',  size: '74px' },
-      { e: '🍗', rotate: '8deg',   top: '48%',  right: '22%', size: '56px' },
-      { e: '🥟', rotate: '-6deg',  bottom: '8%', right: '6%', size: '52px' },
-    ],
+    tag: 'Oferta especial',
+    title: '20% off en tu primer pedido',
+    subtitle: 'Aplicá el código al finalizar la compra.',
+    cta: 'Pedir ahora',
+    code: 'PRIMERO',
   },
   {
     id: 2,
-    from: '#D98C0A',
-    mid: '#F2A516',
-    to:  '#E8590C',
-    tag: '🛵 DELIVERY',
-    title: 'Envío\nGRATIS',
-    subtitle: 'Todos los viernes',
-    note: 'Sin monto mínimo',
-    deco: [
-      { e: '🛵', rotate: '-8deg',  top: '8%',   right: '5%',  size: '76px' },
-      { e: '⚡', rotate: '12deg',  top: '52%',  right: '24%', size: '52px' },
-      { e: '🎁', rotate: '-14deg', bottom: '6%', right: '8%', size: '50px' },
-    ],
+    tag: 'Delivery',
+    title: 'Envío gratis los viernes',
+    subtitle: 'Sin monto mínimo en comercios seleccionados.',
+    cta: 'Ver comercios',
+    code: null,
   },
   {
     id: 3,
-    from: '#14532D',
-    mid: '#1F9D55',
-    to:  '#54A53F',
-    tag: '👨‍👩‍👧 PARA TODOS',
-    title: 'Combo\nFamiliar',
-    subtitle: 'Desde $3.500',
-    note: 'Más de 5 opciones',
-    deco: [
-      { e: '🥩', rotate: '-10deg', top: '8%',   right: '6%',  size: '70px' },
-      { e: '🍗', rotate: '6deg',   top: '50%',  right: '22%', size: '58px' },
-      { e: '🥗', rotate: '-8deg',  bottom: '6%', right: '5%', size: '54px' },
-    ],
+    tag: 'Para compartir',
+    title: 'Combos familiares desde $3.500',
+    subtitle: 'Más de cinco opciones para toda la mesa.',
+    cta: 'Explorar combos',
+    code: null,
   },
 ];
 
 export default function HeroCarousel() {
   return (
-    <div style={{ marginTop: '0', marginBottom: '4px' }}>
+    <div className="px-4">
       <Swiper
         modules={[Autoplay, Pagination]}
-        autoplay={{ delay: 3200, disableOnInteraction: false, pauseOnMouseEnter: true }}
+        autoplay={{ delay: 4500, disableOnInteraction: false, pauseOnMouseEnter: true }}
         pagination={{ clickable: true }}
         loop
-        speed={650}
-        style={{ paddingBottom: '36px' }}
+        speed={600}
+        style={{ paddingBottom: '28px' }}
       >
-        {SLIDES.map(slide => (
+        {SLIDES.map((slide) => (
           <SwiperSlide key={slide.id}>
-            {/* Sin margen lateral = full width */}
-            <div
-              className="relative flex items-center overflow-hidden"
-              style={{
-                height: 250,
-                background: `linear-gradient(135deg, ${slide.from} 0%, ${slide.mid} 50%, ${slide.to} 100%)`,
-              }}
-            >
-              {/* Círculos de fondo */}
-              <div style={{ position:'absolute', right:'-60px', top:'-60px',
-                width:260, height:260, borderRadius:'50%', background:'rgba(255,255,255,0.10)' }} />
-              <div style={{ position:'absolute', left:'-40px', bottom:'-80px',
-                width:200, height:200, borderRadius:'50%', background:'rgba(0,0,0,0.08)' }} />
+            <div className="relative flex flex-col justify-center bg-white border border-line rounded-2xl px-5 py-6 min-h-[150px] overflow-hidden">
+              {/* Acento de marca contenido: barra lateral roja */}
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-primary" aria-hidden="true" />
 
-              {/* Emojis decorativos */}
-              {slide.deco.map((d, i) => (
-                <span
-                  key={i}
-                  style={{
-                    position: 'absolute',
-                    top: d.top, bottom: d.bottom,
-                    right: d.right,
-                    fontSize: d.size,
-                    transform: `rotate(${d.rotate})`,
-                    lineHeight: 1,
-                    userSelect: 'none',
-                    filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))',
-                  }}
-                >
-                  {d.e}
-                </span>
-              ))}
+              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary mb-2">
+                {slide.tag}
+              </span>
 
-              {/* Texto */}
-              <div style={{ position:'relative', zIndex:10, paddingLeft:24, paddingRight:'44%' }}>
-                <span style={{
-                  display: 'block',
-                  color: 'rgba(255,255,255,0.85)',
-                  fontSize: 11,
-                  fontWeight: 800,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  marginBottom: 6,
-                }}>
-                  {slide.tag}
-                </span>
+              <h2 className="font-display text-2xl font-extrabold text-ink leading-tight tracking-tight text-balance mb-1.5 pr-4">
+                {slide.title}
+              </h2>
 
-                <h2 style={{
-                  color: '#fff',
-                  fontFamily: "'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif",
-                  fontSize: 52,
-                  fontWeight: 800,
-                  lineHeight: 0.95,
-                  letterSpacing: '-0.03em',
-                  whiteSpace: 'pre-line',
-                  marginBottom: 8,
-                  textShadow: '0 2px 12px rgba(0,0,0,0.2)',
-                }}>
-                  {slide.title}
-                </h2>
+              <p className="text-sm text-ink-muted leading-relaxed mb-4 pr-4">
+                {slide.subtitle}
+              </p>
 
-                <p style={{
-                  color: 'rgba(255,255,255,0.9)',
-                  fontSize: 16,
-                  fontWeight: 700,
-                  lineHeight: 1.3,
-                  marginBottom: 12,
-                }}>
-                  {slide.subtitle}
-                </p>
-
-                <span style={{
-                  display: 'inline-block',
-                  background: 'rgba(255,255,255,0.22)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255,255,255,0.35)',
-                  color: '#fff',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  padding: '5px 14px',
-                  borderRadius: 999,
-                }}>
-                  {slide.note}
-                </span>
+              <div className="flex items-center gap-3 flex-wrap">
+                <button className="inline-flex items-center gap-1.5 bg-primary text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-primary-dark transition-colors">
+                  {slide.cta}
+                  <ArrowRight size={15} strokeWidth={2.5} />
+                </button>
+                {slide.code && (
+                  <span className="text-xs font-semibold text-ink-soft">
+                    Código:{' '}
+                    <span className="font-mono font-bold text-ink bg-surface border border-line px-1.5 py-0.5 rounded">
+                      {slide.code}
+                    </span>
+                  </span>
+                )}
               </div>
             </div>
           </SwiperSlide>

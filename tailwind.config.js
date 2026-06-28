@@ -4,41 +4,35 @@ export default {
   theme: {
     extend: {
       colors: {
-        // ── Marca: rojo cálido (vermellón) ──
+        // ── Único color de marca: rojo cálido (vermellón) ──
+        // Usar SOLO para CTAs, estados activos y acentos de marca.
         primary: {
           DEFAULT: '#E63A2E',
           dark:    '#C42B22',
           light:   '#F2563F',
           bg:      '#FDEEEC',
         },
-        // ── Acento: amarillo maíz ──
-        accent: {
-          DEFAULT: '#F2A516',
-          dark:    '#D98C0A',
-          bg:      '#FEF6E6',
-        },
-        // ── Tinta cálida (texto / nav) ──
+        // ── Neutrales (texto / superficies / bordes) ──
         ink: {
-          DEFAULT: '#1F1815',
-          soft:    '#574E48',
-          muted:   '#938A82',
+          DEFAULT: '#1C1C1E', // casi negro, no negro puro
+          soft:    '#56565A',
+          muted:   '#8A8A8E',
         },
-        // ── Superficies ──
-        surface: '#FBF6EF', // fondo de app (crema)
-        line:    '#ECE4DA', // bordes/divisores cálidos
-        // ── Funcional ──
-        success: '#1F9D55',
+        surface: '#F5F5F6', // fondo de app (gris muy claro)
+        line:    '#E6E6E8', // bordes/divisores
+        // ── Funcionales (uso restringido, no son colores de marca) ──
+        accent:  '#E0A516', // estrellas de rating únicamente
+        success: '#1F9D55', // badge abierto/cerrado únicamente
       },
       fontFamily: {
         sans:    ['Plus Jakarta Sans', 'Segoe UI', 'system-ui', 'sans-serif'],
         display: ['Bricolage Grotesque', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        // sombras con tinte cálido marrón en vez de negro puro
-        card:         '0 4px 20px rgba(60,34,22,0.08)',
-        'card-hover': '0 10px 32px rgba(60,34,22,0.16)',
-        nav:          '0 -4px 24px rgba(60,34,22,0.08)',
-        cta:          '0 6px 18px rgba(230,58,46,0.32)',
+        // sombras neutras y sutiles
+        card:         '0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)',
+        'card-hover': '0 4px 16px rgba(0,0,0,0.10)',
+        nav:          '0 -1px 12px rgba(0,0,0,0.05)',
       },
       borderRadius: {
         '2xl': '1rem',

@@ -60,28 +60,29 @@ export default function DesignPreview() {
             Vicuñaya — Muestra visual
           </h1>
           <p className="text-sm text-ink-muted mt-1 leading-relaxed">
-            Rojo vermellón, amarillo maíz y crema. Títulos en Bricolage Grotesque.
+            Rojo de marca como único acento, sobre blanco y grises. Títulos en Bricolage Grotesque.
           </p>
         </header>
 
         {/* Paleta */}
-        <Section title="Paleta">
-          <div className="px-4 grid grid-cols-5 gap-2">
+        <Section title="Paleta de marca">
+          <div className="px-4 grid grid-cols-4 gap-2">
             {[
-              ['Marca', 'bg-primary', 'text-white'],
-              ['Acento', 'bg-accent', 'text-ink'],
-              ['Tinta', 'bg-ink', 'text-white'],
-              ['Éxito', 'bg-success', 'text-white'],
-              ['Crema', 'bg-card border border-line', 'text-ink'],
-            ].map(([label, bg, fg]) => (
+              ['Marca', 'bg-primary'],
+              ['Tinta', 'bg-ink'],
+              ['Gris', 'bg-ink-muted'],
+              ['Superficie', 'bg-surface border border-line'],
+            ].map(([label, bg]) => (
               <div key={label} className="flex flex-col items-center gap-1">
-                <div className={`h-14 w-full rounded-2xl ${bg}`} />
-                <span className={`text-[11px] font-semibold ${fg === 'text-white' ? 'text-ink' : fg}`}>
-                  {label}
-                </span>
+                <div className={`h-14 w-full rounded-xl ${bg}`} />
+                <span className="text-[11px] font-semibold text-ink-soft">{label}</span>
               </div>
             ))}
           </div>
+          <p className="px-4 text-[11px] text-ink-muted mt-3 leading-relaxed">
+            El amarillo (rating), el verde (abierto/cerrado) y los tonos de categoría son colores
+            funcionales: viven solo en sus chips/badges, nunca en botones ni en el banner.
+          </p>
         </Section>
 
         {/* Botones */}

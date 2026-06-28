@@ -38,13 +38,8 @@ export default function RestaurantCard({ restaurant }) {
               style={{ objectPosition: cover_position || '50% 50%' }}
             />
           ) : (
-            <div
-              className="w-full h-full flex items-center justify-center relative overflow-hidden"
-              style={{ background: `linear-gradient(145deg, ${theme.grad[0]} 0%, ${theme.grad[1]} 100%)` }}
-            >
-              <div className="absolute -right-8 -top-8 w-36 h-36 rounded-full bg-white/10" />
-              <div className="absolute -left-5 -bottom-10 w-28 h-28 rounded-full bg-black/10" />
-              <span className="relative z-10 text-6xl font-display font-extrabold tracking-tighter text-white/35">
+            <div className="w-full h-full flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-[#EDEDF0] to-[#DCDCE0]">
+              <span className="relative z-10 text-6xl font-display font-extrabold tracking-tighter text-ink/15">
                 {name.charAt(0)}
               </span>
             </div>
@@ -71,14 +66,11 @@ export default function RestaurantCard({ restaurant }) {
 
           {/* Logo + nombre + rating */}
           <div className="flex items-start gap-2.5 mb-2">
-            <div
-              className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center overflow-hidden border-2 border-line shadow-sm"
-              style={{ background: logo_url ? '#FBF6EF' : theme.solid }}
-            >
+            <div className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center overflow-hidden border border-line bg-surface">
               {logo_url ? (
                 <img src={logo_url} alt={name} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-white font-display font-extrabold text-lg">
+                <span className="text-ink-soft font-display font-extrabold text-lg">
                   {name.charAt(0).toUpperCase()}
                 </span>
               )}
