@@ -10,6 +10,7 @@ import AdminGuard from './components/AdminGuard.jsx';
 import RestaurantGuard from './components/RestaurantGuard.jsx';
 import TurnosPanelGuard from './components/TurnosPanelGuard.jsx';
 
+import DesignPreview from './pages/DesignPreview.jsx';
 import Welcome from './pages/Welcome.jsx';
 import CompleteProfile from './pages/CompleteProfile.jsx';
 import Home from './pages/Home.jsx';
@@ -76,6 +77,9 @@ export default function App() {
         />
         <UpdateBanner />
         <Routes>
+        {/* ── Muestra del Design System (pública, sin login) ── */}
+        <Route path="/design-preview" element={<DesignPreview />} />
+
         {/* ── Registro / login / perfil ── */}
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/complete-profile" element={<CompleteProfile />} />

@@ -22,5 +22,9 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),
   },
-  server: { port: 3000 },
+  server: {
+    port: 3000,
+    host: true,
+    allowedHosts: true,
+  },
 });
