@@ -72,7 +72,7 @@ export default function App() {
           position="top-center"
           toastOptions={{
             style: { borderRadius: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px' },
-            success: { iconTheme: { primary: '#e31b23', secondary: '#fff' } },
+            success: { iconTheme: { primary: '#ec1b34', secondary: '#fff' } },
           }}
         />
         <UpdateBanner />

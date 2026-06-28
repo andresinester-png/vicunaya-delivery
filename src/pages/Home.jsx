@@ -81,7 +81,7 @@ export default function Home() {
               cursor: 'pointer',
               background: card.image
                 ? '#1C1C1E'
-                : 'linear-gradient(155deg, #f5333b 0%, #e31b23 52%, #c01920 100%)',
+                : 'var(--brand-gradient)',
               boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 18px rgba(0,0,0,0.08)',
             }}
           >

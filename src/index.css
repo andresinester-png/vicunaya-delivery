@@ -3,6 +3,15 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* ── Rojo de marca moderno (escarlata premium) ── */
+  --brand-light: #ff4d5a;
+  --brand:       #ec1b34;
+  --brand-deep:  #c20e2e;
+  /* degradado de marca: coral vivo arriba → carmín profundo abajo */
+  --brand-gradient: linear-gradient(150deg, #ff4d5a 0%, #ec1b34 50%, #c20e2e 100%);
+}
+
 @layer base {
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
@@ -47,6 +56,7 @@
     @apply text-xl tracking-tight text-ink font-display;
     font-weight: 800;
   }
+  .brand-gradient { background: var(--brand-gradient); }
 }
 
 /* ── Shimmer skeleton (tinte cálido) ── */
@@ -69,7 +79,7 @@
   transition: all 0.3s ease !important;
 }
 .swiper-pagination-bullet-active {
-  background: #e31b23 !important;
+  background: #ec1b34 !important;
   width: 20px !important;
   border-radius: 3px !important;
 }
