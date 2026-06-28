@@ -7,10 +7,10 @@ export default {
         // ── Único color de marca: rojo cálido (vermellón) ──
         // Usar SOLO para CTAs, estados activos y acentos de marca.
         primary: {
-          DEFAULT: '#E63A2E',
-          dark:    '#C42B22',
-          light:   '#F2563F',
-          bg:      '#FDEEEC',
+          DEFAULT: '#e31b23', // mismo rojo del header de marca
+          dark:    '#c01920',
+          light:   '#ef4b52',
+          bg:      '#FEF2F2',
         },
         // ── Neutrales (texto / superficies / bordes) ──
         ink: {

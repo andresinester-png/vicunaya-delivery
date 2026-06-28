@@ -69,7 +69,7 @@
   transition: all 0.3s ease !important;
 }
 .swiper-pagination-bullet-active {
-  background: #E63A2E !important;
+  background: #e31b23 !important;
   width: 20px !important;
   border-radius: 3px !important;
 }
@@ -81,7 +81,7 @@
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #D9CEC0; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: #D4D4D8; border-radius: 2px; }
 
 /* ── Safe area ── */
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }

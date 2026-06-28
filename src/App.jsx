@@ -79,6 +79,10 @@ export default function App() {
         <Routes>
         {/* ── Muestra del Design System (pública, sin login) ── */}
         <Route path="/design-preview" element={<DesignPreview />} />
+        <Route element={<MainLayout />}>
+          <Route path="/preview-home" element={<Home />} />
+        </Route>
+        <Route path="/preview-rotiserias" element={<Rotiserias />} />
 
         {/* ── Registro / login / perfil ── */}
         <Route path="/welcome" element={<Welcome />} />

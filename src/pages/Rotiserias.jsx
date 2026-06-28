@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Search, SlidersHorizontal, ChevronDown, X, Check } from 'lucide-react';
+import { ChevronLeft, Search, SlidersHorizontal, ChevronDown, X, Check, UtensilsCrossed } from 'lucide-react';
 import RestaurantCard, { RestaurantSkeleton } from '../components/RestaurantCard.jsx';
 import { supabase } from '../lib/supabase.js';
-import bgImage from '../screen.png';
+
+const DISPLAY_FONT = "'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif";
 
 const DEMO_RESTAURANTS = [
   { id:'demo-1', name:'La Rotisería de Don Carlos', category:['Rotisería'], tags:'Rotisería, Milanesas, Pollos', rating:4.8, delivery_time:25, delivery_price:350, min_order:1500, is_active:true,  image_url:null },
@@ -24,7 +25,7 @@ const SORT_OPTIONS = [
 const ALL_CATS = ['Todos','Rotisería','Pizza','Empanadas','Parrilla','Sushi','Vegano','Bebidas'];
 
 const CATEGORIES = [
-  { label:'Todos',      icon:'🍽️' },
+  { label:'Todos',      lucide: UtensilsCrossed },
   { label:'Café & Deli',image:'https://lh3.googleusercontent.com/aida-public/AB6AXuC644a3B293g3-fzwJUf-5nTko6ZGhRBZfc9uiyszTp4H94jQ-gETI_TFPxs1W7CiPeOxE4KrtGTIgWv0F-A_tfcg5kq9T1xZgrxld9fQApR4f1CAQEDTC4Qc5z4SfXXbfvrtrVqVg29LAQ2ipbsV9JSZz__YXhB0MW_llGsuvnhA-sZm6zqMAAnwQRTrKU3D2sAWfp6OyLKkQr-S2XGmMURhu4rf-DMAyjWYRcoMaImechqVDx0JCH2zrzV5rGU_6FDJibEpWeSxRI' },
   { label:'Helados',    image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBv7yOHl7y0XboUsKxjWNmX1m9XRetNszCe1RaiZepbqkdISMo-zUU46A6j_EemDesBjBzYt-UUpVVbWS-s_NqqP2zyOOtCk6boPX0_hWxr1O_OzeSg2hcKodJ1b6Y8Ox1q4-iQwe-roKaBTKKo1ZsVJwvrBcER5t7Ih5NRLWi913Jpy12FCxoHpdFBJlkXPuRve_0BF4l-2VeE3SIBwmtDjem8YbOf5WG33n_i2q0ZJVR7t9mQyujE9coBulRjg5y-8DlNJL-Xvt5P' },
   { label:'Kioscos',    image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBccfXnhe8YUeuyRdcy2264jmUjgX6ULlGtTlitCcoitH6GiU-YR5VivSG_onrjiNe12Ac7ZULYusEre-1CLoidFXRhA4PT5AS-qllyKt_KUHeJthuKT_OCe-gcV89ugyPRCPNtYyU_2SB9r1R7dTM11NcrFvrE688j30jgh5HeheIZWUBaYi20wsTzL_J9JmG-t-4t7e_0tWZVLsNv9Vz2KlQE-KtY0FxYm-wlFThnaYPo7ye_urBPoBtYOa5x-HCcg99akGQlX7pU' },
@@ -116,7 +117,7 @@ export default function Rotiserias() {
   const currentSort = SORT_OPTIONS.find(o => o.id === sortBy);
 
   return (
-    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', position:'relative' }}>
+    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', position:'relative', background:'#F5F5F6' }}>
 
       {/* ── Animación de scroll para imágenes de categorías ── */}
       <style>{`
@@ -131,25 +132,6 @@ export default function Rotiserias() {
           animation: categoryScroll 3.5s linear infinite;
         }
       `}</style>
-
-      {/* ── Fondo fijo ── */}
-      <img
-        src={bgImage}
-        alt=""
-        aria-hidden
-        style={{
-          position:'fixed', top:0, left:0,
-          width:'100%', height:'100%',
-          objectFit:'cover', objectPosition:'center top',
-          zIndex:0,
-        }}
-      />
-      {/* Overlay oscuro para legibilidad */}
-      <div aria-hidden style={{
-        position:'fixed', inset:0,
-        background:'rgba(0,0,0,0.45)',
-        zIndex:1, pointerEvents:'none',
-      }} />
 
       {/* ── Header rojo ── */}
       <div style={{ background:'#e31b23', paddingBottom:14, position:'relative', zIndex:10 }}>
@@ -169,7 +151,7 @@ export default function Rotiserias() {
           </motion.button>
 
           <div style={{ flex:1 }}>
-            <h1 style={{ color:'#fff', fontSize:19, fontWeight:900, letterSpacing:'-0.02em', lineHeight:1, margin:0 }}>
+            <h1 style={{ fontFamily:DISPLAY_FONT, color:'#fff', fontSize:20, fontWeight:800, letterSpacing:'-0.02em', lineHeight:1, margin:0 }}>
               Rotiserías
             </h1>
             <p style={{ color:'rgba(255,255,255,0.72)', fontSize:12, fontWeight:600, marginTop:2 }}>
@@ -338,9 +320,9 @@ export default function Rotiserias() {
                         animationDelay:`${idx * 0.4}s`,
                       }}
                     />
-                  ) : (
-                    <span style={{ fontSize:26 }}>{cat.icon}</span>
-                  )}
+                  ) : cat.lucide ? (
+                    <cat.lucide size={26} strokeWidth={2} color={active ? '#e31b23' : '#56565A'} />
+                  ) : null}
                 </div>
                 <span style={{
                   fontSize:11.5, lineHeight:1.2, textAlign:'center',
@@ -468,7 +450,7 @@ export default function Rotiserias() {
             animate={{ opacity:1, scale:1 }}
             style={{ textAlign:'center', padding:'64px 0', color:'#9CA3AF' }}
           >
-            <div style={{ fontSize:48, marginBottom:12 }}>🍽️</div>
+            <UtensilsCrossed size={44} strokeWidth={1.5} color="#C4C4C8" style={{ margin:'0 auto 12px' }} />
             <p style={{ fontWeight:700, color:'#6B7280', fontSize:15 }}>Sin resultados</p>
             <button
               onClick={() => { setSearch(''); setCatFilter('Todos'); }}
