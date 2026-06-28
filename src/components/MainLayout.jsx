@@ -31,7 +31,10 @@ export default function MainLayout() {
       {/* ── Header rojo ── */}
       <header
         className="sticky top-0 z-40 shrink-0"
-        style={{ background: '#e31b23', boxShadow: '0 2px 16px rgba(227,27,35,0.25)' }}
+        style={{
+          background: 'linear-gradient(155deg, #f5333b 0%, #e31b23 52%, #c01920 100%)',
+          boxShadow: '0 4px 20px rgba(192,25,32,0.30)',
+        }}
       >
         {/* Fila del logo */}
         <div style={{ height: 56, display: 'flex', alignItems: 'center', padding: '0 16px', position: 'relative' }}>
