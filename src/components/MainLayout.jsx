@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Bell, Search } from 'lucide-react';
+import { ShoppingCart, Bell } from 'lucide-react';
 import BottomNav from './BottomNav.jsx';
 import CartPanel from './CartPanel.jsx';
 import useCartStore from '../store/cartStore.js';
@@ -22,7 +22,6 @@ export default function MainLayout() {
   const location = useLocation();
   const [cartOpen, setCartOpen] = useState(false);
   const count = useCartStore(s => s.count());
-  const isHome = location.pathname === '/';
   const isRemises = location.pathname === '/remises';
   const title = PAGE_TITLES[location.pathname];
 
@@ -99,34 +98,8 @@ export default function MainLayout() {
           </button>
         </div>
 
-        {/* Barra de búsqueda – sólo en Inicio */}
-        {isHome && (
-          <div style={{ padding: '0 16px 14px' }}>
-            <div style={{ position: 'relative' }}>
-              <Search
-                size={16}
-                style={{
-                  position: 'absolute', left: 14, top: '50%',
-                  transform: 'translateY(-50%)', color: '#9CA3AF', pointerEvents: 'none',
-                }}
-              />
-              <input
-                placeholder="Buscá remises, comida o envíos..."
-                style={{
-                  width: '100%',
-                  padding: '11px 16px 11px 42px',
-                  borderRadius: 16, border: 'none', outline: 'none',
-                  background: 'rgba(255,255,255,0.97)',
-                  fontSize: 14, fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  color: '#111', boxSizing: 'border-box',
-                }}
-              />
-            </div>
-          </div>
-        )}
-
         {/* Título de página – tabs que no son Inicio */}
-        {!isHome && title && (
+        {title && (
           <div style={{ padding: '0 16px 12px' }}>
             <h1 style={{ color: '#fff', fontWeight: 900, fontSize: 20, letterSpacing: '-0.02em', margin: 0 }}>
               {title}
