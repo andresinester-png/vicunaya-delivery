@@ -18,7 +18,6 @@ import Orders from './pages/Orders.jsx';
 import Profile from './pages/Profile.jsx';
 import Addresses from './pages/Addresses.jsx';
 
-import Rotiserias from './pages/Rotiserias.jsx';
 import Encomiendas from './pages/Encomiendas.jsx';
 import Anunciate from './pages/Anunciate.jsx';
 import Sorteo from './pages/Sorteo.jsx';
@@ -50,6 +49,10 @@ import RestaurantMenu from './pages/restaurant/Menu.jsx';
 import RestaurantProfile from './pages/restaurant/Profile.jsx';
 import RestaurantEarnings from './pages/restaurant/Earnings.jsx';
 
+import EncomiendaPanelLogin from './pages/encomiendas-panel/EncomiendaPanelLogin.jsx';
+import EncomiendaPanel from './pages/encomiendas-panel/EncomiendaPanel.jsx';
+import EncomiendaConfig from './pages/encomiendas-panel/EncomiendaConfig.jsx';
+import EncomiendaPanelGuard from './components/EncomiendaPanelGuard.jsx';
 import TurnosPanelLogin from './pages/turnos-panel/TurnosPanelLogin.jsx';
 import TurnosPanelAgenda from './pages/turnos-panel/Agenda.jsx';
 import TurnosPanelServicios from './pages/turnos-panel/Servicios.jsx';
@@ -93,7 +96,6 @@ export default function App() {
           </Route>
 
           {/* ── Secciones principales (sin bottom nav) ── */}
-          <Route path="/rotiserias" element={<Rotiserias />} />
           <Route path="/encomiendas" element={<Encomiendas />} />
           <Route path="/anunciate" element={<Anunciate />} />
           <Route path="/sorteo" element={<Sorteo />} />
@@ -150,6 +152,13 @@ export default function App() {
           <Route path="profesionales" element={<TurnosPanelProfesionales />} />
           <Route path="horarios"      element={<TurnosPanelHorarios />} />
           <Route path="mi-negocio"    element={<TurnosPanelMiNegocio />} />
+        </Route>
+
+        {/* ── Panel encomiendas ── */}
+        <Route path="/encomiendas/panel/login" element={<EncomiendaPanelLogin />} />
+        <Route element={<EncomiendaPanelGuard />}>
+          <Route path="/encomiendas/panel" element={<EncomiendaPanel />} />
+          <Route path="/encomiendas/panel/configuracion" element={<EncomiendaConfig />} />
         </Route>
 
         {/* ── OAuth callback ── */}

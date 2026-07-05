@@ -56,7 +56,7 @@ const PROMO_BANNERS = [
     title: '30% OFF en tu primer pedido',
     subtitle: 'Usá el código VICUÑA30 al pagar.',
     cta: 'Pedir ahora',
-    to: '/rotiserias',
+    to: '/',
   },
   {
     id: 'envio',
@@ -64,7 +64,7 @@ const PROMO_BANNERS = [
     title: 'Envío gratis',
     subtitle: 'En pedidos arriba de $3.000.',
     cta: 'Ver restaurantes',
-    to: '/rotiserias',
+    to: '/',
   },
 ];
 
@@ -164,7 +164,7 @@ export default function Home() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '0 18px', marginBottom: 12 }}>
           <span style={{ fontWeight: 800, fontSize: 16.5, color: '#241F1D', letterSpacing: '-0.01em' }}>Categorías</span>
           <button
-            onClick={() => navigate('/rotiserias')}
+            onClick={() => setCatFilter('')}
             style={{ background: 'none', border: 'none', fontSize: 12.5, fontWeight: 700, color: RED, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
           >
             Ver todas
