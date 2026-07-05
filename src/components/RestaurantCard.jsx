@@ -11,13 +11,13 @@ const CAT_GRADIENT = {
   'Sushi':     ['#4F46E5','#2E1065'],
   'Vegano':    ['#15803D','#052E16'],
   'Bebidas':   ['#0284C7','#0C4A6E'],
-  default:     ['#e31b23','#7F0028'],
+  default:     ['#D32F2F','#7F0028'],
 };
 
 const CAT_LOGO_BG = {
   'Rotisería': '#FF8C00', 'Parrilla': '#DC2626', 'Pizza': '#D97706',
   'Empanadas': '#16A34A', 'Sushi':    '#4F46E5', 'Vegano': '#15803D',
-  'Bebidas':   '#0284C7', default:    '#e31b23',
+  'Bebidas':   '#0284C7', default:    '#D32F2F',
 };
 
 const CAT_CHIP = {
@@ -28,7 +28,7 @@ const CAT_CHIP = {
   'Sushi':     { bg:'#EEF2FF', color:'#4F46E5' },
   'Vegano':    { bg:'#F0FDF4', color:'#15803D' },
   'Bebidas':   { bg:'#EFF6FF', color:'#2563EB' },
-  default:     { bg:'#FEF2F2', color:'#e31b23' },
+  default:     { bg:'#FFF8F8', color:'#D32F2F' },
 };
 
 export default function RestaurantCard({ restaurant }) {
@@ -59,7 +59,7 @@ export default function RestaurantCard({ restaurant }) {
         style={{
           display:'block', background:'#fff',
           borderRadius:20, overflow:'hidden',
-          boxShadow:'0 2px 16px rgba(0,0,0,0.08)',
+          boxShadow:'0 4px 14px rgba(0,0,0,0.06)',
           textDecoration:'none',
         }}
       >
@@ -90,7 +90,7 @@ export default function RestaurantCard({ restaurant }) {
           <div style={{ position:'absolute', top:10, left:10 }}>
             <span style={{
               display:'inline-flex', alignItems:'center', gap:5,
-              background: isOpen ? 'rgba(22,163,74,0.90)' : 'rgba(0,0,0,0.58)',
+              background: isOpen ? 'rgba(46,125,50,0.90)' : 'rgba(0,0,0,0.58)',
               color:'#fff', fontSize:11, fontWeight:800,
               padding:'4px 10px', borderRadius:999,
               backdropFilter:'blur(4px)',
@@ -198,7 +198,7 @@ export default function RestaurantCard({ restaurant }) {
 
 export function RestaurantSkeleton() {
   return (
-    <div style={{ background:'#fff', borderRadius:20, overflow:'hidden', boxShadow:'0 2px 16px rgba(0,0,0,0.08)' }}>
+    <div style={{ background:'#fff', borderRadius:20, overflow:'hidden', boxShadow:'0 4px 14px rgba(0,0,0,0.06)' }}>
       <div style={{ height:160 }} className="skeleton" />
       <div style={{ padding:'12px 14px 14px' }}>
         <div style={{ display:'flex', gap:10, marginBottom:10 }}>

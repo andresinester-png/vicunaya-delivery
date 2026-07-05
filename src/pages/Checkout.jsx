@@ -14,7 +14,7 @@ function OrderSuccessScreen() {
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-      style={{ background: '#22c55e' }}
+      style={{ background: '#2E7D32' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
@@ -47,7 +47,7 @@ function OrderSuccessScreen() {
         <svg viewBox="0 0 52 52" width={78} height={78} fill="none">
           <path
             d="M14 27 L22 35 L38 17"
-            stroke="#22c55e"
+            stroke="#2E7D32"
             strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -432,8 +432,8 @@ export default function Checkout() {
             onClick={() => setPaymentMethod('transfer')}
             className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
             style={{
-              borderColor: paymentMethod === 'transfer' ? '#e31b23' : '#E5E7EB',
-              background: paymentMethod === 'transfer' ? '#fef2f2' : '#fff',
+              borderColor: paymentMethod === 'transfer' ? '#D32F2F' : '#E9D5D8',
+              background: paymentMethod === 'transfer' ? '#FFF8F8' : '#fff',
             }}
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-lg">🏦</div>
@@ -446,8 +446,8 @@ export default function Checkout() {
             onClick={() => setPaymentMethod('cash')}
             className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
             style={{
-              borderColor: paymentMethod === 'cash' ? '#e31b23' : '#E5E7EB',
-              background: paymentMethod === 'cash' ? '#fef2f2' : '#fff',
+              borderColor: paymentMethod === 'cash' ? '#D32F2F' : '#E9D5D8',
+              background: paymentMethod === 'cash' ? '#FFF8F8' : '#fff',
             }}
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-lg">💵</div>
@@ -493,8 +493,8 @@ export default function Checkout() {
                     onClick={copyAlias}
                     className="flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-xl text-sm font-bold transition-colors"
                     style={{
-                      background: aliasCopied ? '#DCFCE7' : '#e31b23',
-                      color: aliasCopied ? '#16A34A' : '#fff',
+                      background: aliasCopied ? '#DCFCE7' : '#D32F2F',
+                      color: aliasCopied ? '#2E7D32' : '#fff',
                       border: 'none',
                       cursor: 'pointer',
                     }}
@@ -525,7 +525,7 @@ export default function Checkout() {
               <label htmlFor="receipt-upload" className="block cursor-pointer">
                 <div
                   className="border-2 border-dashed rounded-xl transition-colors"
-                  style={{ borderColor: receipt ? '#16A34A' : '#BBF7D0', background: receipt ? '#F0FDF4' : '#fff' }}
+                  style={{ borderColor: receipt ? '#2E7D32' : '#BBF7D0', background: receipt ? '#F0FDF4' : '#fff' }}
                 >
                   {receipt ? (
                     <div className="flex items-center gap-3 p-3">

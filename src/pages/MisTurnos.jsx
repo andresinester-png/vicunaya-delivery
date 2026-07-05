@@ -79,9 +79,9 @@ function LoginPrompt() {
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
       <div
         className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-        style={{ background: '#FEF2F2' }}
+        style={{ background: '#FFF8F8' }}
       >
-        <CalendarCheck size={28} style={{ color: '#e31b23' }} />
+        <CalendarCheck size={28} style={{ color: '#D32F2F' }} />
       </div>
       <h2 className="font-extrabold text-lg text-gray-900 mb-1">Iniciá sesión</h2>
       <p className="text-sm text-gray-500 mb-6">Para ver tus turnos necesitás estar logueado.</p>
@@ -185,12 +185,12 @@ export default function MisTurnos() {
   const isUpdating = (id, action) => updating === id + action;
 
   return (
-    <div className="min-h-screen" style={{ background: '#F9FAFB', paddingBottom: 80 }}>
+    <div className="min-h-screen" style={{ background: '#FFF8F8', paddingBottom: 80 }}>
       <div className="max-w-2xl mx-auto px-4 py-4">
 
         {/* Título de sección */}
         <div className="flex items-center gap-2 mb-4">
-          <CalendarCheck size={20} style={{ color: '#e31b23' }} />
+          <CalendarCheck size={20} style={{ color: '#D32F2F' }} />
           <h1 className="font-extrabold text-lg text-gray-900">Mis turnos</h1>
         </div>
 
@@ -209,9 +209,9 @@ export default function MisTurnos() {
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-              style={{ background: '#FEF2F2' }}
+              style={{ background: '#FFF8F8' }}
             >
-              <CalendarCheck size={28} style={{ color: '#e31b23' }} />
+              <CalendarCheck size={28} style={{ color: '#D32F2F' }} />
             </div>
             <p className="font-bold text-gray-700">No tenés turnos reservados</p>
             <p className="text-sm text-gray-400 mt-1">Buscá un negocio en Turnos y reservá.</p>
@@ -288,7 +288,7 @@ export default function MisTurnos() {
                           disabled={!!updating}
                           className="flex-1 py-2 rounded-xl text-xs font-bold transition-colors"
                           style={{
-                            background: isUpdating(appt.id, 'confirmed') ? '#D1FAE5' : '#22c55e',
+                            background: isUpdating(appt.id, 'confirmed') ? '#D1FAE5' : '#2E7D32',
                             color: '#fff',
                             opacity: !!updating ? 0.7 : 1,
                           }}
@@ -301,8 +301,8 @@ export default function MisTurnos() {
                         disabled={!!updating}
                         className="flex-1 py-2 rounded-xl text-xs font-bold transition-colors"
                         style={{
-                          background: isUpdating(appt.id, 'cancelled') ? '#FEE2E2' : '#FEF2F2',
-                          color: '#e31b23',
+                          background: isUpdating(appt.id, 'cancelled') ? '#FEE2E2' : '#FFF8F8',
+                          color: '#D32F2F',
                           border: '1.5px solid #FECACA',
                           opacity: !!updating ? 0.7 : 1,
                         }}

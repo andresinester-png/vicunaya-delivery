@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Search, SlidersHorizontal, ChevronDown, X, Check } from 'lucide-react';
 import RestaurantCard, { RestaurantSkeleton } from '../components/RestaurantCard.jsx';
+import BottomNav from '../components/BottomNav.jsx';
 import { supabase } from '../lib/supabase.js';
 import bgImage from '../screen.png';
 
@@ -25,18 +26,16 @@ const ALL_CATS = ['Todos','Rotisería','Pizza','Empanadas','Parrilla','Sushi','V
 
 const CATEGORIES = [
   { label:'Todos',      icon:'🍽️' },
-  { label:'Café & Deli',image:'https://lh3.googleusercontent.com/aida-public/AB6AXuC644a3B293g3-fzwJUf-5nTko6ZGhRBZfc9uiyszTp4H94jQ-gETI_TFPxs1W7CiPeOxE4KrtGTIgWv0F-A_tfcg5kq9T1xZgrxld9fQApR4f1CAQEDTC4Qc5z4SfXXbfvrtrVqVg29LAQ2ipbsV9JSZz__YXhB0MW_llGsuvnhA-sZm6zqMAAnwQRTrKU3D2sAWfp6OyLKkQr-S2XGmMURhu4rf-DMAyjWYRcoMaImechqVDx0JCH2zrzV5rGU_6FDJibEpWeSxRI' },
-  { label:'Helados',    image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBv7yOHl7y0XboUsKxjWNmX1m9XRetNszCe1RaiZepbqkdISMo-zUU46A6j_EemDesBjBzYt-UUpVVbWS-s_NqqP2zyOOtCk6boPX0_hWxr1O_OzeSg2hcKodJ1b6Y8Ox1q4-iQwe-roKaBTKKo1ZsVJwvrBcER5t7Ih5NRLWi913Jpy12FCxoHpdFBJlkXPuRve_0BF4l-2VeE3SIBwmtDjem8YbOf5WG33n_i2q0ZJVR7t9mQyujE9coBulRjg5y-8DlNJL-Xvt5P' },
-  { label:'Kioscos',    image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBccfXnhe8YUeuyRdcy2264jmUjgX6ULlGtTlitCcoitH6GiU-YR5VivSG_onrjiNe12Ac7ZULYusEre-1CLoidFXRhA4PT5AS-qllyKt_KUHeJthuKT_OCe-gcV89ugyPRCPNtYyU_2SB9r1R7dTM11NcrFvrE688j30jgh5HeheIZWUBaYi20wsTzL_J9JmG-t-4t7e_0tWZVLsNv9Vz2KlQE-KtY0FxYm-wlFThnaYPo7ye_urBPoBtYOa5x-HCcg99akGQlX7pU' },
-  { label:'Bebidas',    image:'https://lh3.googleusercontent.com/aida-public/AB6AXuA4WfUPUZssd7XXSwzYFyEjk47A0IfsZZfhh--RSa4QXVizLe7YOSKnEBZBMfgXFFImJO3byCOD_Qdw_S8nJQ-mVnciz36O69pxiYYhfbygjp6u0oDGS3aClGz9QC1B3Q13NOhMe4T88C445IdDWIeWIfqQx-DhlZfg8lUX9vO9vPIn40734P1GgGnHCBYLetU8jFu4-tybQcSaMxLBntrh0NxPKzvkwklWpQSSIaGCOyW_vLQR9OvQ2pmx9MWxd1cvWF4PSNdFezAP' },
-  { label:'Empanadas',  image:'https://lh3.googleusercontent.com/aida/AP1WRLsF8g25q9zzjewJoYDuzt9P6VHhROMrTCzpRGxOFXz-KargpD9l9YqOD6MUq4xR9JAa2hRSi8tE29p5zbZiLBawIRhjTVjtMG4WakiipIGAN9vTMRLVhA0vH_gRCyesFMtH3_mSQwufLuTrMrGnVh9HCIZo5sEzlifBIEd0Km4XUom88DCmnDDRxgTyEDrf4HwcBTcHJF60M2a6XZN4_YCygxubUcd4XBGgQq7EZgRuiMA_DaWBDPpvawlC' },
-  { label:'Pizza',      image:'https://lh3.googleusercontent.com/aida/AP1WRLt2hfS7nG_MPKcxQt5drIIWkmBiRFzXgV_iec3sO25LWTCKz-NBMW9ggjBGf6OcH0TB-bj1wCRrMMMg7wRxv2YYyx-rSNofBWqV8DP2rXZSfKcVUhvLm-xA4l76bdLaJdFbH-k4qIyqcf2OD_ga0F2ktQXDBgTEJX6AjzFt8oc8ky71kG0RBIOVjyl-dTixl15ai4e-v4rVpLSLTl1cHTPI4g0FtqMchU047MiXEoBN-3NTs2Es0PTCFCy9' },
-  { label:'Lomitos',    image:'https://lh3.googleusercontent.com/aida-public/AB6AXuDBXP96Yc857UOzW4XLmmeq_pYvR_gdQ3FlpHerjxep7D5AoakMWFDWsgjz9AymSzrjXBkDq_YfqgTY1SGZEv24mNUT9Rxjv14wO8wnzy1VDyrN6G5vvD-WYQO06PtKtLH0HxworEN2dTL9OGHv0CgkpDsvtDR-Xxi0_h6c0C_OOEiabYzcD0Aqk1-N35M6HMCHSE51mb9WhRPo5VsNPprptX6HXTMRBonbBqC3d5EQ4BmmoorGMWcr2aRnE2UVqTW6eVPBy6VUQQUh' },
+  { label:'Café & Deli',image:'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&q=80' },
+  { label:'Bebidas',    image:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&q=80' },
+  { label:'Empanadas',  image:'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80' },
+  { label:'Pizza',      image:'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80' },
+  { label:'Lomitos',    image:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80' },
 ];
 
 const BANNERS = [
-  { id:1, title:'¡Envío gratis!',   subtitle:'En tu primer pedido de Rotiserías',     gradient:'linear-gradient(135deg, #ff5b5f 0%, #e31b23 100%)' },
-  { id:2, title:'2x1 en Empanadas', subtitle:'Hoy en locales seleccionados',          gradient:'linear-gradient(135deg, #e31b23 0%, #8e0e13 100%)' },
+  { id:1, title:'¡Envío gratis!',   subtitle:'En tu primer pedido de Rotiserías',     gradient:'linear-gradient(135deg, #ff5b5f 0%, #D32F2F 100%)' },
+  { id:2, title:'2x1 en Empanadas', subtitle:'Hoy en locales seleccionados',          gradient:'linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%)' },
 ];
 
 const cardVariants = {
@@ -152,7 +151,7 @@ export default function Rotiserias() {
       }} />
 
       {/* ── Header rojo ── */}
-      <div style={{ background:'#e31b23', paddingBottom:14, position:'relative', zIndex:10 }}>
+      <div style={{ background:'#D32F2F', paddingBottom:14, position:'relative', zIndex:10 }}>
         {/* Fila título */}
         <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px 0' }}>
           <motion.button
@@ -288,7 +287,7 @@ export default function Rotiserias() {
               key={i}
               style={{
                 width:6, height:6, borderRadius:'50%',
-                background: i === activeBanner ? '#e31b23' : '#E5E7EB',
+                background: i === activeBanner ? '#D32F2F' : '#E9D5D8',
                 transition:'background 0.2s',
               }}
             />
@@ -298,7 +297,7 @@ export default function Rotiserias() {
 
       {/* ── Grilla de categorías ── */}
       <div style={{ background:'#fff', padding:'16px 16px 6px', position:'relative', zIndex:9 }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:14 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 }}>
           {CATEGORIES.map((cat, idx) => {
             const active = catFilter === cat.label;
             return (
@@ -307,7 +306,7 @@ export default function Rotiserias() {
                 whileTap={{ scale:0.92 }}
                 onClick={() => setCatFilter(cat.label)}
                 style={{
-                  display:'flex', flexDirection:'column', alignItems:'center', gap:6,
+                  display:'flex', flexDirection:'column', alignItems:'center', gap:8,
                   background:'none', border:'none', cursor:'pointer', padding:0,
                   fontFamily:"'Plus Jakarta Sans', sans-serif",
                 }}
@@ -318,8 +317,8 @@ export default function Rotiserias() {
                   onTouchStart={() => setHoveredCat(cat.label)}
                   onTouchEnd={() => setHoveredCat(null)}
                   style={{
-                    width:68, height:68, borderRadius:14,
-                    border: active ? '2px solid #e31b23' : '2px solid transparent',
+                    width:88, height:88, borderRadius:16,
+                    border: active ? '2px solid #D32F2F' : '2px solid transparent',
                     boxSizing:'border-box', padding:2,
                     display:'flex', alignItems:'center', justifyContent:'center',
                     overflow:'hidden', background: active ? '#fff0f0' : '#EFEFEF',
@@ -343,9 +342,9 @@ export default function Rotiserias() {
                   )}
                 </div>
                 <span style={{
-                  fontSize:11.5, lineHeight:1.2, textAlign:'center',
+                  fontSize:13, lineHeight:1.2, textAlign:'center',
                   fontWeight: active ? 800 : 600,
-                  color: active ? '#e31b23' : '#374151',
+                  color: active ? '#D32F2F' : '#374151',
                 }}>
                   {cat.label}
                 </span>
@@ -373,9 +372,9 @@ export default function Rotiserias() {
               style={{
                 display:'flex', alignItems:'center', gap:5,
                 padding:'7px 12px', borderRadius:20,
-                background: sortBy !== 'relevance' ? '#e31b23' : '#fff',
+                background: sortBy !== 'relevance' ? '#D32F2F' : '#fff',
                 color: sortBy !== 'relevance' ? '#fff' : '#374151',
-                border: sortBy !== 'relevance' ? 'none' : '1.5px solid #E5E7EB',
+                border: sortBy !== 'relevance' ? 'none' : '1.5px solid #E9D5D8',
                 fontSize:13, fontWeight:700, cursor:'pointer',
                 fontFamily:"'Plus Jakarta Sans', sans-serif",
                 boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
@@ -410,8 +409,8 @@ export default function Rotiserias() {
                       style={{
                         display:'flex', alignItems:'center', justifyContent:'space-between',
                         width:'100%', padding:'12px 16px',
-                        background: sortBy === opt.id ? '#FEF2F2' : '#fff',
-                        color: sortBy === opt.id ? '#e31b23' : '#374151',
+                        background: sortBy === opt.id ? '#FFF8F8' : '#fff',
+                        color: sortBy === opt.id ? '#D32F2F' : '#374151',
                         border:'none', textAlign:'left',
                         fontSize:14, fontWeight: sortBy === opt.id ? 700 : 600,
                         cursor:'pointer', fontFamily:"'Plus Jakarta Sans', sans-serif",
@@ -419,7 +418,7 @@ export default function Rotiserias() {
                       }}
                     >
                       {opt.label}
-                      {sortBy === opt.id && <Check size={15} color="#e31b23" strokeWidth={2.5} />}
+                      {sortBy === opt.id && <Check size={15} color="#D32F2F" strokeWidth={2.5} />}
                     </button>
                   ))}
                 </motion.div>
@@ -439,9 +438,9 @@ export default function Rotiserias() {
                   style={{
                     flexShrink:0,
                     padding:'7px 13px', borderRadius:20,
-                    background: active ? '#e31b23' : '#fff',
+                    background: active ? '#D32F2F' : '#fff',
                     color: active ? '#fff' : '#374151',
-                    border: active ? 'none' : '1.5px solid #E5E7EB',
+                    border: active ? 'none' : '1.5px solid #E9D5D8',
                     fontSize:13, fontWeight:700, cursor:'pointer',
                     fontFamily:"'Plus Jakarta Sans', sans-serif",
                     boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
@@ -457,7 +456,7 @@ export default function Rotiserias() {
       </div>
 
       {/* ── Lista ── */}
-      <div style={{ flex:1, padding:'16px 16px 24px', position:'relative', zIndex:5 }} onClick={() => sortOpen && setSortOpen(false)}>
+      <div style={{ flex:1, padding:'16px 16px 80px', position:'relative', zIndex:5 }} onClick={() => sortOpen && setSortOpen(false)}>
         {loading ? (
           <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
             {[...Array(3)].map((_,i) => <RestaurantSkeleton key={i} />)}
@@ -472,7 +471,7 @@ export default function Rotiserias() {
             <p style={{ fontWeight:700, color:'#6B7280', fontSize:15 }}>Sin resultados</p>
             <button
               onClick={() => { setSearch(''); setCatFilter('Todos'); }}
-              style={{ marginTop:8, color:'#e31b23', fontWeight:700, fontSize:14, background:'none', border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans', sans-serif" }}
+              style={{ marginTop:8, color:'#D32F2F', fontWeight:700, fontSize:14, background:'none', border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans', sans-serif" }}
             >
               Limpiar filtros
             </button>
@@ -492,6 +491,7 @@ export default function Rotiserias() {
           </motion.div>
         )}
       </div>
+      <BottomNav />
     </div>
   );
 }

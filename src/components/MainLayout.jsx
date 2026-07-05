@@ -26,11 +26,11 @@ export default function MainLayout() {
   const title = PAGE_TITLES[location.pathname];
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#F8F8F8' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#FFF8F8' }}>
       {/* ── Header rojo ── */}
       <header
         className="sticky top-0 z-40 shrink-0"
-        style={{ background: '#e31b23', boxShadow: '0 2px 16px rgba(227,27,35,0.25)' }}
+        style={{ background: '#D32F2F', boxShadow: '0 2px 16px rgba(211,47,47,0.25)' }}
       >
         {/* Fila del logo */}
         <div style={{ height: 56, display: 'flex', alignItems: 'center', padding: '0 16px', position: 'relative' }}>
@@ -55,7 +55,7 @@ export default function MainLayout() {
                   transition={{ type: 'spring', stiffness: 500, damping: 18 }}
                   style={{
                     position: 'absolute', top: -2, right: -2,
-                    background: '#fff', color: '#e31b23',
+                    background: '#fff', color: '#D32F2F',
                     fontSize: 10, fontWeight: 900,
                     width: 18, height: 18, borderRadius: '50%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -78,7 +78,7 @@ export default function MainLayout() {
             <span style={{ color: '#fff', fontWeight: 900, fontSize: 26, letterSpacing: '-0.03em', lineHeight: 1, textShadow: '0 1px 4px rgba(0,0,0,0.15)' }}>
               Vicuña
               <span style={{
-                background: '#fff', color: '#e31b23',
+                background: '#fff', color: '#D32F2F',
                 borderRadius: 8, padding: '1px 7px',
                 marginLeft: 3, fontWeight: 900, fontSize: 26,
               }}>

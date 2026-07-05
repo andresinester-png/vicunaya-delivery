@@ -18,11 +18,11 @@ function AddressCard({ address, isDefault, onMenu }) {
     }}>
       <div style={{
         width: 42, height: 42, borderRadius: 12, flexShrink: 0,
-        background: isDefault ? '#FEF2F2' : '#F3F4F6',
+        background: isDefault ? '#FFF8F8' : '#F3F4F6',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         {isDefault
-          ? <Home size={20} color="#e31b23" />
+          ? <Home size={20} color="#D32F2F" />
           : <MapPin size={20} color="#9CA3AF" />}
       </div>
       <div style={{ flex: 1, minWidth: 0, paddingTop: 1 }}>
@@ -65,7 +65,7 @@ function SheetRow({ icon, label, onClick, danger }) {
         background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
       }}
     >
-      <div style={{ width: 40, height: 40, borderRadius: 12, background: danger ? '#FEF2F2' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ width: 40, height: 40, borderRadius: 12, background: danger ? '#FFF8F8' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         {icon}
       </div>
       <span style={{ fontSize: 15, fontWeight: 600, color: danger ? '#EF4444' : '#111' }}>{label}</span>
@@ -111,7 +111,7 @@ function ActionSheet({ address, onSetDefault, onEdit, onDelete, onClose }) {
           <div style={{ paddingTop: 4 }}>
             {!address.is_default && (
               <SheetRow
-                icon={<Check size={19} color="#e31b23" />}
+                icon={<Check size={19} color="#D32F2F" />}
                 label="Usar como dirección de entrega"
                 onClick={onSetDefault}
               />
@@ -211,9 +211,9 @@ function AddressModal({ initial, onSave, onClose }) {
                   onClick={() => set('label', lbl)}
                   style={{
                     padding: '7px 16px', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    border: form.label === lbl ? '2px solid #e31b23' : '2px solid #E5E7EB',
-                    background: form.label === lbl ? '#FEF2F2' : '#fff',
-                    color: form.label === lbl ? '#e31b23' : '#6B7280',
+                    border: form.label === lbl ? '2px solid #D32F2F' : '2px solid #E9D5D8',
+                    background: form.label === lbl ? '#FFF8F8' : '#fff',
+                    color: form.label === lbl ? '#D32F2F' : '#6B7280',
                     transition: 'all 0.15s',
                   }}
                 >
@@ -259,8 +259,8 @@ function AddressModal({ initial, onSave, onClose }) {
             type="submit"
             style={{
               width: '100%', padding: '15px', borderRadius: 16, border: 'none',
-              background: '#e31b23', color: '#fff', fontWeight: 700, fontSize: 15,
-              cursor: 'pointer', boxShadow: '0 4px 14px rgba(227,27,35,0.35)',
+              background: '#D32F2F', color: '#fff', fontWeight: 700, fontSize: 15,
+              cursor: 'pointer', boxShadow: '0 4px 14px rgba(211,47,47,0.35)',
               fontFamily: "'Plus Jakarta Sans', sans-serif",
               marginBottom: 'env(safe-area-inset-bottom)',
             }}
@@ -347,7 +347,7 @@ export default function Addresses() {
   // ── Loading ──
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-      <div className="animate-spin" style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid #e31b23', borderTopColor: 'transparent' }} />
+      <div className="animate-spin" style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid #D32F2F', borderTopColor: 'transparent' }} />
     </div>
   );
 
@@ -361,7 +361,7 @@ export default function Addresses() {
   );
 
   return (
-    <div style={{ background: '#F8F8F8', minHeight: '100%', paddingBottom: 120 }}>
+    <div style={{ background: '#FFF8F8', minHeight: '100%', paddingBottom: 120 }}>
 
       {/* Page header */}
       <div style={{ background: '#fff', padding: '20px 20px 16px', borderBottom: '1px solid #F3F4F6' }}>
@@ -435,7 +435,7 @@ export default function Addresses() {
       <div style={{
         position: 'fixed', bottom: 64, left: 0, right: 0,
         padding: '10px 16px 12px',
-        background: 'linear-gradient(to top, #F8F8F8 70%, transparent)',
+        background: 'linear-gradient(to top, #FFF8F8 70%, transparent)',
         zIndex: 30,
       }}>
         <motion.button
@@ -443,9 +443,9 @@ export default function Addresses() {
           onClick={() => setEditModal({})}
           style={{
             width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            background: '#e31b23', color: '#fff', fontWeight: 700, fontSize: 15,
+            background: '#D32F2F', color: '#fff', fontWeight: 700, fontSize: 15,
             padding: '16px', borderRadius: 18, border: 'none', cursor: 'pointer',
-            boxShadow: '0 6px 24px rgba(227,27,35,0.40)',
+            boxShadow: '0 6px 24px rgba(211,47,47,0.40)',
             fontFamily: "'Plus Jakarta Sans', sans-serif",
           }}
         >

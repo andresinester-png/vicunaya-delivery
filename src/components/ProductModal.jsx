@@ -21,7 +21,7 @@ function QtyControl({ value, onChange, min = 0 }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'transparent', border: 'none',
           cursor: atMin ? 'default' : 'pointer',
-          color: atMin ? '#D1D5DB' : '#111',
+          color: atMin ? '#D1D5DB' : '#241F1D',
           transition: 'color 0.15s',
         }}
       >
@@ -43,7 +43,7 @@ function QtyControl({ value, onChange, min = 0 }) {
           width: 44, height: 44,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'transparent', border: 'none', cursor: 'pointer',
-          color: '#e31b23',
+          color: '#D32F2F',
           transition: 'opacity 0.15s',
         }}
       >
@@ -243,13 +243,13 @@ export default function ProductModal({ item, restaurant, onClose }) {
             style={{
               width: '100%',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: canAdd ? '#e31b23' : '#E5E7EB',
+              background: canAdd ? '#D32F2F' : '#E5E7EB',
               color: canAdd ? '#fff' : '#9CA3AF',
               fontWeight: 700, fontSize: 15,
               padding: '15px 20px',
               borderRadius: 16, border: 'none',
               cursor: canAdd ? 'pointer' : 'not-allowed',
-              boxShadow: canAdd ? '0 4px 14px rgba(227,27,35,0.35)' : 'none',
+              boxShadow: canAdd ? '0 4px 14px rgba(211,47,47,0.35)' : 'none',
               fontFamily: "'Plus Jakarta Sans', sans-serif",
               transition: 'all 0.18s',
             }}

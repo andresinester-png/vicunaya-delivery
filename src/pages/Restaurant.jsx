@@ -13,7 +13,7 @@ const CAT_GRADIENT = {
   'Rotisería': ['#FF9A3C','#FF6B00'], 'Parrilla': ['#EF4444','#B91C1C'],
   'Pizza':     ['#F59E0B','#D97706'], 'Empanadas': ['#10B981','#059669'],
   'Sushi':     ['#6366F1','#4338CA'], 'Vegano': ['#22C55E','#15803D'],
-  default:     ['#e31b23','#C2003C'],
+  default:     ['#D32F2F','#C2003C'],
 };
 const CAT_EMOJI = {
   'Rotisería':'🍗','Parrilla':'🥩','Pizza':'🍕','Empanadas':'🥟',
@@ -114,7 +114,7 @@ export default function Restaurant() {
 
   // ── Loading skeleton ───────────────────────────────────────────
   if (loading) return (
-    <div style={{ background: '#F8F8F8', minHeight: '100%' }}>
+    <div style={{ background: '#FFF8F8', minHeight: '100%' }}>
       <div style={{ height: 280 }} className="skeleton" />
       <div style={{ padding: '16px 16px 0', display: 'flex', gap: 8 }}>
         {[88, 110, 80].map((w, i) => (
@@ -153,7 +153,7 @@ export default function Restaurant() {
     : [];
 
   return (
-    <div style={{ background: '#F8F8F8', minHeight: '100%' }}>
+    <div style={{ background: '#FFF8F8', minHeight: '100%' }}>
 
       {/* ──────────────────────────────────────────────────────────
           HERO
@@ -215,7 +215,7 @@ export default function Restaurant() {
           <div style={{ marginBottom: 8 }}>
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,
-              background: isOpen ? 'rgba(22,163,74,0.88)' : 'rgba(0,0,0,0.55)',
+              background: isOpen ? 'rgba(46,125,50,0.88)' : 'rgba(0,0,0,0.55)',
               color: '#fff', fontSize: 11, fontWeight: 800,
               padding: '4px 10px', borderRadius: 999,
               backdropFilter: 'blur(4px)',
@@ -265,7 +265,7 @@ export default function Restaurant() {
           </div>
 
           {/* Red accent bar — same pattern as Home page cards */}
-          <div style={{ marginTop: 14, height: 3, width: 40, borderRadius: 2, background: '#e31b23' }} />
+          <div style={{ marginTop: 14, height: 3, width: 40, borderRadius: 2, background: '#D32F2F' }} />
         </div>
       </div>
 
@@ -339,7 +339,7 @@ export default function Restaurant() {
             position: 'sticky',
             top: HEADER_H,
             zIndex: 20,
-            background: '#F8F8F8',
+            background: '#FFF8F8',
             padding: '10px 0',
             boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
           }}
@@ -362,10 +362,10 @@ export default function Restaurant() {
                   fontSize: 13, fontWeight: 700,
                   border: 'none', cursor: 'pointer',
                   transition: 'background 0.18s, color 0.18s, box-shadow 0.18s',
-                  background: activeCategory === cat.id ? '#e31b23' : '#fff',
+                  background: activeCategory === cat.id ? '#D32F2F' : '#fff',
                   color:      activeCategory === cat.id ? '#fff'     : '#374151',
                   boxShadow:  activeCategory === cat.id
-                    ? '0 4px 12px rgba(227,27,35,0.30)'
+                    ? '0 4px 12px rgba(211,47,47,0.30)'
                     : '0 1px 6px rgba(0,0,0,0.08)',
                 }}
               >
@@ -396,7 +396,7 @@ export default function Restaurant() {
               <div style={{
                 background: '#fff',
                 borderRadius: 20,
-                boxShadow: '0 2px 16px rgba(0,0,0,0.07)',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.06)',
                 padding: '0 16px',
               }}>
                 {filteredItems.map((item, i, arr) => (
@@ -441,8 +441,8 @@ export default function Restaurant() {
                   </h2>
                   {(itemsByCategory[cat.id]?.length ?? 0) > 0 && (
                     <span style={{
-                      fontSize: 11, fontWeight: 800, color: '#e31b23',
-                      background: '#fef2f2', padding: '2px 8px', borderRadius: 999,
+                      fontSize: 11, fontWeight: 800, color: '#D32F2F',
+                      background: '#FFF8F8', padding: '2px 8px', borderRadius: 999,
                     }}>
                       {itemsByCategory[cat.id].length}
                     </span>
@@ -453,7 +453,7 @@ export default function Restaurant() {
                 <div style={{
                   background: '#fff',
                   borderRadius: 20,
-                  boxShadow: '0 2px 16px rgba(0,0,0,0.07)',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.06)',
                   padding: '0 16px',
                 }}>
                   {(itemsByCategory[cat.id] || []).length === 0 ? (
@@ -516,11 +516,11 @@ export default function Restaurant() {
               style={{
                 flex: 1,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                background: isOpen ? '#e31b23' : '#9CA3AF', color: '#fff',
+                background: isOpen ? '#D32F2F' : '#9CA3AF', color: '#fff',
                 fontWeight: 800, fontSize: 15,
                 padding: '14px 22px',
                 borderRadius: 999, border: 'none', cursor: isOpen ? 'pointer' : 'not-allowed',
-                boxShadow: isOpen ? '0 6px 20px rgba(227,27,35,0.35)' : 'none',
+                boxShadow: isOpen ? '0 6px 20px rgba(211,47,47,0.35)' : 'none',
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
               }}
             >

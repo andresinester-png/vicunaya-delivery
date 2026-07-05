@@ -104,12 +104,12 @@ export default function Orders() {
                       <Fragment key={idx}>
                         <div
                           className="w-2.5 h-2.5 rounded-full shrink-0 transition-colors duration-300"
-                          style={{ background: idx <= activeStep ? '#e31b23' : '#E5E7EB' }}
+                          style={{ background: idx <= activeStep ? '#D32F2F' : '#E9D5D8' }}
                         />
                         {idx < ORDER_STEPS.length - 1 && (
                           <div
                             className="flex-1 h-1 rounded-full mx-1 transition-colors duration-300"
-                            style={{ background: idx < activeStep ? '#e31b23' : '#E5E7EB' }}
+                            style={{ background: idx < activeStep ? '#D32F2F' : '#E9D5D8' }}
                           />
                         )}
                       </Fragment>

@@ -49,7 +49,7 @@ export default function Cart() {
               onClick={() => setFulfillmentMethod(opt.key)}
               className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
               style={{
-                background: fulfillmentMethod === opt.key ? '#e31b23' : 'transparent',
+                background: fulfillmentMethod === opt.key ? '#D32F2F' : 'transparent',
                 color: fulfillmentMethod === opt.key ? '#fff' : '#6B7280',
               }}
             >
@@ -105,7 +105,7 @@ export default function Cart() {
                     whileTap={{ scale: 0.85 }}
                     onClick={() => updateQty(item.id, item.qty + 1)}
                     className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-dark transition-colors"
-                    style={{ boxShadow: '0 3px 10px rgba(227,27,35,0.3)' }}
+                    style={{ boxShadow: '0 3px 10px rgba(211,47,47,0.3)' }}
                   >
                     <Plus size={13} />
                   </motion.button>

@@ -20,18 +20,18 @@ export const CATEGORY_INFO = {
 
 // Imágenes ilustrativas por categoría, usadas cuando el negocio no tiene logo propio
 const CATEGORY_IMAGES = {
-  estetica:    'https://lh3.googleusercontent.com/aida-public/AB6AXuD-2oFKbZfi8sQeugHeMpeJQ2UY5YuCAmsm4J5Z-YgSqGIC5VE8XpnpgJ9SAmTmxbw2Lj_kY5BReP2eq-6YkzYT3vrDlaG9KObf83HwSLVX-RwXcRaXPE7clbW6ssUkoMZ1a2T_s_bNmUfmysRPcg3IyIGJihids9is1NEYUnmeo2ErYcLcWfQMKkHTj3_1bvJL-6BdMuaXdEgIuyMlJN0B6u9FqKFQCksyBOUfvA7aMtmvgsGyX2XwLdCcH7rtPxA-nz4lS2e6li8Y',
-  peluqueria:  'https://lh3.googleusercontent.com/aida-public/AB6AXuDYc9235Mm-emjynmdFLtVYZckEaaz0ShkTHMar5AoKFtCtcOBmPfXBo-Z1rT157tpFhdJf824gna8udnl0x6YVeHh3ZYG4n9tn_N37ns4Ce-3232PLIYeAkiTrsoJHWKzTysjF5Ep1UVXqUU9jZn0atyYP_u_oeN_WynE7FkZlfFJb1gWQVrklTbXcvEZsoLf24kwUZnuvARegRWXgKW4G4VoB9ff9fiHuHYWPY2CuYvz5qJaz1MDbbVuE7xx7RM2_JVXULzLTyFNC',
-  taller:      'https://lh3.googleusercontent.com/aida-public/AB6AXuCLsyQ61mpIZf_m9gN_pISjjp7CMzdAA5NUN7hUEmV2QIhm7BGSm2N9Dpec-kLrQ9RZa_1CbeYVk_E9lSqiPrLFZqZ4tcyzMTXDNX5QIxxrGJPBVeaG13n8DHcJMXsOznVoZYTxgtr1e2pUnGY9T3yeQu2M_xCRbMREQrHmkLUNpKt52H__Xb79lH_UlkGXs_0LI4GQ386vxNAv5n7ltEtrl592kXqNkMEMdSm32sNx-F_c5vce9YI_oY0wnY7eZhPaeteUyizccbSX',
-  veterinaria: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBfB0rQnaQ6ksKuY9xp2RM2kyCqBsCpP527UXrABVQlw-tqTeEozcI3-qV5I09CXU-I3R8x9DB9pxzRX3FriBnF3osYyegGOxeOPgm8hjI_CwGJ6nC94VOAQ85ovSO_Ei4UTOJEuxlw5NO1L3nxe56O_jYgCnwII0JAxKVbnyqU7aTgm3CpY6EteKvsOhufQ3Eoqg0jNXL4NkyuwhLkIQx5JkG2NU4_D4HbPaECJeJDQWcQdp5TlE4Fe95Tz4f43AdsxFlTrFkpbzQc',
+  estetica:    'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80',
+  peluqueria:  'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400&q=80',
+  taller:      'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&q=80',
+  veterinaria: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=400&q=80',
 };
 
 const FILTER_CATEGORIES = [
-  { key: 'peluqueria',  label: 'Peluquería',  image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAChaQiSJx9SEpQjHijDqPGb5uE0N7cujVqe05_MnoTTlhosk5RJ2hpWC2d-1j-SskWkfDiG8TYneyAzk3WB30HLFLSeZDeBn9EIJVc0SdwTn0J_HLYeDi-QvqRpN4i_dUBoyzDoKNZKpiZpOu1oKPSMpDfiINLA55QG5HPrmByE-gyEaWiMJr_vcmc9aeQLxyZbnVd0pH4yfX7akV5z49e6QolEQgvEdSu8YNahn6r1BoQc7-R5d2zRvTdPc4w8FoF48aV3_Unn-Ju' },
-  { key: 'estetica',    label: 'Estética',    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBzBiQzG-tsIOcFhFtW86cvr7ZnQDfxxUeqQGTPwiqfM9NRl5m4f06aDVF3bHE3smyBhsoSvFjodqw3GflmjfXD3zz4hPiNlK0B0lqdp_Mc1POD8a9UoP-VMWyjZNTfAWsDb31Pic_1mimOIVajP2ihRskzaZL0eOmNgbTUcBS50s3b6BM5TafJcmqeya9s0Sbd1o3Vbn68KB5EsQz3UG_VHh6NGPhAVf7ez2I0ETt5mWq6AKETiT4CCjJxfQgVEsHH1wikqqHtOQ55' },
-  { key: 'taller',      label: 'Taller',      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBkBTTRf3JJ_NzlcVOFimhv6UEyiVNOudUQHvL_aPBSjokTix2KcU2eD0Hp-KUi9jzPjMN37cC-RvYy2NiAgMNMUWICyk4Pn2uE-wVKXA-48dxZiBI3lku43CaVnuHtTLbJl4y7k9p2TrHbXmd4-aKkWjGPHyYp2ukPaWBQSzCEQG_6aT50qCKySsMjlHMx-tDbVrpGIH-m0hFw1CSXK6XCC4dw1PkcmGS70QkfbPI0GptFOn4GcRe9hHgwxwfoEX-UCLoBPVdjdGen' },
-  { key: 'veterinaria', label: 'Veterinaria', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDNnQXnMS5qNh5sweOtB-nignu_OJ3LXwtDoCNh3EZ54j8LUz6EDN4vefOh8cHJX3uDcTcaLO6NKh-1SKWab9OsicWaA0q92RKEQKyPWv0JAqhpHKfYngGOob36jfDiYv2gYQS4Z5RSc6XVGuIPZZSXHKz6V_nG5w9Q1GqpfCgcPfFbsfONhZCczYfTQv7hXIdsqN_EIB13KRkqCv6LHKNmK10MSdqpavXZd7vrZb-oxMUUQgW37Tg_H9-DIBNT9dh65kUXVpQIRxqg' },
-  { key: 'lavadero',    label: 'Lavadero',    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDnFbVj4HzqC3a6_hA3kS2qTxryGqMUEZgc6rC0ZCtKkf_5YuPuW8OChrxDaqQ7oUoBpSvxZv0itU1ow4ly1_RfPdDGqSF0j7Esrvdja4uxIrWgqxFMJIaOeEQrTwqT95UiY5TislXIYbfbXGzol0XTphrQ1_haCFcEK6DwhEypM9PrsbMB7qNtBWlz6t8qqZpb9jFeFb5AIl0bNQNb5CLVRsQk-Hwgp1ctEWKqdvfxT-IUYVWUThae7BAcxcCv9d0G0FjxTuEORovd' },
+  { key: 'peluqueria',  label: 'Peluquería',  image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400&q=80' },
+  { key: 'estetica',    label: 'Estética',    image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80' },
+  { key: 'taller',      label: 'Taller',      image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&q=80' },
+  { key: 'veterinaria', label: 'Veterinaria', image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=400&q=80' },
+  { key: 'lavadero',    label: 'Lavadero',    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
   { key: 'Todos',       label: 'Todos' },
 ];
 
@@ -72,11 +72,11 @@ export default function Turnos() {
   }, [businesses, search, catFilter]);
 
   return (
-    <div style={{ background: '#F9FAFB', minHeight: '100%' }}>
+    <div style={{ background: '#FFF8F8', minHeight: '100%' }}>
 
       {/* Header rojo con título y buscador */}
       <div
-        style={{ background: 'linear-gradient(180deg, #e31b23 0%, #c0121a 100%)' }}
+        style={{ background: 'linear-gradient(180deg, #D32F2F 0%, #B71C1C 100%)' }}
         className="px-4 pt-4 pb-5"
       >
         <h1 className="text-white font-extrabold text-2xl tracking-tight mb-3">Turnos</h1>
@@ -128,7 +128,7 @@ export default function Turnos() {
 
         {/* Chips de filtro */}
         <div
-          className="sticky top-0 z-10 -mx-4 px-4 py-2 mb-4 flex gap-2 overflow-x-auto bg-[#F9FAFB]/80 backdrop-blur-sm"
+          className="sticky top-0 z-10 -mx-4 px-4 py-2 mb-4 flex gap-2 overflow-x-auto bg-[#FFF8F8]/80 backdrop-blur-sm"
           style={{ scrollbarWidth: 'none' }}
         >
           {FILTER_CATEGORIES.map(cat => {
@@ -140,7 +140,7 @@ export default function Turnos() {
                 onClick={() => setCatFilter(cat.key)}
                 className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-colors ${
                   active
-                    ? 'bg-[#e31b23] text-white shadow-[0_4px_12px_rgba(227,27,35,0.35)]'
+                    ? 'bg-[#D32F2F] text-white shadow-[0_4px_12px_rgba(211,47,47,0.35)]'
                     : 'bg-white border border-slate-200 text-slate-600'
                 }`}
               >

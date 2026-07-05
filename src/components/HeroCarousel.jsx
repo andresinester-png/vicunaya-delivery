@@ -6,7 +6,7 @@ import 'swiper/css/pagination';
 const SLIDES = [
   {
     id: 1,
-    from: '#e31b23',
+    from: '#D32F2F',
     mid: '#E8003C',
     to:  '#FF6B35',
     tag: '🎉 OFERTA ESPECIAL',

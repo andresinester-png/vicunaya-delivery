@@ -50,7 +50,7 @@ export default function Sorteo() {
       `}</style>
 
       {/* ── Header rojo ── */}
-      <div style={{ background:'#e31b23', padding:'14px 16px', display:'flex', alignItems:'center', gap:12 }}>
+      <div style={{ background:'#D32F2F', padding:'14px 16px', display:'flex', alignItems:'center', gap:12 }}>
         <motion.button
           whileTap={{ scale:0.88 }}
           onClick={() => navigate(-1)}
@@ -71,7 +71,7 @@ export default function Sorteo() {
       {/* ── Banner con confeti ── */}
       <div style={{
         position:'relative', overflow:'hidden', height:180,
-        background:'linear-gradient(135deg, #e31b23 0%, #8e0e13 100%)',
+        background:'linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%)',
         display:'flex', alignItems:'center', justifyContent:'center',
       }}>
         {CONFETTI.map((c, i) => (

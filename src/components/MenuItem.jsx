@@ -121,7 +121,7 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
                   animate={{ scale: 1, rotate: 0 }}
                   exit={{ scale: 0 }}
                 >
-                  <Check size={16} color="#22c55e" strokeWidth={3} />
+                  <Check size={16} color="#2E7D32" strokeWidth={3} />
                 </motion.span>
               ) : (
                 <motion.span
@@ -130,7 +130,7 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
                 >
-                  <Plus size={20} color="#e31b23" strokeWidth={2.5} />
+                  <Plus size={20} color="#D32F2F" strokeWidth={2.5} />
                 </motion.span>
               )}
             </AnimatePresence>

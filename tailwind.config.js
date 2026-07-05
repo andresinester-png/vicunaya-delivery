@@ -5,17 +5,23 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#e31b23',
-          dark:    '#c01920',
-          light:   '#e84a50',
-          bg:      '#fef2f2',
+          DEFAULT: '#D32F2F',
+          dark:    '#B71C1C',
+          light:   '#E53935',
+          bg:      '#FFF8F8',
         },
+        surface: '#FFF8F8',
+        'border-card': '#E9D5D8',
+        'text-main':   '#241F1D',
+        'text-secondary': '#8A8580',
+        'text-muted':  '#B7B0A8',
+        'open-green':  '#2E7D32',
       },
       fontFamily: {
         sans: ['Plus Jakarta Sans', 'Segoe UI', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        card:         '0 4px 20px rgba(0,0,0,0.08)',
+        card:         '0 4px 14px rgba(0,0,0,0.06)',
         'card-hover': '0 8px 32px rgba(0,0,0,0.14)',
         nav:          '0 2px 12px rgba(0,0,0,0.06)',
       },

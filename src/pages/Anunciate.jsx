@@ -59,7 +59,7 @@ export default function Anunciate() {
     <div style={{ minHeight:'100vh', background:'#fff' }}>
 
       {/* ── Header rojo ── */}
-      <div style={{ background:'#e31b23', padding:'14px 16px', display:'flex', alignItems:'center', gap:12 }}>
+      <div style={{ background:'#D32F2F', padding:'14px 16px', display:'flex', alignItems:'center', gap:12 }}>
         <motion.button
           whileTap={{ scale:0.88 }}
           onClick={() => navigate(-1)}
@@ -158,11 +158,11 @@ export default function Anunciate() {
                   type="submit"
                   disabled={submitting}
                   style={{
-                    background:'#e31b23', color:'#fff',
+                    background:'#D32F2F', color:'#fff',
                     border:'none', borderRadius:14, padding:'14px',
                     fontSize:15, fontWeight:900, letterSpacing:'-0.01em',
                     cursor:'pointer', width:'100%', marginTop:4,
-                    boxShadow:'0 4px 16px rgba(227,27,35,0.25)',
+                    boxShadow:'0 4px 16px rgba(211,47,47,0.25)',
                   }}
                 >
                   {submitting ? 'Enviando...' : 'Enviar'}
@@ -179,9 +179,9 @@ export default function Anunciate() {
           transition={{ delay:0.1 + BENEFICIOS.length * 0.05 }}
           style={{
             marginTop:10, textAlign:'center',
-            background:'linear-gradient(135deg, #ff5b5f 0%, #e31b23 100%)',
+            background:'linear-gradient(135deg, #ff5b5f 0%, #D32F2F 100%)',
             borderRadius:24, padding:'28px 20px',
-            boxShadow:'0 8px 28px rgba(227,27,35,0.25)',
+            boxShadow:'0 8px 28px rgba(211,47,47,0.25)',
           }}
         >
           <h2 style={{ fontSize:20, fontWeight:900, color:'#fff', letterSpacing:'-0.02em', margin:0 }}>
@@ -194,7 +194,7 @@ export default function Anunciate() {
             whileTap={{ scale:0.97 }}
             onClick={handleWhatsApp}
             style={{
-              background:'#fff', color:'#e31b23',
+              background:'#fff', color:'#D32F2F',
               border:'none', borderRadius:18, padding:'16px',
               fontSize:16, fontWeight:900, letterSpacing:'-0.01em',
               cursor:'pointer', width:'100%',

@@ -76,7 +76,7 @@ export default function CompleteProfile() {
     <div style={{ minHeight: '100vh', background: '#fff' }}>
 
       {/* ── Header rojo ── */}
-      <div style={{ background: '#e31b23', padding: '32px 16px 28px', textAlign: 'center' }}>
+      <div style={{ background: '#D32F2F', padding: '32px 16px 28px', textAlign: 'center' }}>
         <h1 style={{ color: '#fff', fontSize: 22, fontWeight: 900, letterSpacing: '-0.02em', margin: 0 }}>
           Completá tu perfil
         </h1>
@@ -134,10 +134,10 @@ export default function CompleteProfile() {
           type="submit"
           disabled={submitting}
           style={{
-            background: '#e31b23', color: '#fff', border: 'none', borderRadius: 16,
+            background: '#D32F2F', color: '#fff', border: 'none', borderRadius: 16,
             padding: '16px 20px', fontSize: 15, fontWeight: 800,
             cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.7 : 1,
-            marginTop: 8, boxShadow: '0 6px 20px rgba(227,27,35,0.25)',
+            marginTop: 8, boxShadow: '0 6px 20px rgba(211,47,47,0.25)',
           }}
         >
           {submitting ? 'Guardando...' : 'Guardar y continuar'}

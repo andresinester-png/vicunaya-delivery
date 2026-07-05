@@ -227,7 +227,7 @@ export default function OrderTracking() {
 
         {/* ── Card de estado ── */}
         <div className="bg-white rounded-3xl shadow-card p-5 mb-4">
-          <p className="text-sm font-bold mb-1" style={{ color: '#22c55e' }}>En hora</p>
+          <p className="text-sm font-bold mb-1" style={{ color: '#2E7D32' }}>En hora</p>
           <p className="text-2xl font-extrabold text-gray-900 mb-5">{etaRange}</p>
 
           {/* Barra de progreso */}
@@ -237,12 +237,12 @@ export default function OrderTracking() {
                 <Fragment key={idx}>
                   <div
                     className="w-3 h-3 rounded-full shrink-0 transition-colors duration-300"
-                    style={{ background: idx <= currentStep ? '#22c55e' : '#E5E7EB' }}
+                    style={{ background: idx <= currentStep ? '#2E7D32' : '#E9D5D8' }}
                   />
                   {idx < STEPS.length - 1 && (
                     <div
                       className="flex-1 h-1 rounded-full mx-1 transition-colors duration-300"
-                      style={{ background: idx < currentStep ? '#22c55e' : '#E5E7EB' }}
+                      style={{ background: idx < currentStep ? '#2E7D32' : '#E9D5D8' }}
                     />
                   )}
                 </Fragment>
@@ -303,7 +303,7 @@ export default function OrderTracking() {
                   type="button"
                   onClick={() => setShowItems(s => !s)}
                   className="shrink-0 text-sm font-bold"
-                  style={{ color: '#e31b23' }}
+                  style={{ color: '#D32F2F' }}
                 >
                   Ver detalle
                 </button>
@@ -379,7 +379,7 @@ export default function OrderTracking() {
                     disabled={addrCountdown <= 0}
                     className="shrink-0 text-sm font-bold transition-colors"
                     style={{
-                      color: addrCountdown > 0 ? '#e31b23' : '#D1D5DB',
+                      color: addrCountdown > 0 ? '#D32F2F' : '#D1D5DB',
                       cursor: addrCountdown > 0 ? 'pointer' : 'not-allowed',
                     }}
                   >
@@ -401,7 +401,7 @@ export default function OrderTracking() {
           </div>
         ) : (
           <div>
-            <p className="text-xs font-semibold mb-3" style={{ color: '#e31b23' }}>
+            <p className="text-xs font-semibold mb-3" style={{ color: '#D32F2F' }}>
               ⏱ Podés agregar productos por {fmtCountdown(itemsCountdown)} min
             </p>
 
@@ -424,7 +424,7 @@ export default function OrderTracking() {
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-gray-900 truncate">{mi.name}</p>
-                        <p className="text-sm font-bold mt-0.5" style={{ color: '#e31b23' }}>${mi.price.toLocaleString('es-AR')}</p>
+                        <p className="text-sm font-bold mt-0.5" style={{ color: '#D32F2F' }}>${mi.price.toLocaleString('es-AR')}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {qty > 0 && (
@@ -535,7 +535,7 @@ export default function OrderTracking() {
 
             <div className="border-t border-gray-100 pt-3 flex justify-between font-bold text-base mb-5">
               <span>Total nuevo del pedido</span>
-              <span style={{ color: '#e31b23' }}>${newOrderTotal.toLocaleString('es-AR')}</span>
+              <span style={{ color: '#D32F2F' }}>${newOrderTotal.toLocaleString('es-AR')}</span>
             </div>
 
             <div className="flex gap-3">

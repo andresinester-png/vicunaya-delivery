@@ -55,7 +55,7 @@ function SuccessScreen({ business, service, professional, day, time }) {
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-      style={{ background: '#22c55e' }}
+      style={{ background: '#2E7D32' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
@@ -77,7 +77,7 @@ function SuccessScreen({ business, service, professional, day, time }) {
         <svg viewBox="0 0 52 52" width={78} height={78} fill="none">
           <path
             d="M14 27 L22 35 L38 17"
-            stroke="#22c55e" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none"
+            stroke="#2E7D32" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none"
             style={{ strokeDasharray: 40, strokeDashoffset: 40, animation: 'checkmarkDraw 0.5s 0.4s ease-out forwards' }}
           />
         </svg>
@@ -425,12 +425,12 @@ export default function TurnoNegocio() {
               <Fragment key={idx}>
                 <div
                   className="w-2.5 h-2.5 rounded-full shrink-0 transition-colors duration-300"
-                  style={{ background: idx <= indicatorStep - 1 ? '#e31b23' : '#E5E7EB' }}
+                  style={{ background: idx <= indicatorStep - 1 ? '#D32F2F' : '#E9D5D8' }}
                 />
                 {idx < visibleLabels.length - 1 && (
                   <div
                     className="flex-1 h-1 rounded-full mx-1 transition-colors duration-300"
-                    style={{ background: idx < indicatorStep - 1 ? '#e31b23' : '#E5E7EB' }}
+                    style={{ background: idx < indicatorStep - 1 ? '#D32F2F' : '#E9D5D8' }}
                   />
                 )}
               </Fragment>
@@ -468,7 +468,7 @@ export default function TurnoNegocio() {
                     <button
                       key={s.id} type="button" onClick={() => setSelectedService(s)}
                       className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
-                      style={{ borderColor: active ? '#e31b23' : '#E5E7EB', background: active ? '#fef2f2' : '#fff' }}
+                      style={{ borderColor: active ? '#D32F2F' : '#E9D5D8', background: active ? '#FFF8F8' : '#fff' }}
                     >
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-sm">{s.name}</p>
@@ -496,7 +496,7 @@ export default function TurnoNegocio() {
                     <button
                       key={prof.id} type="button" onClick={() => setSelectedProfessional(prof)}
                       className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
-                      style={{ borderColor: active ? '#e31b23' : '#E5E7EB', background: active ? '#fef2f2' : '#fff' }}
+                      style={{ borderColor: active ? '#D32F2F' : '#E9D5D8', background: active ? '#FFF8F8' : '#fff' }}
                     >
                       {prof.avatar_url
                         ? <img src={prof.avatar_url} alt={prof.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
@@ -554,7 +554,7 @@ export default function TurnoNegocio() {
                           <span className="text-base font-extrabold leading-none mt-1">{day.date.getDate()}</span>
                           <span
                             className="w-1 h-1 rounded-full mt-1"
-                            style={{ background: isSelected ? '#fff' : isAvailable ? '#22c55e' : 'transparent' }}
+                            style={{ background: isSelected ? '#fff' : isAvailable ? '#2E7D32' : 'transparent' }}
                           />
                         </button>
                       );
@@ -575,7 +575,7 @@ export default function TurnoNegocio() {
 
                       {loadingBooked ? (
                         <div className="flex items-center justify-center py-8">
-                          <div className="w-5 h-5 border-2 border-[#e31b23] border-t-transparent rounded-full animate-spin" />
+                          <div className="w-5 h-5 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
                         </div>
                       ) : calendarSlots.length === 0 ? (
                         <p className="text-sm text-gray-400 py-4 text-center">
