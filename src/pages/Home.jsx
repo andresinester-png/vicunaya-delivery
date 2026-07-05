@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -39,6 +39,33 @@ const DEMO = [
   { id: 'd1', name: 'La Rotisería de Don Carlos', category: ['Rotisería'], rating: 4.8, delivery_time: 25, delivery_price: 350, image_url: null, logo_url: null },
   { id: 'd2', name: 'Rotisería Los Hermanos',     category: ['Rotisería'], rating: 4.6, delivery_time: 35, delivery_price: 400, image_url: null, logo_url: null },
   { id: 'd3', name: 'El Buen Gusto',              category: ['Empanadas'], rating: 4.9, delivery_time: 30, delivery_price: 250, image_url: null, logo_url: null },
+];
+
+const PROMO_BANNERS = [
+  {
+    id: 'negocio',
+    image: 'https://images.unsplash.com/photo-1526367790999-0150786686a2?w=800&auto=format&fit=crop&q=60',
+    title: '¿Tenés un negocio?',
+    subtitle: 'Llegá a miles de vecinos con VicuñaYa.',
+    cta: '¡Sumate a VicuñaYa!',
+    to: '/anunciate',
+  },
+  {
+    id: 'descuento',
+    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=60',
+    title: '30% OFF en tu primer pedido',
+    subtitle: 'Usá el código VICUÑA30 al pagar.',
+    cta: 'Pedir ahora',
+    to: '/rotiserias',
+  },
+  {
+    id: 'envio',
+    image: 'https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=800&auto=format&fit=crop&q=60',
+    title: 'Envío gratis',
+    subtitle: 'En pedidos arriba de $3.000.',
+    cta: 'Ver restaurantes',
+    to: '/rotiserias',
+  },
 ];
 
 function catColor(category) {
@@ -129,47 +156,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Banner promo ── */}
-      <div style={{ padding: '16px 18px 0' }}>
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => navigate('/anunciate')}
-          onKeyDown={e => e.key === 'Enter' && navigate('/anunciate')}
-          style={{
-            position: 'relative', height: 190, borderRadius: 20, overflow: 'hidden',
-            background: `linear-gradient(135deg, ${RED} 0%, #B71C1C 100%)`, cursor: 'pointer',
-          }}
-        >
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(90deg, rgba(211,47,47,0.88) 12%, rgba(183,28,28,0.28) 60%)',
-          }} />
-          <div style={{
-            position: 'absolute', inset: 0, padding: 20,
-            display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 8,
-          }}>
-            <h2 style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: 22, lineHeight: 1.15, maxWidth: 210, letterSpacing: '-0.01em' }}>
-              ¿Tenés un negocio?
-            </h2>
-            <p style={{ margin: 0, color: 'rgba(255,255,255,0.9)', fontSize: 13, fontWeight: 500, maxWidth: 220 }}>
-              Llegá a miles de vecinos con VicuñaYa.
-            </p>
-            <button
-              onClick={e => { e.stopPropagation(); navigate('/anunciate'); }}
-              style={{
-                marginTop: 4, alignSelf: 'flex-start',
-                background: '#fff', color: RED, border: 'none',
-                padding: '10px 18px', borderRadius: 99,
-                fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 13,
-                boxShadow: '0 4px 10px rgba(0,0,0,0.15)', cursor: 'pointer',
-              }}
-            >
-              ¡Sumate a VicuñaYa!
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* ── Carrusel de banners ── */}
+      <PromoBanner navigate={navigate} />
 
       {/* ── Categorías ── */}
       <div style={{ paddingTop: 22 }}>
@@ -362,6 +350,110 @@ export default function Home() {
           </motion.button>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function PromoBanner({ navigate }) {
+  const [active, setActive]     = useState(0);
+  const timerRef                = useRef(null);
+  const pauseRef                = useRef(false);
+
+  const goTo = useCallback((idx) => {
+    setActive(idx);
+    // Pausa el auto-avance 6 segundos tras interacción manual
+    pauseRef.current = true;
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => { pauseRef.current = false; }, 6000);
+  }, []);
+
+  useEffect(() => {
+    const tick = () => {
+      if (!pauseRef.current) {
+        setActive(i => (i + 1) % PROMO_BANNERS.length);
+      }
+    };
+    const id = setInterval(tick, 5000);
+    return () => { clearInterval(id); clearTimeout(timerRef.current); };
+  }, []);
+
+  const banner = PROMO_BANNERS[active];
+
+  return (
+    <div style={{ padding: '16px 18px 0' }}>
+      <div style={{ position: 'relative', height: 190, borderRadius: 20, overflow: 'hidden', background: '#B71C1C', cursor: 'pointer' }}
+        onClick={() => navigate(banner.to)}
+      >
+        {/* Fotos — AnimatePresence para cross-fade */}
+        <AnimatePresence initial={false}>
+          <motion.img
+            key={banner.id}
+            src={banner.image}
+            alt=""
+            aria-hidden
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+          />
+        </AnimatePresence>
+
+        {/* Degradado rojo siempre encima */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(90deg, rgba(211,47,47,0.88) 12%, rgba(183,28,28,0.28) 60%)',
+        }} />
+
+        {/* Contenido del banner activo */}
+        <AnimatePresence initial={false} mode="wait">
+          <motion.div
+            key={banner.id + '-text'}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.3 }}
+            style={{ position: 'absolute', inset: 0, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 8 }}
+          >
+            <h2 style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: 22, lineHeight: 1.15, maxWidth: 210, letterSpacing: '-0.01em' }}>
+              {banner.title}
+            </h2>
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.9)', fontSize: 13, fontWeight: 500, maxWidth: 220 }}>
+              {banner.subtitle}
+            </p>
+            <button
+              onClick={e => { e.stopPropagation(); navigate(banner.to); }}
+              style={{
+                marginTop: 4, alignSelf: 'flex-start',
+                background: '#fff', color: RED, border: 'none',
+                padding: '10px 18px', borderRadius: 99,
+                fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 13,
+                boxShadow: '0 4px 10px rgba(0,0,0,0.15)', cursor: 'pointer',
+              }}
+            >
+              {banner.cta}
+            </button>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Dots indicadores */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, paddingTop: 10 }}>
+        {PROMO_BANNERS.map((b, i) => (
+          <button
+            key={b.id}
+            onClick={() => goTo(i)}
+            aria-label={`Banner ${i + 1}`}
+            style={{
+              width: i === active ? 20 : 6,
+              height: 6, borderRadius: 99,
+              background: i === active ? RED : '#D1C5C5',
+              border: 'none', padding: 0, cursor: 'pointer',
+              transition: 'width 0.3s ease, background 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }
