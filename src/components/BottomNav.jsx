@@ -1,28 +1,38 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Car, ClipboardList, Calendar, CalendarCheck, User } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Home, ClipboardList, Calendar, CalendarCheck, User } from 'lucide-react';
 
 const TABS = [
   { to: '/',           icon: Home,          label: 'Inicio'     },
-  // { to: '/remises', icon: Car, label: 'Remises' }, // Remises: deshabilitado temporalmente
   { to: '/pedidos',    icon: ClipboardList, label: 'Pedidos'    },
   { to: '/turnos',     icon: Calendar,      label: 'Turnos'     },
   { to: '/mis-turnos', icon: CalendarCheck, label: 'Mis turnos' },
   { to: '/perfil',     icon: User,          label: 'Perfil'     },
 ];
 
+const ACTIVE_RED = '#D32F2F';
+
 export default function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white pb-safe"
-      style={{
-        borderTop: '1px solid rgba(0,0,0,0.06)',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
-      }}
-    >
-      <div className="flex items-stretch h-16">
+    <nav style={{
+      position: 'fixed',
+      bottom: 16,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: 'max-content',
+      maxWidth: 'calc(100% - 48px)',
+      zIndex: 50,
+      background: 'rgba(20,20,20,0.50)',
+      backdropFilter: 'blur(28px)',
+      WebkitBackdropFilter: 'blur(28px)',
+      borderRadius: 28,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.40), 0 2px 8px rgba(0,0,0,0.25)',
+      padding: '8px 4px',
+      paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
         {TABS.map(({ to, icon: Icon, label }) => {
           const active = to === '/'
             ? location.pathname === '/'
@@ -33,40 +43,52 @@ export default function BottomNav() {
               key={to}
               to={to}
               end={to === '/'}
-              className="flex-1 flex flex-col items-center justify-center relative overflow-hidden"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 3,
+                textDecoration: 'none',
+                padding: '2px 8px',
+              }}
             >
-              {/* Active background pill */}
-              <AnimatePresence>
+              {/* Contenedor del ícono con píldora activa */}
+              <div style={{ position: 'relative', width: 44, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {active && (
                   <motion.div
-                    layoutId="nav-pill"
-                    className="absolute inset-x-3 inset-y-2 rounded-2xl bg-primary/10"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    layoutId="island-pill"
+                    style={{
+                      position: 'absolute', inset: 0,
+                      background: ACTIVE_RED,
+                      borderRadius: 14,
+                    }}
+                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
                   />
                 )}
-              </AnimatePresence>
+                <motion.div
+                  animate={active ? { scale: 1.08 } : { scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                  style={{ position: 'relative', zIndex: 1 }}
+                >
+                  <Icon
+                    size={19}
+                    strokeWidth={active ? 2.5 : 1.8}
+                    color={active ? '#fff' : 'rgba(255,255,255,0.45)'}
+                  />
+                </motion.div>
+              </div>
 
-              {/* Icon */}
-              <motion.div
-                animate={active ? { y: -1, scale: 1.1 } : { y: 0, scale: 1 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                className="relative z-10"
-              >
-                <Icon
-                  size={22}
-                  strokeWidth={active ? 2.5 : 1.8}
-                  className={active ? 'text-primary' : 'text-gray-400'}
-                />
-              </motion.div>
-
-              {/* Label */}
+              {/* Etiqueta */}
               <motion.span
-                animate={{ color: active ? '#e31b23' : '#9CA3AF' }}
-                transition={{ duration: 0.2 }}
-                className="text-[10px] font-bold mt-0.5 relative z-10 tracking-tight"
+                animate={{ color: active ? ACTIVE_RED : 'rgba(255,255,255,0.38)' }}
+                transition={{ duration: 0.18 }}
+                style={{
+                  fontSize: 9.5,
+                  fontWeight: active ? 700 : 500,
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  letterSpacing: '-0.01em',
+                  lineHeight: 1,
+                }}
               >
                 {label}
               </motion.span>
