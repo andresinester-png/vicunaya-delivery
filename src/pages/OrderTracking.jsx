@@ -187,7 +187,7 @@ export default function OrderTracking() {
       <div className="text-5xl mb-4">😞</div>
       <h2 className="font-extrabold text-xl text-gray-900 mb-2">Pedido rechazado</h2>
       <p className="text-gray-500 text-sm mb-6">El restaurante no puede tomar tu pedido en este momento.</p>
-      <button onClick={() => navigate('/')} className="btn-primary">Volver al inicio</button>
+      <button onClick={() => navigate('/delivery')} className="btn-primary">Volver al inicio</button>
     </div>
   );
 
@@ -213,7 +213,7 @@ export default function OrderTracking() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="flex items-center justify-between px-2 py-2 sticky top-0 z-40 bg-white border-b border-gray-100">
-        <button onClick={() => navigate('/')} className="p-2.5 rounded-full hover:bg-gray-100 transition-colors">
+        <button onClick={() => navigate('/delivery')} className="p-2.5 rounded-full hover:bg-gray-100 transition-colors">
           <X size={22} className="text-gray-900" />
         </button>
         <div className="flex items-center gap-1">

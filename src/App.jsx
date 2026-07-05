@@ -12,6 +12,7 @@ import TurnosPanelGuard from './components/TurnosPanelGuard.jsx';
 
 import Welcome from './pages/Welcome.jsx';
 import CompleteProfile from './pages/CompleteProfile.jsx';
+import Hub from './pages/Hub.jsx';
 import Home from './pages/Home.jsx';
 // import RemisesPage from './pages/Remises.jsx'; // Remises: deshabilitado temporalmente
 import Orders from './pages/Orders.jsx';
@@ -84,9 +85,12 @@ export default function App() {
         <Route path="/complete-profile" element={<CompleteProfile />} />
 
         <Route element={<CustomerGate />}>
+          {/* ── Hub de servicios (pantalla de entrada) ── */}
+          <Route path="/" element={<Hub />} />
+
           {/* ── Tabs principales con bottom nav ── */}
           <Route element={<MainLayout />}>
-            <Route path="/" element={<Home />} />
+            <Route path="/delivery" element={<Home />} />
             {/* <Route path="/remises" element={<RemisesPage />} /> */}
             <Route path="/pedidos" element={<Orders />} />
             <Route path="/turnos"     element={<Turnos />}     />

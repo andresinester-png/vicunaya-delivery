@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Home, ClipboardList, Calendar, CalendarCheck, User } from 'lucide-react';
 
 const TABS = [
-  { to: '/',           icon: Home,          label: 'Inicio'     },
+  { to: '/delivery',   icon: Home,          label: 'Inicio'     },
   { to: '/pedidos',    icon: ClipboardList, label: 'Pedidos'    },
   { to: '/turnos',     icon: Calendar,      label: 'Turnos'     },
   { to: '/mis-turnos', icon: CalendarCheck, label: 'Mis turnos' },
@@ -34,15 +34,15 @@ export default function BottomNav() {
     }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         {TABS.map(({ to, icon: Icon, label }) => {
-          const active = to === '/'
-            ? location.pathname === '/'
+          const active = to === '/delivery'
+            ? location.pathname === '/delivery'
             : location.pathname.startsWith(to);
 
           return (
             <NavLink
               key={to}
               to={to}
-              end={to === '/'}
+              end={to === '/delivery'}
               style={{
                 display: 'flex',
                 flexDirection: 'column',

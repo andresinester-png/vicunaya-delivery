@@ -56,7 +56,7 @@ const PROMO_BANNERS = [
     title: '30% OFF en tu primer pedido',
     subtitle: 'Usá el código VICUÑA30 al pagar.',
     cta: 'Pedir ahora',
-    to: '/',
+    to: '/delivery',
   },
   {
     id: 'envio',
@@ -64,7 +64,7 @@ const PROMO_BANNERS = [
     title: 'Envío gratis',
     subtitle: 'En pedidos arriba de $3.000.',
     cta: 'Ver restaurantes',
-    to: '/',
+    to: '/delivery',
   },
 ];
 

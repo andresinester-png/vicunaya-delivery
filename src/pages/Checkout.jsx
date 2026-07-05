@@ -300,7 +300,7 @@ export default function Checkout() {
   if (showSuccess) return <OrderSuccessScreen />;
 
   if (items.length === 0) {
-    navigate('/');
+    navigate('/delivery');
     return null;
   }
 
