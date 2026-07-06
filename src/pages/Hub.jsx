@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import bgImage from '../screen.png';
+import BottomNav from '../components/BottomNav.jsx';
 
 const CARDS = [
   {
@@ -88,7 +89,7 @@ export default function Hub() {
       />
 
       {/* Contenido */}
-      <div style={{ position: 'relative', zIndex: 2, padding: '56px 20px 48px' }}>
+      <div style={{ position: 'relative', zIndex: 2, padding: '56px 20px 104px' }}>
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
@@ -191,6 +192,8 @@ export default function Hub() {
           ))}
         </motion.div>
       </div>
+
+      <BottomNav />
     </div>
   );
 }

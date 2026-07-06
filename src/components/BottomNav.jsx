@@ -35,7 +35,7 @@ export default function BottomNav() {
       <div style={{ display: 'flex', alignItems: 'center' }}>
         {TABS.map(({ to, icon: Icon, label }) => {
           const active = to === '/'
-            ? location.pathname === '/delivery'
+            ? location.pathname === '/' || location.pathname === '/delivery'
             : location.pathname.startsWith(to);
 
           return (
