@@ -5,6 +5,7 @@ import { ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import bgImage from '../screen.png';
 
 function GoogleIcon() {
   return (
@@ -19,8 +20,13 @@ function GoogleIcon() {
 
 const inputStyle = {
   width: '100%', boxSizing: 'border-box', padding: '14px 16px',
-  borderRadius: 14, border: '1.5px solid #E5E7EB', fontSize: 15,
-  fontWeight: 600, color: '#111', outline: 'none', fontFamily: 'inherit',
+  borderRadius: 14,
+  border: '1.5px solid rgba(255,255,255,0.22)',
+  background: 'rgba(255,255,255,0.09)',
+  backdropFilter: 'blur(10px)',
+  WebkitBackdropFilter: 'blur(10px)',
+  fontSize: 15, fontWeight: 600,
+  color: '#fff', outline: 'none', fontFamily: 'inherit',
 };
 
 export default function Welcome() {
@@ -31,8 +37,14 @@ export default function Welcome() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+      <div style={{ minHeight: '100dvh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: '50%',
+          border: '3px solid rgba(255,255,255,0.25)',
+          borderTopColor: '#D32F2F',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -79,151 +91,233 @@ export default function Welcome() {
 
   return (
     <div style={{
-      minHeight: '100vh', background: '#fff', display: 'flex',
-      flexDirection: 'column', justifyContent: 'center',
-      padding: '32px 24px', boxSizing: 'border-box',
+      minHeight: '100dvh',
+      position: 'relative',
+      background: '#111',
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
+      display: 'flex', flexDirection: 'column',
+      justifyContent: 'center',
+      boxSizing: 'border-box',
+      overflow: 'hidden',
     }}>
+      {/* Placeholder de inputs sobre fondo oscuro */}
+      <style>{`.wl-input::placeholder { color: rgba(255,255,255,0.38); }`}</style>
 
-      {/* ── Logo ── */}
-      <motion.div
-        initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        style={{ textAlign: 'center', marginBottom: 10 }}
-      >
-        <span style={{ color: '#e31b23', fontWeight: 900, fontSize: 44, letterSpacing: '-0.03em', lineHeight: 1 }}>
-          Vicuña
-          <span style={{
-            background: '#e31b23', color: '#fff', borderRadius: 12,
-            padding: '2px 12px', marginLeft: 6, fontWeight: 900, fontSize: 44,
-            display: 'inline-block',
-          }}>
-            Ya
-          </span>
-        </span>
-      </motion.div>
+      {/* Fondo screen.png */}
+      <img
+        src={bgImage}
+        alt=""
+        aria-hidden
+        style={{
+          position: 'absolute', inset: 0, zIndex: 0,
+          width: '100%', height: '100%',
+          objectFit: 'cover', objectPosition: 'center top',
+        }}
+      />
 
-      <motion.p
-        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-        style={{ textAlign: 'center', color: '#6B7280', fontSize: 15, fontWeight: 700, marginBottom: 56 }}
-      >
-        La app de delivery de Vicuña Mackenna
-      </motion.p>
+      {/* Overlay oscuro */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.65) 100%)',
+        }}
+      />
 
-      <AnimatePresence mode="wait">
-        {mode === 'welcome' ? (
-          <motion.div
-            key="welcome"
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.3 }}
-            style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
-          >
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={handleGoogle}
-              style={{
-                background: '#e31b23', color: '#fff', border: 'none', borderRadius: 16,
-                padding: '16px 20px', fontSize: 15, fontWeight: 800, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                boxShadow: '0 6px 20px rgba(227,27,35,0.25)',
-              }}
+      {/* Contenido */}
+      <div style={{
+        position: 'relative', zIndex: 2,
+        padding: '48px 24px',
+        display: 'flex', flexDirection: 'column',
+      }}>
+
+        {/* Logo con relieve 3D */}
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          style={{ textAlign: 'center', marginBottom: 10 }}
+        >
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <span style={{
+              color: '#fff', fontWeight: 900, fontSize: 44,
+              letterSpacing: '-0.04em', lineHeight: 1,
+              textShadow: [
+                '0 1px 0 rgba(255,255,255,0.10)',
+                '0 2px 0 rgba(0,0,0,0.32)',
+                '0 3px 0 rgba(0,0,0,0.20)',
+                '0 4px 0 rgba(0,0,0,0.10)',
+                '0 8px 22px rgba(0,0,0,0.55)',
+              ].join(', '),
+            }}>
+              Vicuña
+            </span>
+            <span style={{
+              background: '#D32F2F', color: '#fff',
+              borderRadius: 12, padding: '3px 13px',
+              fontWeight: 900, fontSize: 44,
+              letterSpacing: '-0.04em',
+              boxShadow: '0 4px 18px rgba(211,47,47,0.55)',
+            }}>
+              Ya
+            </span>
+          </div>
+        </motion.div>
+
+        {/* Tagline */}
+        <motion.p
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+          style={{
+            textAlign: 'center',
+            color: 'rgba(255,255,255,0.62)',
+            fontSize: 15, fontWeight: 600,
+            marginBottom: 52, marginTop: 0,
+          }}
+        >
+          La app de Vicuña Mackenna
+        </motion.p>
+
+        <AnimatePresence mode="wait">
+          {mode === 'welcome' ? (
+            <motion.div
+              key="welcome"
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3 }}
+              style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
             >
-              <GoogleIcon /> Continuar con Google
-            </motion.button>
-
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setMode('signup')}
-              style={{
-                background: '#fff', color: '#e31b23', border: '2px solid #e31b23', borderRadius: 16,
-                padding: '14px 20px', fontSize: 15, fontWeight: 800, cursor: 'pointer',
-              }}
-            >
-              Registrarse con email
-            </motion.button>
-
-            <button
-              type="button"
-              onClick={() => setMode('login')}
-              style={{
-                background: 'none', border: 'none', color: '#e31b23', fontSize: 14,
-                fontWeight: 800, cursor: 'pointer', padding: '8px 0', marginTop: 4,
-              }}
-            >
-              Ya tengo cuenta, iniciar sesión
-            </button>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="form"
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-              <button
-                type="button"
-                onClick={() => setMode('welcome')}
-                style={{
-                  width: 36, height: 36, borderRadius: '50%', border: '1.5px solid #E5E7EB',
-                  background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', flexShrink: 0,
-                }}
-              >
-                <ChevronLeft size={18} color="#111" strokeWidth={2.5} />
-              </button>
-              <h2 style={{ fontSize: 18, fontWeight: 900, color: '#111', margin: 0 }}>
-                {mode === 'signup' ? 'Crear cuenta' : 'Iniciar sesión'}
-              </h2>
-            </div>
-
-            <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input
-                type="email"
-                required
-                value={form.email}
-                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                placeholder="Email"
-                style={inputStyle}
-                autoCapitalize="none"
-              />
-              <input
-                type="password"
-                required
-                value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                placeholder="Contraseña"
-                style={inputStyle}
-              />
-
+              {/* Continuar con Google */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                type="submit"
-                disabled={submitting}
+                onClick={handleGoogle}
                 style={{
-                  background: '#e31b23', color: '#fff', border: 'none', borderRadius: 16,
-                  padding: '16px 20px', fontSize: 15, fontWeight: 800,
-                  cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.7 : 1,
-                  marginTop: 4, boxShadow: '0 6px 20px rgba(227,27,35,0.25)',
+                  background: '#D32F2F', color: '#fff', border: 'none', borderRadius: 16,
+                  padding: '16px 20px', fontSize: 15, fontWeight: 800, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  boxShadow: '0 6px 24px rgba(211,47,47,0.45)',
+                  fontFamily: 'inherit',
                 }}
               >
-                {submitting ? 'Un momento...' : mode === 'signup' ? 'Crear cuenta' : 'Iniciar sesión'}
+                <GoogleIcon /> Continuar con Google
               </motion.button>
-            </form>
 
-            <button
-              type="button"
-              onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
-              style={{
-                background: 'none', border: 'none', color: '#e31b23', fontSize: 14,
-                fontWeight: 800, cursor: 'pointer', padding: '16px 0 0', width: '100%',
-                textAlign: 'center',
-              }}
+              {/* Registrarse con email — glass */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setMode('signup')}
+                style={{
+                  background: 'rgba(255,255,255,0.11)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  color: '#fff',
+                  border: '1.5px solid rgba(255,255,255,0.28)',
+                  borderRadius: 16,
+                  padding: '14px 20px', fontSize: 15, fontWeight: 800, cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                Registrarse con email
+              </motion.button>
+
+              {/* Ya tengo cuenta */}
+              <button
+                type="button"
+                onClick={() => setMode('login')}
+                style={{
+                  background: 'none', border: 'none',
+                  color: 'rgba(255,255,255,0.72)',
+                  fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                  padding: '8px 0', marginTop: 4, fontFamily: 'inherit',
+                }}
+              >
+                Ya tengo cuenta, iniciar sesión
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3 }}
             >
-              {mode === 'signup' ? 'Ya tengo cuenta, iniciar sesión' : '¿No tenés cuenta? Registrate'}
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {/* Header del form */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+                <button
+                  type="button"
+                  onClick={() => setMode('welcome')}
+                  style={{
+                    width: 36, height: 36, borderRadius: '50%',
+                    border: '1.5px solid rgba(255,255,255,0.25)',
+                    background: 'rgba(255,255,255,0.12)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', flexShrink: 0,
+                  }}
+                >
+                  <ChevronLeft size={18} color="#fff" strokeWidth={2.5} />
+                </button>
+                <h2 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>
+                  {mode === 'signup' ? 'Crear cuenta' : 'Iniciar sesión'}
+                </h2>
+              </div>
+
+              <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  placeholder="Email"
+                  className="wl-input"
+                  style={inputStyle}
+                  autoCapitalize="none"
+                />
+                <input
+                  type="password"
+                  required
+                  value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder="Contraseña"
+                  className="wl-input"
+                  style={inputStyle}
+                />
+
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  type="submit"
+                  disabled={submitting}
+                  style={{
+                    background: '#D32F2F', color: '#fff', border: 'none', borderRadius: 16,
+                    padding: '16px 20px', fontSize: 15, fontWeight: 800,
+                    cursor: submitting ? 'default' : 'pointer',
+                    opacity: submitting ? 0.7 : 1,
+                    marginTop: 4,
+                    boxShadow: '0 6px 24px rgba(211,47,47,0.45)',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {submitting ? 'Un momento...' : mode === 'signup' ? 'Crear cuenta' : 'Iniciar sesión'}
+                </motion.button>
+              </form>
+
+              <button
+                type="button"
+                onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
+                style={{
+                  background: 'none', border: 'none',
+                  color: 'rgba(255,255,255,0.65)',
+                  fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                  padding: '16px 0 0', width: '100%',
+                  textAlign: 'center', fontFamily: 'inherit',
+                }}
+              >
+                {mode === 'signup' ? 'Ya tengo cuenta, iniciar sesión' : '¿No tenés cuenta? Registrate'}
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
