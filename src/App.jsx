@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 
 import { AuthProvider } from './context/AuthContext.jsx';
 import UpdateBanner from './components/UpdateBanner.jsx';
+import SplashScreen from './components/SplashScreen.jsx';
 import CustomerGate from './components/CustomerGate.jsx';
 import MainLayout from './components/MainLayout.jsx';
 import AdminGuard from './components/AdminGuard.jsx';
@@ -78,6 +79,7 @@ export default function App() {
             success: { iconTheme: { primary: '#e31b23', secondary: '#fff' } },
           }}
         />
+        <SplashScreen />
         <UpdateBanner />
         <Routes>
         {/* ── Registro / login / perfil ── */}
