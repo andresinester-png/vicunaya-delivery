@@ -1,10 +1,15 @@
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Check } from 'lucide-react';
+import { Plus, Minus } from 'lucide-react';
+import useCartStore from '../store/cartStore.js';
 
 export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
   const { name, description, price, image_url, is_available, allows_extras } = item;
-  const [bouncing, setBouncing] = useState(false);
+
+  const cartQty   = useCartStore(s => s.items.find(i => i.id === item.id)?.qty ?? 0);
+  const updateQty = useCartStore(s => s.updateQty);
+
+  // Show [−][qty][+] only for simple items (no extras) already in cart
+  const showQtyControl = !allows_extras && cartQty > 0 && !!onAdd && is_available;
 
   const handleCardClick = () => {
     if (onTap) onTap(item);
@@ -12,15 +17,19 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
 
   const handlePlusClick = (e) => {
     e.stopPropagation();
-    // Items with extras always open the modal so the user can configure
-    if (allows_extras && onTap) {
-      onTap(item);
-      return;
-    }
-    if (!is_available || bouncing || !onAdd) return;
+    if (allows_extras && onTap) { onTap(item); return; }
+    if (!is_available || !onAdd) return;
     onAdd(item);
-    setBouncing(true);
-    setTimeout(() => setBouncing(false), 900);
+  };
+
+  const handleMinus = (e) => {
+    e.stopPropagation();
+    updateQty(item.id, cartQty - 1);
+  };
+
+  const handlePlus = (e) => {
+    e.stopPropagation();
+    if (onAdd) onAdd(item);
   };
 
   return (
@@ -94,47 +103,83 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
           )}
         </div>
 
-        {/* + button */}
-        {is_available && (
-          <motion.button
-            whileTap={{ scale: 0.80 }}
-            animate={bouncing ? { scale: [1, 1.30, 0.88, 1.08, 1] } : {}}
-            transition={{ duration: 0.48, times: [0, 0.25, 0.55, 0.75, 1] }}
-            onClick={handlePlusClick}
-            style={{
-              position: 'absolute',
-              bottom: -8, right: -8,
-              width: 36, height: 36,
-              borderRadius: '50%',
-              background: '#fff',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
-            }}
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              {bouncing ? (
-                <motion.span
-                  key="check"
-                  initial={{ scale: 0, rotate: -90 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  exit={{ scale: 0 }}
+        {/* + button  ↔  [−][qty][+] control */}
+        {is_available && onAdd && (
+          <AnimatePresence mode="wait" initial={false}>
+            {showQtyControl ? (
+              <motion.div
+                key="qty-control"
+                initial={{ scale: 0.75, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.75, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 420, damping: 26 }}
+                onClick={e => e.stopPropagation()}
+                style={{
+                  position: 'absolute',
+                  bottom: -8, right: -8,
+                  display: 'flex', alignItems: 'center',
+                  background: '#fff',
+                  borderRadius: 999,
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.22)',
+                  border: '1.5px solid #F3F4F6',
+                  overflow: 'hidden',
+                }}
+              >
+                <button
+                  onClick={handleMinus}
+                  style={{
+                    width: 32, height: 34, padding: 0,
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
                 >
-                  <Check size={16} color="#2E7D32" strokeWidth={3} />
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="plus"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
+                  <Minus size={14} color="#D32F2F" strokeWidth={3} />
+                </button>
+
+                <span style={{
+                  minWidth: 20, textAlign: 'center',
+                  fontSize: 13, fontWeight: 800, color: '#111',
+                  lineHeight: 1, userSelect: 'none',
+                }}>
+                  {cartQty}
+                </span>
+
+                <button
+                  onClick={handlePlus}
+                  style={{
+                    width: 32, height: 34, padding: 0,
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
                 >
-                  <Plus size={20} color="#D32F2F" strokeWidth={2.5} />
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
+                  <Plus size={14} color="#D32F2F" strokeWidth={3} />
+                </button>
+              </motion.div>
+            ) : (
+              <motion.button
+                key="plus-btn"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                whileTap={{ scale: 0.80 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 24 }}
+                onClick={handlePlusClick}
+                style={{
+                  position: 'absolute',
+                  bottom: -8, right: -8,
+                  width: 36, height: 36,
+                  borderRadius: '50%',
+                  background: '#fff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
+                }}
+              >
+                <Plus size={20} color="#D32F2F" strokeWidth={2.5} />
+              </motion.button>
+            )}
+          </AnimatePresence>
         )}
       </div>
     </div>

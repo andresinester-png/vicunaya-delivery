@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { CalendarCheck, Clock, MapPin, User as UserIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CalendarCheck, Clock, MapPin, User as UserIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -13,7 +13,6 @@ const STATUS_CONFIG = {
 };
 
 function fmtDate(dateStr) {
-  // Add T12:00:00 to avoid UTC-boundary timezone shift
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-AR', {
     weekday: 'long', day: 'numeric', month: 'long',
   });
@@ -49,7 +48,7 @@ function GoogleIcon() {
 }
 
 function LoginPrompt() {
-  const [mode, setMode] = useState(null); // null | 'email'
+  const [mode, setMode] = useState(null);
   const [form, setForm] = useState({ email: '', password: '' });
   const [submitting, setSubmitting] = useState(false);
 
@@ -77,10 +76,7 @@ function LoginPrompt() {
 
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-      <div
-        className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-        style={{ background: '#FFF8F8' }}
-      >
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#FFF8F8' }}>
         <CalendarCheck size={28} style={{ color: '#D32F2F' }} />
       </div>
       <h2 className="font-extrabold text-lg text-gray-900 mb-1">Iniciá sesión</h2>
@@ -88,35 +84,21 @@ function LoginPrompt() {
 
       {mode !== 'email' ? (
         <div className="w-full max-w-xs space-y-3">
-          <button
-            onClick={handleGoogle}
-            className="btn-primary w-full flex items-center justify-center gap-2"
-          >
+          <button onClick={handleGoogle} className="btn-primary w-full flex items-center justify-center gap-2">
             <GoogleIcon /> Continuar con Google
           </button>
-          <button
-            onClick={() => setMode('email')}
-            className="w-full py-2 text-sm font-bold text-primary"
-          >
+          <button onClick={() => setMode('email')} className="w-full py-2 text-sm font-bold text-primary">
             Usar email y contraseña
           </button>
         </div>
       ) : (
         <form onSubmit={handleEmail} className="w-full max-w-xs space-y-3">
-          <input
-            type="email" required autoCapitalize="none"
-            value={form.email}
+          <input type="email" required autoCapitalize="none" value={form.email}
             onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-            placeholder="Email"
-            className="input"
-          />
-          <input
-            type="password" required
-            value={form.password}
+            placeholder="Email" className="input" />
+          <input type="password" required value={form.password}
             onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-            placeholder="Contraseña"
-            className="input"
-          />
+            placeholder="Contraseña" className="input" />
           <button type="submit" disabled={submitting} className="btn-primary w-full">
             {submitting ? 'Un momento...' : 'Iniciar sesión'}
           </button>
@@ -142,11 +124,101 @@ function CardSkeleton() {
   );
 }
 
+function AppointmentCard({ appt, index, updating, onUpdateStatus }) {
+  const canAct = isFuture(appt) && appt.status !== 'cancelled' && appt.status !== 'completed';
+  const business = appt.appointment_businesses;
+  const service  = appt.appointment_services;
+  const prof     = appt.appointment_professionals;
+  const isUpdating = (action) => updating === appt.id + action;
+
+  return (
+    <motion.div
+      className="card p-4"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.2 }}
+    >
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <p className="font-extrabold text-sm text-gray-900 leading-tight">
+          {business?.name ?? '—'}
+        </p>
+        <StatusBadge status={appt.status} />
+      </div>
+
+      {service?.name && (
+        <p className="text-xs font-semibold text-gray-500 mb-2">{service.name}</p>
+      )}
+
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+        <span className="flex items-center gap-1 capitalize">
+          <CalendarCheck size={12} />
+          {fmtDate(appt.date)}
+        </span>
+        <span className="flex items-center gap-1">
+          <Clock size={12} />
+          {fmtTime(appt.start_time)}
+        </span>
+        {business?.address && (
+          <span className="flex items-center gap-1">
+            <MapPin size={12} />
+            {business.address}
+          </span>
+        )}
+        {prof?.name && (
+          <span className="flex items-center gap-1">
+            <UserIcon size={12} />
+            {prof.name}
+          </span>
+        )}
+      </div>
+
+      {service?.price != null && (
+        <p className="text-xs font-bold text-primary mt-1.5">
+          ${Number(service.price).toLocaleString('es-AR')}
+        </p>
+      )}
+
+      {canAct && (
+        <div className="flex gap-2 mt-3">
+          {appt.status !== 'confirmed' && (
+            <button
+              onClick={() => onUpdateStatus(appt.id, 'confirmed')}
+              disabled={!!updating}
+              className="flex-1 py-2 rounded-xl text-xs font-bold transition-colors"
+              style={{
+                background: isUpdating('confirmed') ? '#D1FAE5' : '#2E7D32',
+                color: '#fff',
+                opacity: !!updating ? 0.7 : 1,
+              }}
+            >
+              {isUpdating('confirmed') ? 'Confirmando...' : 'Confirmar'}
+            </button>
+          )}
+          <button
+            onClick={() => onUpdateStatus(appt.id, 'cancelled')}
+            disabled={!!updating}
+            className="flex-1 py-2 rounded-xl text-xs font-bold transition-colors"
+            style={{
+              background: isUpdating('cancelled') ? '#FEE2E2' : '#FFF8F8',
+              color: '#D32F2F',
+              border: '1.5px solid #FECACA',
+              opacity: !!updating ? 0.7 : 1,
+            }}
+          >
+            {isUpdating('cancelled') ? 'Cancelando...' : 'Cancelar'}
+          </button>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 export default function MisTurnos() {
   const { session, loading: authLoading } = useAuth();
   const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(null);
+  const [loading, setLoading]           = useState(true);
+  const [updating, setUpdating]         = useState(null);
+  const [showHistory, setShowHistory]   = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -182,13 +254,23 @@ export default function MisTurnos() {
     setUpdating(null);
   };
 
-  const isUpdating = (id, action) => updating === id + action;
+  // Turnos activos: futuros y en estado pendiente o confirmado
+  const activeAppts = appointments.filter(a =>
+    isFuture(a) && (a.status === 'pending' || a.status === 'confirmed')
+  );
+
+  // Historial: cancelados (cualquier fecha), completados, o con fecha pasada
+  const historyAppts = appointments.filter(a =>
+    !isFuture(a) || a.status === 'cancelled' || a.status === 'completed'
+  );
+
+  const isReady = !loading && !authLoading && session;
 
   return (
     <div className="min-h-screen" style={{ background: '#FFF8F8', paddingBottom: 80 }}>
       <div className="max-w-2xl mx-auto px-4 py-4">
 
-        {/* Título de sección */}
+        {/* Título */}
         <div className="flex items-center gap-2 mb-4">
           <CalendarCheck size={20} style={{ color: '#D32F2F' }} />
           <h1 className="font-extrabold text-lg text-gray-900">Mis turnos</h1>
@@ -204,117 +286,92 @@ export default function MisTurnos() {
           </div>
         )}
 
-        {/* Sin turnos */}
-        {!loading && !authLoading && session && appointments.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-              style={{ background: '#FFF8F8' }}
-            >
-              <CalendarCheck size={28} style={{ color: '#D32F2F' }} />
-            </div>
-            <p className="font-bold text-gray-700">No tenés turnos reservados</p>
-            <p className="text-sm text-gray-400 mt-1">Buscá un negocio en Turnos y reservá.</p>
-          </div>
-        )}
+        {isReady && (
+          <>
+            {/* ── Turnos próximos ── */}
+            {activeAppts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#fff', border: '1.5px solid #E9D5D8' }}>
+                  <CalendarCheck size={28} style={{ color: '#D32F2F' }} />
+                </div>
+                <p className="font-bold text-gray-700">No tenés turnos próximos</p>
+                <p className="text-sm text-gray-400 mt-1">Buscá un negocio en Turnos y reservá.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {activeAppts.map((appt, i) => (
+                  <AppointmentCard
+                    key={appt.id}
+                    appt={appt}
+                    index={i}
+                    updating={updating}
+                    onUpdateStatus={updateStatus}
+                  />
+                ))}
+              </div>
+            )}
 
-        {/* Lista de turnos */}
-        {!loading && !authLoading && session && appointments.length > 0 && (
-          <div className="space-y-3">
-            {appointments.map((appt, i) => {
-              const canAct = isFuture(appt) && appt.status !== 'cancelled' && appt.status !== 'completed';
-              const business = appt.appointment_businesses;
-              const service  = appt.appointment_services;
-              const prof     = appt.appointment_professionals;
-
-              return (
-                <motion.div
-                  key={appt.id}
-                  className="card p-4"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05, duration: 0.2 }}
+            {/* ── Botón historial ── */}
+            {historyAppts.length > 0 && (
+              <div style={{ marginTop: 28 }}>
+                <button
+                  onClick={() => setShowHistory(v => !v)}
+                  style={{
+                    width: '100%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '13px 16px',
+                    background: '#fff',
+                    border: '1.5px solid #E9D5D8',
+                    borderRadius: 14,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
                 >
-                  {/* Encabezado: negocio + badge */}
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="font-extrabold text-sm text-gray-900 leading-tight">
-                      {business?.name ?? '—'}
-                    </p>
-                    <StatusBadge status={appt.status} />
-                  </div>
-
-                  {/* Servicio */}
-                  {service?.name && (
-                    <p className="text-xs font-semibold text-gray-500 mb-2">{service.name}</p>
-                  )}
-
-                  {/* Fecha y hora */}
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                    <span className="flex items-center gap-1 capitalize">
-                      <CalendarCheck size={12} />
-                      {fmtDate(appt.date)}
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#241F1D' }}>
+                    Historial de turnos
+                    <span style={{
+                      marginLeft: 8,
+                      fontSize: 11, fontWeight: 800,
+                      background: '#FFF8F8', color: '#8A8580',
+                      padding: '2px 8px', borderRadius: 999,
+                      border: '1px solid #E9D5D8',
+                    }}>
+                      {historyAppts.length}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={12} />
-                      {fmtTime(appt.start_time)}
-                    </span>
-                    {business?.address && (
-                      <span className="flex items-center gap-1">
-                        <MapPin size={12} />
-                        {business.address}
-                      </span>
-                    )}
-                    {prof?.name && (
-                      <span className="flex items-center gap-1">
-                        <UserIcon size={12} />
-                        {prof.name}
-                      </span>
-                    )}
-                  </div>
+                  </span>
+                  {showHistory
+                    ? <ChevronUp size={18} color="#8A8580" strokeWidth={2.5} />
+                    : <ChevronDown size={18} color="#8A8580" strokeWidth={2.5} />
+                  }
+                </button>
 
-                  {/* Precio */}
-                  {service?.price != null && (
-                    <p className="text-xs font-bold text-primary mt-1.5">
-                      ${Number(service.price).toLocaleString('es-AR')}
-                    </p>
+                <AnimatePresence initial={false}>
+                  {showHistory && (
+                    <motion.div
+                      key="history"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+                      style={{ overflow: 'hidden' }}
+                    >
+                      <div className="space-y-3" style={{ paddingTop: 12 }}>
+                        {historyAppts.map((appt, i) => (
+                          <AppointmentCard
+                            key={appt.id}
+                            appt={appt}
+                            index={i}
+                            updating={updating}
+                            onUpdateStatus={updateStatus}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
                   )}
-
-                  {/* Acciones para turnos futuros */}
-                  {canAct && (
-                    <div className="flex gap-2 mt-3">
-                      {appt.status !== 'confirmed' && (
-                        <button
-                          onClick={() => updateStatus(appt.id, 'confirmed')}
-                          disabled={!!updating}
-                          className="flex-1 py-2 rounded-xl text-xs font-bold transition-colors"
-                          style={{
-                            background: isUpdating(appt.id, 'confirmed') ? '#D1FAE5' : '#2E7D32',
-                            color: '#fff',
-                            opacity: !!updating ? 0.7 : 1,
-                          }}
-                        >
-                          {isUpdating(appt.id, 'confirmed') ? 'Confirmando...' : 'Confirmar'}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => updateStatus(appt.id, 'cancelled')}
-                        disabled={!!updating}
-                        className="flex-1 py-2 rounded-xl text-xs font-bold transition-colors"
-                        style={{
-                          background: isUpdating(appt.id, 'cancelled') ? '#FEE2E2' : '#FFF8F8',
-                          color: '#D32F2F',
-                          border: '1.5px solid #FECACA',
-                          opacity: !!updating ? 0.7 : 1,
-                        }}
-                      >
-                        {isUpdating(appt.id, 'cancelled') ? 'Cancelando...' : 'Cancelar'}
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
+                </AnimatePresence>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
