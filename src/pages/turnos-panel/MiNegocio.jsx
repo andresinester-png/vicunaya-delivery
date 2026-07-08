@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ToggleLeft, ToggleRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
 import { useTurnosNegocio } from '../../contexts/TurnosNegocioContext.js';
 import toast from 'react-hot-toast';
@@ -18,10 +19,25 @@ export default function MiNegocio() {
     phone:       negocio.phone       || '',
     category:    negocio.category    || '',
   });
-  const [saving, setSaving] = useState(false);
+  const [isActive, setIsActive] = useState(negocio.is_active ?? true);
+  const [saving,   setSaving]   = useState(false);
+  const [toggling, setToggling] = useState(false);
 
   function set(field, value) {
     setForm(f => ({ ...f, [field]: value }));
+  }
+
+  async function toggleVisible() {
+    const next = !isActive;
+    setIsActive(next);
+    setToggling(true);
+    const { error } = await supabase
+      .from('appointment_businesses')
+      .update({ is_active: next })
+      .eq('id', negocio.id);
+    setToggling(false);
+    if (error) { setIsActive(!next); toast.error('Error al actualizar'); return; }
+    toast.success(next ? 'Negocio visible en la app' : 'Negocio oculto de la app');
   }
 
   async function handleSave(e) {
@@ -121,6 +137,20 @@ export default function MiNegocio() {
           </button>
         </div>
       </form>
+
+      <div className="bg-white rounded-2xl p-5 shadow-sm flex items-center justify-between gap-4">
+        <div>
+          <p className="font-semibold text-sm text-gray-900">Visible en la app</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {isActive ? 'Tu negocio aparece en el listado de clientes' : 'Tu negocio está oculto para los clientes'}
+          </p>
+        </div>
+        <button onClick={toggleVisible} disabled={toggling} className="shrink-0 transition-colors disabled:opacity-50">
+          {isActive
+            ? <ToggleRight size={42} className="text-[#e31b23]" />
+            : <ToggleLeft  size={42} className="text-gray-300" />}
+        </button>
+      </div>
 
       <div className="bg-gray-50 rounded-2xl px-4 py-3 text-xs text-gray-400">
         URL pública del negocio: <span className="font-mono text-gray-600">/turnos/{negocio.slug}</span>

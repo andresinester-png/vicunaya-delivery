@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { Calendar, Pencil, Upload, X, Loader2, Check, ToggleLeft, ToggleRight, Image, Plus, Key, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { supabaseAdmin } from '../../lib/supabase.js';
-import { CreateAccessModal, ResetPasswordModal } from '../../components/OwnerAccessModal.jsx';
+import { supabase } from '../../lib/supabase.js';
+import { CreateAccessModal, ResetPasswordModal, generatePassword, PasswordRow, CredentialsBox } from '../../components/OwnerAccessModal.jsx';
 
 const BUCKET = 'IMAGES';
 
@@ -52,84 +52,128 @@ function LogoUploadBox({ preview, inputRef, onChange }) {
   );
 }
 
-function BusinessModal({ business, onClose, onSaved }) {
-  const isNew = !business;
-  const [form, setForm] = useState({
-    name:        business?.name        || '',
-    category:    business?.category    || 'peluqueria',
-    description: business?.description || '',
-    address:     business?.address     || '',
-    phone:       business?.phone       || '',
-    slug:        business?.slug        || '',
-    is_active:   business?.is_active   ?? true,
-  });
-  const [logoFile,    setLogoFile]    = useState(null);
-  const [logoPreview, setLogoPreview] = useState(business?.logo_url || null);
+function NewBusinessModal({ onClose, onSaved }) {
+  const [form,        setForm]        = useState({ name: '', email: '', password: '' });
   const [saving,      setSaving]      = useState(false);
-  const logoRef = useRef(null);
-
-  const handleNameChange = (value) => {
-    setForm(p => ({
-      ...p,
-      name: value,
-      ...(isNew ? { slug: slugify(value) } : {}),
-    }));
-  };
-
-  const handleLogoChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setLogoFile(file);
-    setLogoPreview(URL.createObjectURL(file));
-  };
-
-  const uploadLogo = async (file, id) => {
-    const ext = file.name.split('.').pop().toLowerCase();
-    const path = `turnos-negocios/logo_${id}_${Date.now()}.${ext}`;
-    const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, file, { upsert: true });
-    if (error) throw error;
-    return supabaseAdmin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-  };
+  const [credentials, setCredentials] = useState(null);
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('El nombre es obligatorio'); return; }
-    if (!form.slug.trim()) { toast.error('El slug es obligatorio'); return; }
+    if (form.email.trim() && !form.password) { toast.error('Ingresá una contraseña para el acceso'); return; }
     setSaving(true);
     try {
-      const payload = {
-        name:        form.name.trim(),
-        category:    form.category,
-        description: form.description.trim() || null,
-        address:     form.address.trim()     || null,
-        phone:       form.phone.trim()       || null,
-        slug:        form.slug.trim(),
-        is_active:   form.is_active,
-      };
+      const { data: created, error: insertErr } = await supabase
+        .from('appointment_businesses')
+        .insert({ name: form.name.trim(), slug: slugify(form.name.trim()), category: 'otro', is_active: false })
+        .select()
+        .single();
+      if (insertErr) throw insertErr;
 
-      if (isNew) {
-        const { data: created, error: insertErr } = await supabaseAdmin
-          .from('appointment_businesses')
-          .insert(payload)
-          .select()
-          .single();
-        if (insertErr) throw insertErr;
-        if (logoFile) {
-          const url = await uploadLogo(logoFile, created.id);
-          await supabaseAdmin.from('appointment_businesses').update({ logo_url: url }).eq('id', created.id);
-        }
-        toast.success('Negocio creado');
+      if (form.email.trim()) {
+        const { data, error } = await supabase.functions.invoke('admin-create-owner', {
+          body: { email: form.email.trim().toLowerCase(), password: form.password, entityId: created.id, table: 'appointment_businesses' },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        setCredentials({ email: form.email.trim().toLowerCase(), password: form.password });
+        onSaved();
       } else {
-        if (logoFile) {
-          payload.logo_url = await uploadLogo(logoFile, business.id);
-        }
-        const { error: updateErr } = await supabaseAdmin
-          .from('appointment_businesses')
-          .update(payload)
-          .eq('id', business.id);
-        if (updateErr) throw updateErr;
-        toast.success('Negocio guardado');
+        toast.success('Negocio creado');
+        onSaved();
+        onClose();
       }
+    } catch (err) {
+      toast.error('Error: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
+  if (credentials) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={e => e.target === e.currentTarget && onClose()}>
+        <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl overflow-hidden flex flex-col" style={{ maxHeight: '92vh' }}>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 shrink-0">
+            <h2 className="font-extrabold text-lg">Negocio creado</h2>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"><X size={18} /></button>
+          </div>
+          <div className="px-5 py-4 space-y-4 overflow-y-auto">
+            <CredentialsBox email={credentials.email} password={credentials.password} onClose={onClose} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl overflow-hidden flex flex-col" style={{ maxHeight: '92vh' }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 shrink-0">
+          <h2 className="font-extrabold text-lg">Nuevo negocio</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"><X size={18} /></button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre del negocio *</label>
+              <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Ej: Peluquería López" className="input" />
+            </div>
+          </div>
+
+          <div className="border-t border-neutral-100 pt-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Key size={14} className="text-gray-400" />
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Acceso del dueño (opcional)</p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Email del dueño</label>
+              <input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="dueno@ejemplo.com" className="input" autoCapitalize="none" />
+            </div>
+            {form.email.trim() && (
+              <PasswordRow
+                value={form.password}
+                onChange={pw => setForm(p => ({ ...p, password: pw }))}
+                onGenerate={() => setForm(p => ({ ...p, password: generatePassword() }))}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="px-5 py-4 border-t border-neutral-100 shrink-0">
+          <button onClick={handleSave} disabled={saving || !form.name.trim()} className="btn-primary w-full flex items-center justify-center gap-2">
+            {saving ? <Loader2 size={17} className="animate-spin" /> : <Plus size={17} />}
+            {saving ? 'Creando…' : 'Crear negocio'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditBusinessModal({ business, onClose, onSaved }) {
+  const [name,        setName]        = useState(business.name || '');
+  const [isActive,    setIsActive]    = useState(business.is_active ?? true);
+  const [logoFile,    setLogoFile]    = useState(null);
+  const [logoPreview, setLogoPreview] = useState(business.logo_url || null);
+  const [saving,      setSaving]      = useState(false);
+  const logoRef = useRef(null);
+
+  const handleSave = async () => {
+    if (!name.trim()) { toast.error('El nombre es obligatorio'); return; }
+    setSaving(true);
+    try {
+      const updates = { name: name.trim(), is_active: isActive };
+      if (logoFile) {
+        const ext  = logoFile.name.split('.').pop().toLowerCase();
+        const path = `turnos-negocios/logo_${business.id}_${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, logoFile, { upsert: true });
+        if (upErr) throw upErr;
+        updates.logo_url = supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+      }
+      const { error } = await supabase.from('appointment_businesses').update(updates).eq('id', business.id);
+      if (error) throw error;
+      toast.success('Negocio guardado');
       onSaved();
     } catch (err) {
       toast.error('Error: ' + err.message);
@@ -139,131 +183,49 @@ function BusinessModal({ business, onClose, onSaved }) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      style={{ background: 'rgba(0,0,0,0.5)' }}
-      onClick={e => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl overflow-hidden flex flex-col"
-        style={{ maxHeight: '92vh' }}
-      >
-        {/* Header */}
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl overflow-hidden flex flex-col" style={{ maxHeight: '92vh' }}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 shrink-0">
-          <h2 className="font-extrabold text-lg">{isNew ? 'Nuevo negocio' : 'Editar negocio'}</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
-            <X size={18} />
-          </button>
+          <h2 className="font-extrabold text-lg">Editar negocio</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"><X size={18} /></button>
         </div>
 
-        {/* Form */}
         <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+          <LogoUploadBox
+            preview={logoPreview}
+            inputRef={logoRef}
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setLogoFile(file);
+              setLogoPreview(URL.createObjectURL(file));
+            }}
+          />
 
-          <LogoUploadBox preview={logoPreview} inputRef={logoRef} onChange={handleLogoChange} />
-
-          <div className="border-t border-neutral-100 pt-4 space-y-3">
-
-            {/* Nombre */}
+          <div className="border-t border-neutral-100 pt-4 space-y-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre *</label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={e => handleNameChange(e.target.value)}
-                placeholder="Ej: Peluquería López"
-                className="input"
-              />
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre del negocio</label>
+              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ej: Peluquería López" className="input" />
             </div>
 
-            {/* Categoría */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Categoría *</label>
-              <select
-                value={form.category}
-                onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
-                className="input"
-              >
-                {CATEGORIES.map(c => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
+            <div className="flex items-center justify-between py-1">
+              <div>
+                <p className="font-semibold text-sm">Visible en la app</p>
+                <p className="text-xs text-gray-400">{isActive ? 'Aparece en el listado de clientes' : 'Oculto para los clientes'}</p>
+              </div>
+              <button onClick={() => setIsActive(a => !a)} className="transition-colors">
+                {isActive
+                  ? <ToggleRight size={38} className="text-primary" />
+                  : <ToggleLeft  size={38} className="text-gray-300" />}
+              </button>
             </div>
-
-            {/* Descripción */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Descripción</label>
-              <textarea
-                value={form.description}
-                onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                rows={2}
-                placeholder="Breve descripción del negocio..."
-                className="input resize-none"
-              />
-            </div>
-
-            {/* Dirección */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Dirección</label>
-              <input
-                type="text"
-                value={form.address}
-                onChange={e => setForm(p => ({ ...p, address: e.target.value }))}
-                placeholder="Calle 123, Ciudad"
-                className="input"
-              />
-            </div>
-
-            {/* Teléfono */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Teléfono</label>
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
-                placeholder="3571-123456"
-                className="input"
-              />
-            </div>
-
-            {/* Slug */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                Slug <span className="text-gray-400 font-normal normal-case">(URL del negocio)</span>
-              </label>
-              <input
-                type="text"
-                value={form.slug}
-                onChange={e => setForm(p => ({ ...p, slug: e.target.value }))}
-                placeholder="peluqueria-lopez"
-                className="input font-mono text-sm"
-              />
-              <p className="text-xs text-gray-400 mt-1">/turnos/{form.slug || '...'}</p>
-            </div>
-          </div>
-
-          {/* Toggle activo */}
-          <div className="flex items-center justify-between border-t border-neutral-100 pt-4">
-            <div>
-              <p className="font-semibold text-sm">Visible en la app</p>
-              <p className="text-xs text-gray-400">{form.is_active ? 'Activo y visible' : 'Oculto para los clientes'}</p>
-            </div>
-            <button onClick={() => setForm(p => ({ ...p, is_active: !p.is_active }))}>
-              {form.is_active
-                ? <ToggleRight size={38} className="text-primary" />
-                : <ToggleLeft  size={38} className="text-gray-300" />}
-            </button>
           </div>
         </div>
 
-        {/* Footer */}
         <div className="px-5 py-4 border-t border-neutral-100 shrink-0">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-primary w-full flex items-center justify-center gap-2"
-          >
+          <button onClick={handleSave} disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2">
             {saving ? <Loader2 size={17} className="animate-spin" /> : <Check size={17} />}
-            {saving ? 'Guardando…' : isNew ? 'Crear negocio' : 'Guardar cambios'}
+            {saving ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </div>
       </div>
@@ -274,14 +236,15 @@ function BusinessModal({ business, onClose, onSaved }) {
 export default function AdminTurnosNegocios() {
   const [negocios,    setNegocios]    = useState([]);
   const [loading,     setLoading]     = useState(true);
-  const [modal,       setModal]       = useState(null); // null | 'new' | business object
+  const [newModal,    setNewModal]    = useState(false);
+  const [editModal,   setEditModal]   = useState(null); // null | business object
   const [ownerMap,    setOwnerMap]    = useState({}); // { userId: email }
   const [createModal, setCreateModal] = useState(null); // { id, name }
   const [resetModal,  setResetModal]  = useState(null); // { userId, email }
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('appointment_businesses')
       .select('*')
       .order('name');
@@ -289,9 +252,9 @@ export default function AdminTurnosNegocios() {
       setNegocios(data || []);
       const ownerIds = [...new Set((data || []).map(n => n.owner_id).filter(Boolean))];
       if (ownerIds.length) {
-        const { data: usersData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+        const { data: listData } = await supabase.functions.invoke('admin-list-users');
         const map = {};
-        usersData?.users?.forEach(u => { if (ownerIds.includes(u.id)) map[u.id] = u.email; });
+        listData?.users?.forEach(u => { if (ownerIds.includes(u.id)) map[u.id] = u.email; });
         setOwnerMap(map);
       }
     }
@@ -301,7 +264,7 @@ export default function AdminTurnosNegocios() {
   useEffect(() => { load(); }, []);
 
   const toggleActive = async (neg) => {
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('appointment_businesses')
       .update({ is_active: !neg.is_active })
       .eq('id', neg.id);
@@ -320,10 +283,10 @@ export default function AdminTurnosNegocios() {
           </p>
         </div>
         <button
-          onClick={() => setModal('new')}
+          onClick={() => setNewModal(true)}
           className="btn-primary flex items-center gap-2"
         >
-          <Plus size={16} /> Agregar negocio
+          <Plus size={16} /> Nuevo negocio
         </button>
       </div>
 
@@ -346,8 +309,8 @@ export default function AdminTurnosNegocios() {
           <Calendar size={44} strokeWidth={1} className="mx-auto mb-3" />
           <p className="font-semibold">No hay negocios de turnos</p>
           <p className="text-sm mt-1">Creá el primero para que aparezca en la app</p>
-          <button onClick={() => setModal('new')} className="btn-primary mt-4">
-            Agregar negocio
+          <button onClick={() => setNewModal(true)} className="btn-primary mt-4">
+            Nuevo negocio
           </button>
         </div>
       ) : (
@@ -384,7 +347,7 @@ export default function AdminTurnosNegocios() {
               {/* Actions */}
               <div className="flex items-center gap-1 pt-2 border-t border-neutral-100">
                 <button
-                  onClick={() => setModal(neg)}
+                  onClick={() => setEditModal(neg)}
                   className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:bg-primary-bg px-3 py-1.5 rounded-xl transition-colors"
                 >
                   <Pencil size={14} /> Editar
@@ -434,11 +397,18 @@ export default function AdminTurnosNegocios() {
         </div>
       )}
 
-      {modal !== null && (
-        <BusinessModal
-          business={modal === 'new' ? null : modal}
-          onClose={() => setModal(null)}
-          onSaved={() => { setModal(null); load(); }}
+      {newModal && (
+        <NewBusinessModal
+          onClose={() => setNewModal(false)}
+          onSaved={load}
+        />
+      )}
+
+      {editModal && (
+        <EditBusinessModal
+          business={editModal}
+          onClose={() => setEditModal(null)}
+          onSaved={() => { setEditModal(null); load(); }}
         />
       )}
 
