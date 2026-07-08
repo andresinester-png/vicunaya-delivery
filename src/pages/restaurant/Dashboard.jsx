@@ -5,7 +5,7 @@ import {
   Volume2, VolumeX,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { supabase, supabaseAdmin } from '../../lib/supabase.js';
+import { supabase } from '../../lib/supabase.js';
 import { useRestaurant } from '../../contexts/RestaurantContext.js';
 import { subscribeToPush } from '../../lib/pushNotifications.js';
 import { usePendingOrdersAlert } from '../../hooks/usePendingOrdersAlert.js';
@@ -158,7 +158,7 @@ export default function Dashboard() {
   }, [restaurant]);
 
   const updateStatus = async (orderId, status) => {
-    const { error } = await supabaseAdmin.from('orders').update({ order_status: status }).eq('id', orderId);
+    const { error } = await supabase.from('orders').update({ order_status: status }).eq('id', orderId);
     if (error) { toast.error('Error al actualizar'); return; }
     toast.success('Estado actualizado');
     fetch('/api/notify-client', {
@@ -171,7 +171,7 @@ export default function Dashboard() {
   const toggleOpen = async () => {
     const next = !isOpen;
     setIsOpen(next);
-    const { error } = await supabaseAdmin.from('restaurants').update({ is_active: next }).eq('id', restaurant.id);
+    const { error } = await supabase.from('restaurants').update({ is_active: next }).eq('id', restaurant.id);
     if (error) { setIsOpen(!next); toast.error('Error al actualizar estado'); return; }
     toast.success(next ? 'Local abierto' : 'Local cerrado');
   };
@@ -228,7 +228,7 @@ export default function Dashboard() {
             <span className={`w-7 h-4 rounded-full relative transition-colors ${isOpen ? 'bg-green-500' : 'bg-gray-300'}`}>
               <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${isOpen ? 'right-0.5' : 'left-0.5'}`} />
             </span>
-            <span className="text-xs font-bold">{isOpen ? 'Abierto' : 'Cerrado'}</span>
+            <span className="text-xs font-bold">{isOpen ? 'Visible en la app' : 'No visible'}</span>
           </button>
 
           <button

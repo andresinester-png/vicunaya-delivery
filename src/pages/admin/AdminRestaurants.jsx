@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Pencil, Store, Upload, X, Loader2, Check, ToggleLeft, ToggleRight, Image, Move, Clock, Key, ShieldCheck, Plus } from 'lucide-react';
+import { Pencil, Store, Upload, X, Loader2, Check, Image, Move, Key, ShieldCheck, Plus, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase.js';
 import { CreateAccessModal, ResetPasswordModal, generatePassword, PasswordRow, CredentialsBox } from '../../components/OwnerAccessModal.jsx';
@@ -107,98 +107,32 @@ function CoverPositionBox({ preview, inputRef, onChange, position, onPositionCha
   );
 }
 
-function ImageUploadBox({ label, preview, inputRef, onChange }) {
-  return (
-    <div>
-      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{label}</p>
-      <div
-        onClick={() => inputRef.current?.click()}
-        className="relative cursor-pointer rounded-xl overflow-hidden border-2 border-dashed border-neutral-200 hover:border-primary transition-colors"
-        style={{ height: 80, background: '#F9FAFB' }}
-      >
-        {preview ? (
-          <img src={preview} alt={label} className="w-full h-full object-cover" />
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full gap-1.5 text-gray-400">
-            <Image size={22} strokeWidth={1.5} />
-            <span className="text-xs font-medium">Subir imagen</span>
-          </div>
-        )}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity rounded-xl">
-          <Upload size={20} color="#fff" />
-        </div>
-      </div>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onChange} />
-    </div>
-  );
-}
-
 function EditModal({ restaurant, onClose, onSaved }) {
-  const [form, setForm] = useState({
-    name:             restaurant.name             || '',
-    description:      restaurant.description      || '',
-    delivery_time:    restaurant.delivery_time    ?? '',
-    delivery_price:   restaurant.delivery_price   ?? '',
-    min_order:        restaurant.min_order        ?? '',
-    is_active:        restaurant.is_active        ?? true,
-    opening_time:     restaurant.opening_time     ? restaurant.opening_time.slice(0, 5)     : '',
-    closing_time:     restaurant.closing_time     ? restaurant.closing_time.slice(0, 5)     : '',
-    opening_time_2:   restaurant.opening_time_2   ? restaurant.opening_time_2.slice(0, 5)   : '',
-    closing_time_2:   restaurant.closing_time_2   ? restaurant.closing_time_2.slice(0, 5)   : '',
-    is_open_override:   restaurant.is_open_override   ?? null,
-    is_open_override_2: restaurant.is_open_override_2 ?? null,
-  });
-  const [coverFile,      setCoverFile]      = useState(null);
-  const [logoFile,       setLogoFile]       = useState(null);
-  const [coverPreview,   setCoverPreview]   = useState(restaurant.image_url  || null);
-  const [logoPreview,    setLogoPreview]    = useState(restaurant.logo_url   || null);
-  const [coverPosition,  setCoverPosition]  = useState(parsePosition(restaurant.cover_position));
-  const [saving,         setSaving]         = useState(false);
+  const [name,          setName]          = useState(restaurant.name || '');
+  const [isActive,      setIsActive]      = useState(restaurant.is_active ?? true);
+  const [coverFile,     setCoverFile]     = useState(null);
+  const [coverPreview,  setCoverPreview]  = useState(restaurant.image_url || null);
+  const [coverPosition, setCoverPosition] = useState(parsePosition(restaurant.cover_position));
+  const [saving,        setSaving]        = useState(false);
 
   const coverRef = useRef(null);
-  const logoRef  = useRef(null);
-
-  const handleFileChange = (e, type) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    if (type === 'cover') { setCoverFile(file); setCoverPreview(url); }
-    else                  { setLogoFile(file);  setLogoPreview(url);  }
-  };
-
-  const uploadFile = async (file, path) => {
-    const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true });
-    if (error) throw error;
-    return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-  };
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast.error('El nombre es obligatorio'); return; }
+    if (!name.trim()) { toast.error('El nombre es obligatorio'); return; }
     setSaving(true);
     try {
       const updates = {
-        name:           form.name.trim(),
-        description:    form.description.trim() || null,
-        delivery_time:  form.delivery_time  !== '' ? Number(form.delivery_time)  : null,
-        delivery_price: form.delivery_price !== '' ? Number(form.delivery_price) : null,
-        min_order:      form.min_order      !== '' ? Number(form.min_order)      : null,
-        is_active:        form.is_active,
-        cover_position:   `${coverPosition.x}% ${coverPosition.y}%`,
-        opening_time:     form.opening_time   || null,
-        closing_time:     form.closing_time   || null,
-        opening_time_2:   form.opening_time_2 || null,
-        closing_time_2:   form.closing_time_2 || null,
-        is_open_override:   form.is_open_override,
-        is_open_override_2: form.is_open_override_2,
+        name:           name.trim(),
+        is_active:      isActive,
+        cover_position: `${coverPosition.x}% ${coverPosition.y}%`,
       };
 
       if (coverFile) {
-        const ext = coverFile.name.split('.').pop();
-        updates.image_url = await uploadFile(coverFile, `restaurants/cover_${restaurant.id}_${Date.now()}.${ext}`);
-      }
-      if (logoFile) {
-        const ext = logoFile.name.split('.').pop();
-        updates.logo_url = await uploadFile(logoFile, `restaurants/logo_${restaurant.id}_${Date.now()}.${ext}`);
+        const ext  = coverFile.name.split('.').pop();
+        const path = `restaurants/cover_${restaurant.id}_${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, coverFile, { upsert: true });
+        if (upErr) throw upErr;
+        updates.image_url = supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
       }
 
       const { error } = await supabase.from('restaurants').update(updates).eq('id', restaurant.id);
@@ -213,19 +147,6 @@ function EditModal({ restaurant, onClose, onSaved }) {
     }
   };
 
-  const field = (label, key, type = 'text', extra = {}) => (
-    <div>
-      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{label}</label>
-      <input
-        type={type}
-        value={form[key]}
-        onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
-        className="input"
-        {...extra}
-      />
-    </div>
-  );
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
@@ -236,7 +157,6 @@ function EditModal({ restaurant, onClose, onSaved }) {
         className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl overflow-hidden flex flex-col"
         style={{ maxHeight: '92vh' }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 shrink-0">
           <h2 className="font-extrabold text-lg">Editar restaurante</h2>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
@@ -244,125 +164,44 @@ function EditModal({ restaurant, onClose, onSaved }) {
           </button>
         </div>
 
-        {/* Formulario scrollable */}
         <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+          <CoverPositionBox
+            preview={coverPreview}
+            inputRef={coverRef}
+            onChange={e => {
+              const file = e.target.files[0];
+              if (!file) return;
+              setCoverFile(file);
+              setCoverPreview(URL.createObjectURL(file));
+            }}
+            position={coverPosition}
+            onPositionChange={setCoverPosition}
+          />
 
-          {/* Imágenes */}
-          <div className="space-y-3">
-            <CoverPositionBox
-              preview={coverPreview}
-              inputRef={coverRef}
-              onChange={e => handleFileChange(e, 'cover')}
-              position={coverPosition}
-              onPositionChange={setCoverPosition}
-            />
-            <ImageUploadBox
-              label="Logo"
-              preview={logoPreview}
-              inputRef={logoRef}
-              onChange={e => handleFileChange(e, 'logo')}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre del restaurante</label>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Ej: La Rotisería de Carlos"
+              className="input"
             />
           </div>
 
-          <div className="border-t border-neutral-100 pt-4 space-y-3">
-            {field('Nombre del restaurante', 'name', 'text', { placeholder: 'Ej: La Rotisería de Carlos' })}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Descripción</label>
-              <textarea
-                value={form.description}
-                onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                rows={2}
-                placeholder="Breve descripción del local..."
-                className="input resize-none"
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {field('Tiempo (min)', 'delivery_time', 'number', { placeholder: '30', min: 1 })}
-              {field('Envío ($)', 'delivery_price', 'number', { placeholder: '350', min: 0 })}
-              {field('Mín. orden ($)', 'min_order', 'number', { placeholder: '1000', min: 0 })}
-            </div>
-          </div>
-
-          {/* Toggle activo */}
           <div className="flex items-center justify-between py-1">
             <div>
-              <p className="font-semibold text-sm">Estado</p>
-              <p className="text-xs text-gray-400">{form.is_active ? 'Abierto y visible' : 'Cerrado / no visible'}</p>
+              <p className="font-semibold text-sm">Visible en la app</p>
+              <p className="text-xs text-gray-400">{isActive ? 'Aparece en el listado de clientes' : 'Oculto para los clientes'}</p>
             </div>
-            <button
-              onClick={() => setForm(p => ({ ...p, is_active: !p.is_active }))}
-              className="transition-colors"
-            >
-              {form.is_active
+            <button onClick={() => setIsActive(a => !a)} className="transition-colors">
+              {isActive
                 ? <ToggleRight size={38} className="text-primary" />
                 : <ToggleLeft  size={38} className="text-gray-300" />}
             </button>
           </div>
-
-          {/* Horario mediodía */}
-          <div className="border-t border-neutral-100 pt-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Clock size={14} className="text-gray-400" />
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Horario mediodía</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Apertura</label>
-                <input type="time" value={form.opening_time} onChange={e => setForm(p => ({ ...p, opening_time: e.target.value }))} className="input" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Cierre</label>
-                <input type="time" value={form.closing_time} onChange={e => setForm(p => ({ ...p, closing_time: e.target.value }))} className="input" />
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-sm text-red-600">Forzar cierre mediodía</p>
-                <p className="text-xs text-gray-400">
-                  {form.is_open_override === false ? 'Este turno siempre cerrado' : 'El horario determina si está abierto'}
-                </p>
-              </div>
-              <button type="button" onClick={() => setForm(p => ({ ...p, is_open_override: p.is_open_override === false ? null : false }))} className="transition-colors">
-                {form.is_open_override === false
-                  ? <ToggleRight size={38} className="text-red-500" />
-                  : <ToggleLeft  size={38} className="text-gray-300" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Horario noche */}
-          <div className="border-t border-neutral-100 pt-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Clock size={14} className="text-gray-400" />
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Horario noche</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Apertura</label>
-                <input type="time" value={form.opening_time_2} onChange={e => setForm(p => ({ ...p, opening_time_2: e.target.value }))} className="input" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Cierre</label>
-                <input type="time" value={form.closing_time_2} onChange={e => setForm(p => ({ ...p, closing_time_2: e.target.value }))} className="input" />
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-sm text-red-600">Forzar cierre noche</p>
-                <p className="text-xs text-gray-400">
-                  {form.is_open_override_2 === false ? 'Este turno siempre cerrado' : 'El horario determina si está abierto'}
-                </p>
-              </div>
-              <button type="button" onClick={() => setForm(p => ({ ...p, is_open_override_2: p.is_open_override_2 === false ? null : false }))} className="transition-colors">
-                {form.is_open_override_2 === false
-                  ? <ToggleRight size={38} className="text-red-500" />
-                  : <ToggleLeft  size={38} className="text-gray-300" />}
-              </button>
-            </div>
-          </div>
         </div>
 
-        {/* Footer */}
         <div className="px-5 py-4 border-t border-neutral-100 shrink-0">
           <button
             onClick={handleSave}
@@ -379,11 +218,7 @@ function EditModal({ restaurant, onClose, onSaved }) {
 }
 
 function NewRestaurantModal({ onClose, onSaved }) {
-  const [form, setForm] = useState({
-    name: '', description: '', category: '',
-    email: '', password: '',
-    delivery_time: '', min_order: '',
-  });
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [saving,      setSaving]      = useState(false);
   const [credentials, setCredentials] = useState(null);
 
@@ -395,13 +230,7 @@ function NewRestaurantModal({ onClose, onSaved }) {
     try {
       const { data: restaurant, error: insertErr } = await supabase
         .from('restaurants')
-        .insert({
-          name:          form.name.trim(),
-          description:   form.description.trim() || null,
-          category:      form.category.trim() ? [form.category.trim()] : null,
-          delivery_time: form.delivery_time !== '' ? Number(form.delivery_time) : null,
-          min_order:     form.min_order     !== '' ? Number(form.min_order)     : null,
-        })
+        .insert({ name: form.name.trim(), is_active: false })
         .select()
         .single();
 
@@ -464,24 +293,6 @@ function NewRestaurantModal({ onClose, onSaved }) {
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre del restaurante *</label>
               <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Ej: La Rotisería de Carlos" className="input" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Descripción</label>
-              <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} placeholder="Breve descripción del local..." className="input resize-none" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Categoría</label>
-              <input type="text" value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} placeholder="Ej: Pizzería, Burger, Sushi…" className="input" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tiempo (min)</label>
-                <input type="number" value={form.delivery_time} onChange={e => setForm(p => ({ ...p, delivery_time: e.target.value }))} placeholder="30" min={1} className="input" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Mín. orden ($)</label>
-                <input type="number" value={form.min_order} onChange={e => setForm(p => ({ ...p, min_order: e.target.value }))} placeholder="1000" min={0} className="input" />
-              </div>
             </div>
           </div>
 

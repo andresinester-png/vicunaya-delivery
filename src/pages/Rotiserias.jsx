@@ -66,7 +66,7 @@ export default function Rotiserias() {
 
   useEffect(() => {
     setLoading(true);
-    supabase.from('restaurants').select('*').order('name').then(({ data, error }) => {
+    supabase.from('restaurants').select('*').eq('is_active', true).order('name').then(({ data, error }) => {
       if (!error && data && data.length > 0) setRestaurants(data);
       setLoading(false);
     });

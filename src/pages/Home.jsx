@@ -85,7 +85,7 @@ export default function Home() {
   const [sortOpen, setSortOpen]       = useState(false);
 
   useEffect(() => {
-    supabase.from('restaurants').select('*').order('name').then(({ data, error }) => {
+    supabase.from('restaurants').select('*').eq('is_active', true).order('name').then(({ data, error }) => {
       if (!error && data?.length) setRestaurants(data);
       setLoading(false);
     });
