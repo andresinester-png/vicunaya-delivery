@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Pencil, Store, Upload, X, Loader2, Check, ToggleLeft, ToggleRight, Image, Move, Clock, Key, ShieldCheck } from 'lucide-react';
+import { Pencil, Store, Upload, X, Loader2, Check, ToggleLeft, ToggleRight, Image, Move, Clock, Key, ShieldCheck, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { supabase, supabaseAdmin } from '../../lib/supabase.js';
-import { CreateAccessModal, ResetPasswordModal } from '../../components/OwnerAccessModal.jsx';
+import { supabase } from '../../lib/supabase.js';
+import { CreateAccessModal, ResetPasswordModal, generatePassword, PasswordRow, CredentialsBox } from '../../components/OwnerAccessModal.jsx';
 
 const BUCKET = 'IMAGES';
 
@@ -167,9 +167,9 @@ function EditModal({ restaurant, onClose, onSaved }) {
   };
 
   const uploadFile = async (file, path) => {
-    const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true });
     if (error) throw error;
-    return supabaseAdmin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+    return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
   };
 
   const handleSave = async () => {
@@ -201,7 +201,7 @@ function EditModal({ restaurant, onClose, onSaved }) {
         updates.logo_url = await uploadFile(logoFile, `restaurants/logo_${restaurant.id}_${Date.now()}.${ext}`);
       }
 
-      const { error } = await supabaseAdmin.from('restaurants').update(updates).eq('id', restaurant.id);
+      const { error } = await supabase.from('restaurants').update(updates).eq('id', restaurant.id);
       if (error) throw error;
 
       toast.success('Restaurante guardado');
@@ -378,11 +378,153 @@ function EditModal({ restaurant, onClose, onSaved }) {
   );
 }
 
+function NewRestaurantModal({ onClose, onSaved }) {
+  const [form, setForm] = useState({
+    name: '', description: '', category: '',
+    email: '', password: '',
+    delivery_time: '', min_order: '',
+  });
+  const [saving,      setSaving]      = useState(false);
+  const [credentials, setCredentials] = useState(null);
+
+  const handleSave = async () => {
+    if (!form.name.trim()) { toast.error('El nombre es obligatorio'); return; }
+    if (form.email.trim() && !form.password) { toast.error('Ingresá una contraseña para el acceso'); return; }
+
+    setSaving(true);
+    try {
+      const { data: restaurant, error: insertErr } = await supabase
+        .from('restaurants')
+        .insert({
+          name:          form.name.trim(),
+          description:   form.description.trim() || null,
+          category:      form.category.trim() ? [form.category.trim()] : null,
+          delivery_time: form.delivery_time !== '' ? Number(form.delivery_time) : null,
+          min_order:     form.min_order     !== '' ? Number(form.min_order)     : null,
+        })
+        .select()
+        .single();
+
+      if (insertErr) throw insertErr;
+
+      if (form.email.trim()) {
+        const { data, error } = await supabase.functions.invoke('admin-create-owner', {
+          body: { email: form.email.trim().toLowerCase(), password: form.password, entityId: restaurant.id, table: 'restaurants' },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        setCredentials({ email: form.email.trim().toLowerCase(), password: form.password });
+        onSaved();
+      } else {
+        toast.success('Restaurante creado');
+        onSaved();
+        onClose();
+      }
+    } catch (err) {
+      toast.error('Error: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (credentials) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+        style={{ background: 'rgba(0,0,0,0.5)' }}
+        onClick={e => e.target === e.currentTarget && onClose()}
+      >
+        <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl overflow-hidden flex flex-col" style={{ maxHeight: '92vh' }}>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 shrink-0">
+            <h2 className="font-extrabold text-lg">Restaurante creado</h2>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"><X size={18} /></button>
+          </div>
+          <div className="px-5 py-4 space-y-4 overflow-y-auto">
+            <CredentialsBox email={credentials.email} password={credentials.password} onClose={onClose} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      style={{ background: 'rgba(0,0,0,0.5)' }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl overflow-hidden flex flex-col" style={{ maxHeight: '92vh' }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 shrink-0">
+          <h2 className="font-extrabold text-lg">Nuevo restaurante</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"><X size={18} /></button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre del restaurante *</label>
+              <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Ej: La Rotisería de Carlos" className="input" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Descripción</label>
+              <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} placeholder="Breve descripción del local..." className="input resize-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Categoría</label>
+              <input type="text" value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} placeholder="Ej: Pizzería, Burger, Sushi…" className="input" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tiempo (min)</label>
+                <input type="number" value={form.delivery_time} onChange={e => setForm(p => ({ ...p, delivery_time: e.target.value }))} placeholder="30" min={1} className="input" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Mín. orden ($)</label>
+                <input type="number" value={form.min_order} onChange={e => setForm(p => ({ ...p, min_order: e.target.value }))} placeholder="1000" min={0} className="input" />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-neutral-100 pt-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Key size={14} className="text-gray-400" />
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Acceso del dueño (opcional)</p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Email del dueño</label>
+              <input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="dueno@ejemplo.com" className="input" autoCapitalize="none" />
+            </div>
+            {form.email.trim() && (
+              <PasswordRow
+                value={form.password}
+                onChange={pw => setForm(p => ({ ...p, password: pw }))}
+                onGenerate={() => setForm(p => ({ ...p, password: generatePassword() }))}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="px-5 py-4 border-t border-neutral-100 shrink-0">
+          <button
+            onClick={handleSave}
+            disabled={saving || !form.name.trim()}
+            className="btn-primary w-full flex items-center justify-center gap-2"
+          >
+            {saving ? <Loader2 size={17} className="animate-spin" /> : <Plus size={17} />}
+            {saving ? 'Creando…' : 'Crear restaurante'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminRestaurants() {
   const [restaurants, setRestaurants] = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [editing,     setEditing]     = useState(null);
   const [ownerMap,    setOwnerMap]    = useState({}); // { userId: email }
+  const [newModal,    setNewModal]    = useState(false);
   const [createModal, setCreateModal] = useState(null); // { id, name }
   const [resetModal,  setResetModal]  = useState(null); // { userId, email }
 
@@ -393,9 +535,9 @@ export default function AdminRestaurants() {
       setRestaurants(data || []);
       const ownerIds = [...new Set((data || []).map(r => r.owner_id).filter(Boolean))];
       if (ownerIds.length) {
-        const { data: usersData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+        const { data: listData } = await supabase.functions.invoke('admin-list-users');
         const map = {};
-        usersData?.users?.forEach(u => { if (ownerIds.includes(u.id)) map[u.id] = u.email; });
+        listData?.users?.forEach(u => { if (ownerIds.includes(u.id)) map[u.id] = u.email; });
         setOwnerMap(map);
       }
     }
@@ -413,6 +555,12 @@ export default function AdminRestaurants() {
           <h1 className="font-extrabold text-2xl">Restaurantes</h1>
           <p className="text-sm text-gray-400 mt-0.5">{restaurants.length} locales en total</p>
         </div>
+        <button
+          onClick={() => setNewModal(true)}
+          className="btn-primary flex items-center gap-1.5 px-4 py-2 text-sm"
+        >
+          <Plus size={16} /> Nuevo restaurante
+        </button>
       </div>
 
       {loading ? (
@@ -512,6 +660,13 @@ export default function AdminRestaurants() {
             </div>
           ))}
         </div>
+      )}
+
+      {newModal && (
+        <NewRestaurantModal
+          onClose={() => setNewModal(false)}
+          onSaved={load}
+        />
       )}
 
       {editingRestaurant && (

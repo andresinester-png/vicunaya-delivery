@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { X, Loader2, RefreshCw, Key, Copy, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { supabaseAdmin } from '../lib/supabase.js';
+import { supabase } from '../lib/supabase.js';
 
 const PROTECTED = ['andresinester@gmail.com', 'admin@vicunaya.com'];
 
-function generatePassword() {
+export function generatePassword() {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
   return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
@@ -25,7 +25,7 @@ function CopyField({ label, value }) {
   );
 }
 
-function CredentialsBox({ email, password, onClose }) {
+export function CredentialsBox({ email, password, onClose }) {
   const copyAll = () => {
     navigator.clipboard.writeText(`Email: ${email}\nContraseña: ${password}`);
     toast.success('Copiado al portapapeles');
@@ -53,7 +53,7 @@ function CredentialsBox({ email, password, onClose }) {
   );
 }
 
-function PasswordRow({ value, onChange, onGenerate }) {
+export function PasswordRow({ value, onChange, onGenerate }) {
   return (
     <div>
       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Contraseña</label>
@@ -124,18 +124,11 @@ export function CreateAccessModal({ entityId, entityName, table, onClose, onSave
 
     setSaving(true);
     try {
-      const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
-        email: trimmed,
-        password,
-        email_confirm: true,
+      const { data, error } = await supabase.functions.invoke('admin-create-owner', {
+        body: { email: trimmed, password, entityId, table },
       });
-      if (authErr) throw authErr;
-
-      const { error: dbErr } = await supabaseAdmin
-        .from(table)
-        .update({ owner_id: authData.user.id })
-        .eq('id', entityId);
-      if (dbErr) throw dbErr;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       setCredentials({ email: trimmed, password });
       onSaved();
@@ -196,8 +189,11 @@ export function ResetPasswordModal({ userId, email, onClose }) {
 
     setSaving(true);
     try {
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, { password });
+      const { data, error } = await supabase.functions.invoke('admin-update-password', {
+        body: { userId, password },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       setCredentials({ email, password });
     } catch (err) {
       toast.error('Error: ' + err.message);
