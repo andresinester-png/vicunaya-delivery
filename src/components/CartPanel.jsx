@@ -98,14 +98,15 @@ export default function CartPanel({ open, onClose }) {
                         )}
 
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-sm leading-tight truncate">{item.name}</p>
-                          {item.extras > 0 && (
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              {item.qty > 0 && `${item.qty} ${item.base_label || 'u.'}`}
-                              {item.qty > 0 && item.extras > 0 && ' + '}
-                              {item.extras > 0 && `${item.extras} ${item.extra_label || 'extra'}`}
-                            </p>
-                          )}
+                          <p className="font-bold text-sm leading-tight truncate">
+                            {item.name}{item.variant_label ? ` ${item.variant_label}` : ''}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {item.sale_mode === 'dozen'
+                              ? `x${item.qty} docena${item.qty !== 1 ? 's' : ''}`
+                              : `x${item.qty} unidad${item.qty !== 1 ? 'es' : ''}`
+                            }
+                          </p>
                           <p className="text-primary font-extrabold text-sm mt-0.5">
                             ${(item.price * item.qty + (item.extras || 0) * (item.extra_price || 0)).toLocaleString('es-AR')}
                           </p>

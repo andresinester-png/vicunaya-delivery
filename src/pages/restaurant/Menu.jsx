@@ -1,14 +1,15 @@
 import { useEffect, useState, useRef } from 'react';
 import { Plus, Pencil, Trash2, X, Upload, Image } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { supabase, supabaseAdmin } from '../../lib/supabase.js';
+import { supabase } from '../../lib/supabase.js';
 import { useRestaurant } from '../../contexts/RestaurantContext.js';
 
 const BUCKET = 'menu-item-images';
 
 const EMPTY_ITEM = {
-  name: '', description: '', price: '', image_url: '', is_available: true,
-  allows_extras: false, extra_price: '', extra_label: 'Unidades extra', base_label: 'Unidad',
+  name: '', description: '', image_url: '', is_available: true,
+  sells_unit: true,   price_unit: '',
+  sells_dozen: false, price_dozen: '',
 };
 
 export default function Menu() {
@@ -21,7 +22,6 @@ export default function Menu() {
   const [catForm,    setCatForm]    = useState('');
   const [saving,     setSaving]     = useState(false);
 
-  // Image upload state for item modal
   const [imageFile,    setImageFile]    = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const imageRef = useRef(null);
@@ -41,7 +41,13 @@ export default function Menu() {
 
   const openItemModal = (categoryId, item = null) => {
     setForm(item
-      ? { ...item, price: item.price ?? '', extra_price: item.extra_price ?? '' }
+      ? {
+          ...item,
+          sells_unit:  item.price_unit  != null,
+          price_unit:  item.price_unit  ?? '',
+          sells_dozen: item.price_dozen != null,
+          price_dozen: item.price_dozen ?? '',
+        }
       : { ...EMPTY_ITEM, category_id: categoryId }
     );
     setImageFile(null);
@@ -63,30 +69,36 @@ export default function Menu() {
   };
 
   const saveItem = async () => {
-    if (!form.name || !form.price) { toast.error('Nombre y precio son obligatorios'); return; }
+    if (!form.name) { toast.error('El nombre es obligatorio'); return; }
+    const puVal = form.sells_unit   && form.price_unit   !== '' ? parseFloat(form.price_unit)   : null;
+    const pdVal = form.sells_dozen  && form.price_dozen  !== '' ? parseFloat(form.price_dozen)  : null;
+    if (puVal == null && pdVal == null) {
+      toast.error('Activá al menos una opción de precio'); return;
+    }
     setSaving(true);
     try {
       let image_url = form.image_url || null;
-
       if (imageFile) {
         const ext  = imageFile.name.split('.').pop();
         const path = `items/${restaurant.id}_${Date.now()}.${ext}`;
-        const { error: upErr } = await supabaseAdmin.storage.from(BUCKET).upload(path, imageFile, { upsert: true });
+        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, imageFile, { upsert: true });
         if (upErr) throw upErr;
-        image_url = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+        image_url = supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
       }
 
+      const { sells_unit, sells_dozen, price_unit: _pu, price_dozen: _pd, price: _p, sale_unit: _su, ...rest } = form;
       const payload = {
-        ...form,
+        ...rest,
         image_url,
-        price: parseFloat(form.price),
-        extra_price: form.allows_extras && form.extra_price !== '' ? parseFloat(form.extra_price) : null,
+        price_unit:  puVal,
+        price_dozen: pdVal,
+        price: puVal ?? pdVal,
         restaurant_id: restaurant.id,
       };
 
       const { error } = form.id
-        ? await supabaseAdmin.from('menu_items').update(payload).eq('id', form.id)
-        : await supabaseAdmin.from('menu_items').insert(payload);
+        ? await supabase.from('menu_items').update(payload).eq('id', form.id)
+        : await supabase.from('menu_items').insert(payload);
       if (error) throw error;
 
       toast.success('Guardado');
@@ -101,28 +113,35 @@ export default function Menu() {
 
   const deleteItem = async (id) => {
     if (!confirm('¿Eliminar este producto?')) return;
-    await supabaseAdmin.from('menu_items').delete().eq('id', id);
+    await supabase.from('menu_items').delete().eq('id', id);
     toast.success('Eliminado');
     reload();
   };
 
   const toggleAvailable = async (item) => {
-    await supabaseAdmin.from('menu_items').update({ is_available: !item.is_available }).eq('id', item.id);
+    await supabase.from('menu_items').update({ is_available: !item.is_available }).eq('id', item.id);
     reload();
   };
 
   const saveCategory = async () => {
     if (!catForm.trim()) return;
     setSaving(true);
-    await supabaseAdmin.from('menu_categories').insert({ name: catForm.trim(), restaurant_id: restaurant.id, sort_order: categories.length });
+    await supabase.from('menu_categories').insert({ name: catForm.trim(), restaurant_id: restaurant.id, sort_order: categories.length });
     setCatForm(''); setModal(null); toast.success('Categoría agregada'); reload();
     setSaving(false);
   };
 
   const deleteCategory = async (id) => {
     if (!confirm('¿Eliminar esta categoría y todos sus productos?')) return;
-    await supabaseAdmin.from('menu_categories').delete().eq('id', id);
+    await supabase.from('menu_categories').delete().eq('id', id);
     reload(); toast.success('Categoría eliminada');
+  };
+
+  const priceLabel = (item) => {
+    const parts = [];
+    if (item.price_unit  != null) parts.push(`$${parseFloat(item.price_unit).toLocaleString('es-AR')} c/u`);
+    if (item.price_dozen != null) parts.push(`$${parseFloat(item.price_dozen).toLocaleString('es-AR')} la docena`);
+    return parts.length ? parts.join(' · ') : (item.price != null ? `$${parseFloat(item.price).toLocaleString('es-AR')} c/u` : '—');
   };
 
   if (loading) return (
@@ -177,7 +196,7 @@ export default function Menu() {
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm">{item.name}</p>
                           {item.description && <p className="text-xs text-gray-500 truncate">{item.description}</p>}
-                          <p className="text-primary font-bold text-sm">${parseFloat(item.price).toLocaleString('es-AR')}</p>
+                          <p className="text-primary font-bold text-sm">{priceLabel(item)}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
@@ -225,7 +244,57 @@ export default function Menu() {
               <div className="space-y-3">
                 <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Nombre del producto *" className="input" />
                 <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Descripción (opcional)" className="input resize-none h-16" />
-                <input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="Precio (ej: 1500) *" className="input" min="0" step="0.01" />
+
+                {/* ── Opciones de venta ── */}
+                <div className="border border-neutral-200 rounded-xl p-3 space-y-3">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Opciones de venta</p>
+
+                  {/* Venta por unidad */}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.sells_unit}
+                        onChange={e => setForm(f => ({ ...f, sells_unit: e.target.checked, price_unit: e.target.checked ? f.price_unit : '' }))}
+                        className="w-4 h-4 accent-primary"
+                      />
+                      <span className="text-sm font-medium">Venta por unidad</span>
+                    </label>
+                    {form.sells_unit && (
+                      <input
+                        type="number"
+                        value={form.price_unit}
+                        onChange={e => setForm(f => ({ ...f, price_unit: e.target.value }))}
+                        placeholder="Precio por unidad *"
+                        className="input ml-7"
+                        min="0" step="0.01"
+                      />
+                    )}
+                  </div>
+
+                  {/* Venta por docena */}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.sells_dozen}
+                        onChange={e => setForm(f => ({ ...f, sells_dozen: e.target.checked, price_dozen: e.target.checked ? f.price_dozen : '' }))}
+                        className="w-4 h-4 accent-primary"
+                      />
+                      <span className="text-sm font-medium">Venta por docena</span>
+                    </label>
+                    {form.sells_dozen && (
+                      <input
+                        type="number"
+                        value={form.price_dozen}
+                        onChange={e => setForm(f => ({ ...f, price_dozen: e.target.value }))}
+                        placeholder="Precio por docena *"
+                        className="input ml-7"
+                        min="0" step="0.01"
+                      />
+                    )}
+                  </div>
+                </div>
 
                 {/* ── Image upload ── */}
                 <div>
@@ -235,7 +304,6 @@ export default function Menu() {
                     className="relative cursor-pointer rounded-xl border-2 border-dashed border-neutral-200 hover:border-primary transition-colors flex items-center gap-3 p-3"
                     style={{ background: '#F9FAFB' }}
                   >
-                    {/* Thumbnail preview */}
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
                       {imagePreview
                         ? <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
@@ -258,20 +326,6 @@ export default function Menu() {
                   <input type="checkbox" checked={form.is_available} onChange={e => setForm(f => ({ ...f, is_available: e.target.checked }))} className="w-4 h-4 accent-primary" />
                   <span className="text-sm font-medium">Disponible</span>
                 </label>
-
-                <div className="border-t border-neutral-100 pt-3 space-y-3">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" checked={form.allows_extras} onChange={e => setForm(f => ({ ...f, allows_extras: e.target.checked }))} className="w-4 h-4 accent-primary" />
-                    <span className="text-sm font-medium">Permite unidades extra</span>
-                  </label>
-                  {form.allows_extras && (
-                    <>
-                      <input value={form.base_label} onChange={e => setForm(f => ({ ...f, base_label: e.target.value }))} placeholder="Etiqueta base (ej: Docena)" className="input" />
-                      <input value={form.extra_label} onChange={e => setForm(f => ({ ...f, extra_label: e.target.value }))} placeholder="Etiqueta extra (ej: Unidades extra)" className="input" />
-                      <input type="number" value={form.extra_price} onChange={e => setForm(f => ({ ...f, extra_price: e.target.value }))} placeholder="Precio por unidad extra" className="input" min="0" step="0.01" />
-                    </>
-                  )}
-                </div>
 
                 <button onClick={saveItem} disabled={saving} className="btn-primary w-full">
                   {saving ? 'Guardando...' : 'Guardar'}

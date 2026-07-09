@@ -3,13 +3,31 @@ import { Plus, Minus } from 'lucide-react';
 import useCartStore from '../store/cartStore.js';
 
 export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
-  const { name, description, price, image_url, is_available, allows_extras } = item;
+  const { name, description, price_unit, price_dozen, image_url, is_available, allows_extras } = item;
 
   const cartQty   = useCartStore(s => s.items.find(i => i.id === item.id)?.qty ?? 0);
   const updateQty = useCartStore(s => s.updateQty);
 
-  // Show [−][qty][+] only for simple items (no extras) already in cart
-  const showQtyControl = !allows_extras && cartQty > 0 && !!onAdd && is_available;
+  // Dozen-priced items always need the modal (so "docenas" context is clear)
+  const needsModal = !!price_dozen || allows_extras;
+
+  // Show [−][qty][+] only for simple one-price items already in cart
+  const showQtyControl = !needsModal && cartQty > 0 && !!onAdd && is_available;
+
+  // Normalize item for quick-add (single price only)
+  const quickAddItem = {
+    ...item,
+    price:     price_unit ?? price_dozen ?? item.price ?? 0,
+    sale_mode: price_unit ? 'unit' : 'dozen',
+  };
+
+  const priceText = price_unit && price_dozen
+    ? `$${price_unit.toLocaleString('es-AR')} c/u · $${price_dozen.toLocaleString('es-AR')} la docena`
+    : price_unit
+    ? `$${price_unit.toLocaleString('es-AR')} c/u`
+    : price_dozen
+    ? `$${price_dozen.toLocaleString('es-AR')} la docena`
+    : `$${(item.price || 0).toLocaleString('es-AR')} c/u`;
 
   const handleCardClick = () => {
     if (onTap) onTap(item);
@@ -17,9 +35,9 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
 
   const handlePlusClick = (e) => {
     e.stopPropagation();
-    if (allows_extras && onTap) { onTap(item); return; }
+    if (needsModal && onTap) { onTap(item); return; }
     if (!is_available || !onAdd) return;
-    onAdd(item);
+    onAdd(quickAddItem);
   };
 
   const handleMinus = (e) => {
@@ -29,7 +47,7 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
 
   const handlePlus = (e) => {
     e.stopPropagation();
-    if (onAdd) onAdd(item);
+    if (onAdd) onAdd(quickAddItem);
   };
 
   return (
@@ -73,13 +91,12 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
           fontSize: 15, fontWeight: 800, color: '#111',
           letterSpacing: '-0.01em', margin: 0,
         }}>
-          ${price.toLocaleString('es-AR')}
+          {priceText}
         </p>
       </div>
 
       {/* ── Right: image + button ── */}
       <div style={{ position: 'relative', flexShrink: 0, width: 120, height: 120 }}>
-        {/* Image */}
         <div style={{
           width: 120, height: 120,
           borderRadius: 12,

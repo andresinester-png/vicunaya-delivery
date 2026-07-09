@@ -62,7 +62,9 @@ export default function Cart() {
         <div className="card p-4 space-y-4">
           {items.map(item => {
             const lineTotal = item.price * item.qty + (item.extras || 0) * (item.extra_price || 0);
-            const extraText = item.extras > 0 ? ` + ${item.extras} ${item.extra_label || 'extra'}` : '';
+            const subText = item.sale_mode === 'dozen'
+              ? `x${item.qty} docena${item.qty !== 1 ? 's' : ''}`
+              : `x${item.qty} unidad${item.qty !== 1 ? 'es' : ''}`;
             return (
               <motion.div
                 key={item.id}
@@ -78,7 +80,10 @@ export default function Cart() {
                 )}
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm leading-tight truncate">{item.name}{extraText}</p>
+                  <p className="font-bold text-sm leading-tight truncate">
+                    {item.name}{item.variant_label ? ` ${item.variant_label}` : ''}
+                  </p>
+                  {subText && <p className="text-xs text-gray-400 mt-0.5 truncate">{subText}</p>}
                   <p className="text-primary font-extrabold text-sm mt-0.5">
                     ${lineTotal.toLocaleString('es-AR')}
                   </p>
