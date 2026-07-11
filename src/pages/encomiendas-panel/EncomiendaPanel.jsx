@@ -782,8 +782,8 @@ export default function EncomiendaPanel() {
     fetchEncomiendas();
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('vicunaya_encomiendas_session');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate('/encomiendas/panel/login');
   };
 

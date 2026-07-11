@@ -14,21 +14,17 @@ export default function EncomiendaPanelLogin() {
     e.preventDefault();
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from('empresas_encomiendas')
-      .select('*')
-      .eq('email', form.email.trim().toLowerCase())
-      .eq('password_hash', form.password)
-      .eq('activo', true)
-      .single();
+    const { error } = await supabase.auth.signInWithPassword({
+      email:    form.email.trim().toLowerCase(),
+      password: form.password,
+    });
 
-    if (error || !data) {
+    if (error) {
       toast.error('Email o contraseña incorrectos');
       setLoading(false);
       return;
     }
 
-    localStorage.setItem('vicunaya_encomiendas_session', JSON.stringify(data));
     navigate('/encomiendas/panel');
   };
 
