@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 
-const REQUIRED_FIELDS = ['nombre', 'apellido', 'dni', 'telefono', 'direccion'];
+const REQUIRED_FIELDS = ['nombre', 'apellido', 'dni', 'telefono'];
 
 const AuthContext = createContext(null);
 

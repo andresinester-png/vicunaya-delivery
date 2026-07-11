@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase.js';
 import useCartStore from '../store/cartStore.js';
 import { isRestaurantOpen } from '../lib/restaurantUtils.js';
 
+
 const CAT_GRADIENT = {
   'Rotisería': ['#FF9A3C','#FF6B00'], 'Parrilla': ['#EF4444','#B91C1C'],
   'Pizza':     ['#F59E0B','#D97706'], 'Empanadas': ['#10B981','#059669'],
@@ -277,6 +278,7 @@ export default function Restaurant() {
           </p>
         </div>
       )}
+
 
       {/* Closed banner */}
       {!isOpen && (

@@ -4,7 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Bell } from 'lucide-react';
 import BottomNav from './BottomNav.jsx';
 import CartPanel from './CartPanel.jsx';
+import NotificationsPanel from './NotificationsPanel.jsx';
 import useCartStore from '../store/cartStore.js';
+import useNotifications from '../hooks/useNotifications.js';
 
 const PAGE_TITLES = {
   '/remises': 'Remises',
@@ -18,12 +20,32 @@ const pageVariants = {
   exit:    { opacity: 0, y: -6, transition: { duration: 0.15, ease: 'easeIn' } },
 };
 
+// Animación shake para la campana cuando hay no leídas
+const bellShake = {
+  animate: {
+    rotate: [0, -18, 18, -14, 14, -8, 8, 0],
+    transition: { duration: 0.7, ease: 'easeInOut', repeat: Infinity, repeatDelay: 2.5 },
+  },
+  idle: { rotate: 0 },
+};
+
 export default function MainLayout() {
   const location = useLocation();
-  const [cartOpen, setCartOpen] = useState(false);
+  const [cartOpen,  setCartOpen]  = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+
   const count = useCartStore(s => s.count());
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+
   const isRemises = location.pathname === '/remises';
-  const title = PAGE_TITLES[location.pathname];
+  const title     = PAGE_TITLES[location.pathname];
+
+  const handleBellClick = () => setNotifOpen(true);
+
+  const handleNotifClose = () => {
+    setNotifOpen(false);
+    if (unreadCount > 0) markAllAsRead();
+  };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#FFF8F8' }}>
@@ -34,6 +56,7 @@ export default function MainLayout() {
       >
         {/* Fila del logo */}
         <div style={{ height: 56, display: 'flex', alignItems: 'center', padding: '0 16px', position: 'relative' }}>
+
           {/* Carrito – izquierda */}
           <button
             onClick={() => setCartOpen(true)}
@@ -88,13 +111,46 @@ export default function MainLayout() {
           </Link>
 
           {/* Campana – derecha */}
-          <button style={{
-            marginLeft: 'auto', width: 38, height: 38,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            borderRadius: '50%', background: 'rgba(255,255,255,0.18)',
-            border: 'none', cursor: 'pointer', flexShrink: 0,
-          }}>
-            <Bell size={20} color="#fff" strokeWidth={2} />
+          <button
+            onClick={handleBellClick}
+            style={{
+              marginLeft: 'auto', position: 'relative',
+              width: 38, height: 38,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: '50%', background: 'rgba(255,255,255,0.18)',
+              border: 'none', cursor: 'pointer', flexShrink: 0,
+            }}
+          >
+            {/* Shake cuando hay no leídas */}
+            <motion.div
+              animate={unreadCount > 0 ? bellShake.animate : bellShake.idle}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Bell size={20} color="#fff" strokeWidth={2} />
+            </motion.div>
+
+            {/* Badge rojo con número */}
+            <AnimatePresence>
+              {unreadCount > 0 && (
+                <motion.span
+                  key={unreadCount}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+                  style={{
+                    position: 'absolute', top: -2, right: -2,
+                    background: '#fff', color: '#D32F2F',
+                    fontSize: 10, fontWeight: 900,
+                    minWidth: 18, height: 18, borderRadius: 99,
+                    padding: '0 3px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </button>
         </div>
 
@@ -126,6 +182,12 @@ export default function MainLayout() {
 
       <BottomNav />
       <CartPanel open={cartOpen} onClose={() => setCartOpen(false)} />
+      <NotificationsPanel
+        open={notifOpen}
+        onClose={handleNotifClose}
+        notifications={notifications}
+        onMarkAllAsRead={markAllAsRead}
+      />
     </div>
   );
 }

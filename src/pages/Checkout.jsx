@@ -215,6 +215,10 @@ export default function Checkout() {
   const totalVal = total();
   const { session, profile } = useAuth();
 
+  const [localPhone,   setLocalPhone]   = useState('');
+  const [phoneInput,   setPhoneInput]   = useState('');
+  const [savingPhone,  setSavingPhone]  = useState(false);
+
   const [restaurantInfo, setRestaurantInfo] = useState({ pickup_address: '', payment_alias: '' });
   const [receipt, setReceipt] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState(null);
@@ -297,6 +301,25 @@ export default function Checkout() {
     }
   }, [newAddrForm, session, savedAddresses.length, selectAddress]);
 
+  const effectivePhone = localPhone || profile?.telefono || '';
+  const needsPhone     = !!session?.user?.id && !effectivePhone;
+
+  const savePhone = async () => {
+    const cleaned = phoneInput.trim();
+    if (!cleaned) { toast.error('Ingresá tu número de teléfono'); return; }
+    setSavingPhone(true);
+    try {
+      const { error } = await supabase.from('profiles').update({ telefono: cleaned }).eq('id', session.user.id);
+      if (error) throw error;
+      setLocalPhone(cleaned);
+      toast.success('Teléfono guardado');
+    } catch (err) {
+      toast.error('Error al guardar: ' + err.message);
+    } finally {
+      setSavingPhone(false);
+    }
+  };
+
   if (showSuccess) return <OrderSuccessScreen />;
 
   if (items.length === 0) {
@@ -343,8 +366,9 @@ export default function Checkout() {
 
       const { data: order, error } = await supabase.from('orders').insert({
         restaurant_id: restaurantId,
+        user_id: session?.user?.id || null,
         customer_name: customerName,
-        customer_phone: profile?.telefono || '',
+        customer_phone: effectivePhone,
         customer_address: fulfillmentMethod === 'delivery' ? address.trim() : 'Retira en el local',
         delivery_method: fulfillmentMethod,
         items: orderItems,
@@ -610,6 +634,39 @@ export default function Checkout() {
           </button>
         </div>
       </div>
+
+      {needsPhone && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60">
+          <div className="w-full max-w-lg bg-white rounded-t-2xl p-6 space-y-4" style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}>
+            <div className="text-center">
+              <div className="text-4xl mb-3">📱</div>
+              <h2 className="font-extrabold text-lg">Teléfono requerido</h2>
+              <p className="text-sm text-gray-500 mt-1">Necesitás cargar tu número de teléfono para poder hacer pedidos</p>
+            </div>
+            <input
+              type="tel"
+              inputMode="numeric"
+              value={phoneInput}
+              onChange={e => setPhoneInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && savePhone()}
+              placeholder="Ej: 3816 123456"
+              className="input text-center text-lg font-bold tracking-wide"
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={savePhone}
+              disabled={savingPhone || !phoneInput.trim()}
+              className="btn-primary w-full py-3"
+            >
+              {savingPhone ? 'Guardando...' : 'Guardar y continuar'}
+            </button>
+            <button type="button" onClick={() => navigate(-1)} className="w-full text-sm text-gray-400 py-2 hover:text-gray-600">
+              Volver
+            </button>
+          </div>
+        </div>
+      )}
 
       {sheetOpen && (
         <AddressSheet
