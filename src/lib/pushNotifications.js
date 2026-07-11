@@ -62,7 +62,7 @@ export async function subscribeToPush(userId, supabaseClient) {
  *
  * Returns true on success, false if permission was denied or an error occurred.
  */
-export async function subscribeClientForOrder(orderId, supabaseAdminClient) {
+export async function subscribeClientForOrder(orderId, supabaseClient) {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
   if (!VAPID_PUBLIC_KEY) return false;
 
@@ -72,7 +72,7 @@ export async function subscribeClientForOrder(orderId, supabaseAdminClient) {
   try {
     const subscription = await getOrCreateSubscription();
 
-    await supabaseAdminClient
+    await supabaseClient
       .from('orders')
       .update({ client_push_subscription: subscription.toJSON() })
       .eq('id', orderId);

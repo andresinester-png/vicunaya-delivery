@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingBag, Car, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase.js';
 import useProfileStore from '../store/profileStore.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const ORDER_STATUS_LABEL = {
   pending:    { label: 'Pendiente',  color: 'bg-amber-100 text-amber-700' },
@@ -29,30 +30,39 @@ const ORDER_STEP_INDEX = { pending: 0, accepted: 0, preparing: 1, ready: 2, deli
 
 export default function Orders() {
   const phone = useProfileStore(s => s.phone);
+  const { session } = useAuth();
+  const userId = session?.user?.id;
+
   const [orders, setOrders] = useState([]);
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const tab = 'delivery';
 
   useEffect(() => {
-    if (!phone) { setLoading(false); return; }
+    if (!userId && !phone) { setLoading(false); return; }
     const fetch = async () => {
+      let ordersQuery = supabase.from('orders').select('*, restaurants(name)').order('created_at', { ascending: false }).limit(30);
+      if (userId) {
+        ordersQuery = ordersQuery.eq('user_id', userId);
+      } else {
+        ordersQuery = ordersQuery.eq('customer_phone', phone);
+      }
       const [{ data: o }, { data: t }] = await Promise.all([
-        supabase.from('orders').select('*, restaurants(name)').eq('customer_phone', phone).order('created_at', { ascending: false }).limit(30),
-        supabase.from('trips').select('*').eq('passenger_phone', phone).order('created_at', { ascending: false }).limit(30),
+        ordersQuery,
+        supabase.from('trips').select('*').eq('passenger_phone', phone || '').order('created_at', { ascending: false }).limit(30),
       ]);
       setOrders(o || []);
       setTrips(t || []);
       setLoading(false);
     };
     fetch();
-  }, [phone]);
+  }, [userId, phone]);
 
-  if (!phone) return (
+  if (!userId && !phone) return (
     <div className="flex flex-col items-center justify-center py-24 px-4 text-center text-gray-400">
       <ShoppingBag size={52} strokeWidth={1} />
-      <p className="mt-4 font-semibold text-gray-600">Guardá tu teléfono en Perfil</p>
-      <p className="text-sm mt-1">Así podemos mostrarte tus pedidos anteriores</p>
+      <p className="mt-4 font-semibold text-gray-600">Iniciá sesión para ver tus pedidos</p>
+      <p className="text-sm mt-1">O guardá tu teléfono en Perfil si pediste como invitado</p>
       <Link to="/perfil" className="btn-primary mt-5 text-sm py-2 px-5">Ir a Perfil</Link>
     </div>
   );

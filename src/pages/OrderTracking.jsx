@@ -261,7 +261,10 @@ export default function OrderTracking() {
             </div>
           </div>
 
-          <p className="text-sm font-semibold text-gray-700 mt-4">{status.label}</p>
+          <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 12, padding: '10px 14px', marginTop: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3B82F6', flexShrink: 0, animation: 'pulse 1.5s ease-in-out infinite' }} />
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#1D4ED8', margin: 0 }}>{status.label}</p>
+          </div>
         </div>
 
         {/* ── Tabs ── */}
@@ -303,7 +306,7 @@ export default function OrderTracking() {
                   type="button"
                   onClick={() => setShowItems(s => !s)}
                   className="shrink-0 text-sm font-bold"
-                  style={{ color: '#D32F2F' }}
+                  style={{ color: '#F97316' }}
                 >
                   Ver detalle
                 </button>
@@ -379,7 +382,7 @@ export default function OrderTracking() {
                     disabled={addrCountdown <= 0}
                     className="shrink-0 text-sm font-bold transition-colors"
                     style={{
-                      color: addrCountdown > 0 ? '#D32F2F' : '#D1D5DB',
+                      color: addrCountdown > 0 ? '#F97316' : '#D1D5DB',
                       cursor: addrCountdown > 0 ? 'pointer' : 'not-allowed',
                     }}
                   >

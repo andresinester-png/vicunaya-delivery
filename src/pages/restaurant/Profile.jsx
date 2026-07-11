@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Upload, Image, Loader2, Check, ToggleLeft, ToggleRight, Move, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { supabaseAdmin } from '../../lib/supabase.js';
+import { supabase } from '../../lib/supabase.js';
 import { useRestaurant } from '../../contexts/RestaurantContext.js';
 
 const CATEGORIES = ['Rotisería', 'Parrilla', 'Pizza', 'Empanadas', 'Sushi', 'Vegano', 'Bebidas', 'Otro'];
@@ -201,9 +201,9 @@ export default function Profile() {
   }, [restaurant]);
 
   const uploadImage = async (file, path) => {
-    const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true });
     if (error) throw error;
-    return supabaseAdmin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+    return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
   };
 
   const handleCoverChange = (e) => {
@@ -247,7 +247,7 @@ export default function Profile() {
         updates.logo_url = await uploadImage(logoFile, `logos/${restaurant.id}_${Date.now()}.${ext}`);
       }
 
-      const { error } = await supabaseAdmin.from('restaurants').update(updates).eq('id', restaurant.id);
+      const { error } = await supabase.from('restaurants').update(updates).eq('id', restaurant.id);
       if (error) throw error;
 
       toast.success('Restaurante actualizado');

@@ -6,6 +6,29 @@ import { useRestaurant } from '../../contexts/RestaurantContext.js';
 
 const BUCKET = 'menu-item-images';
 
+function PriceInput({ value, onChange, placeholder, className }) {
+  const display = value !== '' && value != null && !isNaN(Number(value))
+    ? Math.round(Number(value)).toLocaleString('es-AR')
+    : '';
+  const handleChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, '');
+    onChange(raw);
+  };
+  return (
+    <div className={`relative ${className || ''}`}>
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm select-none pointer-events-none">$</span>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={display}
+        onChange={handleChange}
+        placeholder={placeholder || 'Ej: 35.000'}
+        className="input pl-7"
+      />
+    </div>
+  );
+}
+
 const EMPTY_ITEM = {
   name: '', description: '', image_url: '', is_available: true,
   sells_unit: true,   price_unit: '',
@@ -261,13 +284,11 @@ export default function Menu() {
                       <span className="text-sm font-medium">Venta por unidad</span>
                     </label>
                     {form.sells_unit && (
-                      <input
-                        type="number"
+                      <PriceInput
                         value={form.price_unit}
-                        onChange={e => setForm(f => ({ ...f, price_unit: e.target.value }))}
-                        placeholder="Precio por unidad *"
-                        className="input ml-7"
-                        min="0" step="0.01"
+                        onChange={v => setForm(f => ({ ...f, price_unit: v }))}
+                        placeholder="Ej: 35.000"
+                        className="ml-7"
                       />
                     )}
                   </div>
@@ -284,13 +305,11 @@ export default function Menu() {
                       <span className="text-sm font-medium">Venta por docena</span>
                     </label>
                     {form.sells_dozen && (
-                      <input
-                        type="number"
+                      <PriceInput
                         value={form.price_dozen}
-                        onChange={e => setForm(f => ({ ...f, price_dozen: e.target.value }))}
-                        placeholder="Precio por docena *"
-                        className="input ml-7"
-                        min="0" step="0.01"
+                        onChange={v => setForm(f => ({ ...f, price_dozen: v }))}
+                        placeholder="Ej: 35.000"
+                        className="ml-7"
                       />
                     )}
                   </div>

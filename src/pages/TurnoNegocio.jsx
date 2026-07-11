@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, MapPin, CheckCircle, UserCircle } from 'lucide-react';
+import { ChevronLeft, MapPin, CheckCircle, UserCircle, Bell } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 import useProfileStore from '../store/profileStore.js';
@@ -339,17 +339,26 @@ export default function TurnoNegocio() {
     />
   );
 
+  const RedHeader = ({ title, onBack }) => (
+    <header className="sticky top-0 z-40" style={{ background: '#D32F2F', borderRadius: '0 0 24px 24px', padding: '0 18px 18px', boxShadow: '0 4px 20px rgba(211,47,47,0.25)' }}>
+      <div style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button onClick={onBack} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', cursor: 'pointer' }}>
+            <ChevronLeft size={22} color="white" />
+          </button>
+          <span style={{ color: 'white', fontWeight: 700, fontSize: 18, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{title}</span>
+        </div>
+        <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}>
+          <Bell size={20} color="white" />
+        </div>
+      </div>
+    </header>
+  );
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100">
-        <nav className="bg-white shadow-nav sticky top-0 z-40">
-          <div className="h-14 flex items-center px-4 gap-3">
-            <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
-              <ChevronLeft size={20} />
-            </button>
-            <span className="font-bold">Turno</span>
-          </div>
-        </nav>
+      <div className="min-h-screen" style={{ background: '#F9FAFB' }}>
+        <RedHeader title="Reserva de Turno" onBack={() => navigate(-1)} />
         <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
           {[...Array(3)].map((_, i) => <div key={i} className="card h-24 animate-pulse bg-gray-200" />)}
         </div>
@@ -359,15 +368,8 @@ export default function TurnoNegocio() {
 
   if (!business) {
     return (
-      <div className="min-h-screen bg-gray-100">
-        <nav className="bg-white shadow-nav sticky top-0 z-40">
-          <div className="h-14 flex items-center px-4 gap-3">
-            <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
-              <ChevronLeft size={20} />
-            </button>
-            <span className="font-bold">Turno</span>
-          </div>
-        </nav>
+      <div className="min-h-screen" style={{ background: '#F9FAFB' }}>
+        <RedHeader title="Reserva de Turno" onBack={() => navigate(-1)} />
         <div className="flex flex-col items-center justify-center py-24 text-gray-400">
           <p className="font-semibold text-gray-600">Negocio no encontrado</p>
         </div>
@@ -383,15 +385,8 @@ export default function TurnoNegocio() {
 
   // ── Main render ───────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-100" style={{ paddingBottom: 100 }}>
-      <nav className="bg-white shadow-nav sticky top-0 z-40">
-        <div className="h-14 flex items-center px-4 gap-3">
-          <button onClick={handleBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
-            <ChevronLeft size={20} />
-          </button>
-          <span className="font-bold truncate">{business.name}</span>
-        </div>
-      </nav>
+    <div className="min-h-screen" style={{ background: '#F9FAFB', paddingBottom: 100 }}>
+      <RedHeader title={business.name} onBack={handleBack} />
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
 

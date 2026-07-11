@@ -304,9 +304,14 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {filtered.map(r => <FeaturedCard key={r.id} r={r} navigate={navigate} />)}
-          </div>
+          <>
+            <FeaturedCard r={filtered[0]} navigate={navigate} />
+            {filtered.length > 1 && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
+                {filtered.slice(1).map(r => <SmallCard key={r.id} r={r} navigate={navigate} />)}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -544,6 +549,37 @@ function FeaturedCard({ r, navigate }) {
   );
 }
 
+
+function SmallCard({ r, navigate }) {
+  const bg = catColor(r.category);
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => navigate(`/restaurant/${r.id}`)}
+      onKeyDown={e => e.key === 'Enter' && navigate(`/restaurant/${r.id}`)}
+      style={{ background: '#fff', borderRadius: 18, border: '1px solid #E9D5D8', padding: 10, cursor: 'pointer' }}
+    >
+      <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 14, overflow: 'hidden', marginBottom: 8 }}>
+        {r.image_url ? (
+          <img src={r.image_url} alt={r.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <div style={{
+            width: '100%', height: '100%',
+            background: `linear-gradient(145deg, ${bg}cc 0%, ${bg}88 100%)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ fontSize: 36, fontWeight: 900, color: 'rgba(255,255,255,0.4)' }}>{r.name.charAt(0)}</span>
+          </div>
+        )}
+      </div>
+      <div style={{ fontWeight: 700, fontSize: 13.5, color: '#241F1D', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+      <div style={{ fontSize: 11.5, color: '#8A8580', fontWeight: 500, marginTop: 2 }}>
+        {r.rating != null ? `${r.rating.toFixed(1)} · ` : ''}{r.delivery_time != null ? `${r.delivery_time} min` : ''}
+      </div>
+    </div>
+  );
+}
 
 function SkeletonSection() {
   return (

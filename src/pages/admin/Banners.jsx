@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Pencil, Trash2, X, Image, GripVertical, Upload, Loader2, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { supabase, supabaseAdmin } from '../../lib/supabase.js';
+import { supabase } from '../../lib/supabase.js';
 
 const BUCKET = 'IMAGES';
 const EMPTY_BANNER = {
@@ -38,7 +38,7 @@ export default function Banners() {
 
   const loadLeads = async () => {
     setLeadsLoading(true);
-    const { data, error } = await supabaseAdmin.from('leads').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
     if (!error) setLeads(data || []);
     setLeadsLoading(false);
   };
@@ -62,9 +62,9 @@ export default function Banners() {
     try {
       const ext  = file.name.split('.').pop();
       const path = `banners/${Date.now()}.${ext}`;
-      const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, file, { upsert: true });
+      const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true });
       if (error) throw error;
-      const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
+      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
       setForm(f => ({ ...f, image_url: data.publicUrl }));
       toast.success('Imagen subida');
     } catch (err) {
@@ -82,9 +82,9 @@ export default function Banners() {
     try {
       const ext  = file.name.split('.').pop();
       const path = `banners/${Date.now()}.${ext}`;
-      const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, file, { upsert: true });
+      const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true });
       if (error) throw error;
-      const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
+      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
       setForm(f => ({ ...f, page_image_url: data.publicUrl }));
       toast.success('Imagen subida');
     } catch (err) {
@@ -113,8 +113,8 @@ export default function Banners() {
       };
 
       const { error } = form.id
-        ? await supabaseAdmin.from('banners').update(payload).eq('id', form.id)
-        : await supabaseAdmin.from('banners').insert(payload);
+        ? await supabase.from('banners').update(payload).eq('id', form.id)
+        : await supabase.from('banners').insert(payload);
       if (error) throw error;
 
       toast.success('Banner guardado');
@@ -129,14 +129,14 @@ export default function Banners() {
 
   const deleteBanner = async (id) => {
     if (!confirm('¿Eliminar este banner?')) return;
-    const { error } = await supabaseAdmin.from('banners').delete().eq('id', id);
+    const { error } = await supabase.from('banners').delete().eq('id', id);
     if (error) { toast.error('Error: ' + error.message); return; }
     toast.success('Banner eliminado');
     load();
   };
 
   const toggleActive = async (banner) => {
-    const { error } = await supabaseAdmin.from('banners').update({ active: !banner.active }).eq('id', banner.id);
+    const { error } = await supabase.from('banners').update({ active: !banner.active }).eq('id', banner.id);
     if (error) { toast.error('Error: ' + error.message); return; }
     load();
   };

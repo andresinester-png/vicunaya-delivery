@@ -393,24 +393,41 @@ export default function Checkout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100" style={{ paddingBottom: 110 }}>
-      <nav className="bg-white shadow-nav sticky top-0 z-40">
-        <div className="h-14 flex items-center px-4 gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
-            <ChevronLeft size={20} />
+    <div className="min-h-screen" style={{ background: '#F9FAFB', paddingBottom: 110 }}>
+      {/* ── Header rojo redondeado con total ── */}
+      <header style={{
+        background: '#E53935', color: 'white',
+        paddingTop: 44, paddingBottom: 28, paddingLeft: 16, paddingRight: 16,
+        borderRadius: '0 0 2rem 2rem',
+        boxShadow: '0 4px 20px rgba(229,57,53,0.3)',
+        position: 'sticky', top: 0, zIndex: 40,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <button
+            onClick={() => navigate(-1)}
+            style={{ padding: 8, background: 'rgba(255,255,255,0.18)', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex' }}
+          >
+            <ChevronLeft size={24} color="white" />
           </button>
-          <span className="font-bold">Pagar</span>
+          <span style={{ fontWeight: 700, fontSize: 18, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>VicuñaYa - Pago</span>
+          <div style={{ width: 40 }} />
         </div>
-      </nav>
-
-      <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-
-        {/* Monto total */}
-        <div className="card p-6 text-center">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total a pagar</p>
-          <p className="text-4xl font-extrabold text-primary">${totalVal.toLocaleString('es-AR')}</p>
-          {restaurantName && <p className="text-xs text-gray-400 mt-1">{restaurantName}</p>}
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', opacity: 0.8, margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            Total a Pagar
+          </p>
+          <p style={{ fontSize: 40, fontWeight: 900, margin: '6px 0 0', fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.02em' }}>
+            ${totalVal.toLocaleString('es-AR')}
+          </p>
+          {restaurantName && (
+            <p style={{ fontSize: 14, opacity: 0.9, margin: '4px 0 0', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              {restaurantName}
+            </p>
+          )}
         </div>
+      </header>
+
+      <div className="max-w-2xl mx-auto px-4 space-y-4" style={{ paddingTop: 20 }}>
 
         {/* Dirección de entrega / retiro en local */}
         {fulfillmentMethod === 'delivery' ? (
@@ -628,8 +645,8 @@ export default function Checkout() {
         style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.10)', padding: '12px 16px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
       >
         <div className="max-w-2xl mx-auto">
-          <button type="button" onClick={handlePay} disabled={submitting || !paymentMethod || (paymentMethod === 'transfer' && !receipt)} className="btn-primary w-full flex items-center justify-between text-base py-4">
-            <span>{submitting ? 'Procesando...' : 'Pagar'}</span>
+          <button type="button" onClick={handlePay} disabled={submitting || !paymentMethod || (paymentMethod === 'transfer' && !receipt)} className="btn-primary w-full flex items-center justify-between text-base py-4 px-6">
+            <span>{submitting ? 'Procesando...' : 'Pagar pedido'}</span>
             <span className="font-extrabold">${totalVal.toLocaleString('es-AR')}</span>
           </button>
         </div>
