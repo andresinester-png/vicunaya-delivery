@@ -11,6 +11,7 @@
     color: #111;
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
+    overflow-x: hidden;
   }
   h1, h2, h3 { font-weight: 900; letter-spacing: -0.02em; }
 }

@@ -115,19 +115,21 @@ export default function Restaurant() {
 
   // ── Loading skeleton ───────────────────────────────────────────
   if (loading) return (
-    <div style={{ background: '#FFF8F8', minHeight: '100%' }}>
-      <div style={{ height: 280 }} className="skeleton" />
-      <div style={{ padding: '16px 16px 0', display: 'flex', gap: 8 }}>
-        {[88, 110, 80].map((w, i) => (
-          <div key={i} style={{ height: 36, width: w, borderRadius: 999 }} className="skeleton" />
-        ))}
+    <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}>
+      <div style={{ background: '#FFF8F8', minHeight: '100%' }}>
+        <div style={{ height: 280 }} className="skeleton" />
+        <div style={{ padding: '16px 16px 0', display: 'flex', gap: 8 }}>
+          {[88, 110, 80].map((w, i) => (
+            <div key={i} style={{ height: 36, width: w, borderRadius: 999 }} className="skeleton" />
+          ))}
+        </div>
+        <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {[...Array(4)].map((_, i) => (
+            <div key={i} style={{ height: 90, borderRadius: 20 }} className="skeleton" />
+          ))}
+        </div>
       </div>
-      <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {[...Array(4)].map((_, i) => (
-          <div key={i} style={{ height: 90, borderRadius: 20 }} className="skeleton" />
-        ))}
-      </div>
-    </div>
+    </motion.div>
   );
 
   if (!restaurant) return (
@@ -154,6 +156,7 @@ export default function Restaurant() {
     : [];
 
   return (
+    <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}>
     <div style={{ background: '#FFF8F8', minHeight: '100%' }}>
 
       {/* ──────────────────────────────────────────────────────────
@@ -542,5 +545,6 @@ export default function Restaurant() {
         )}
       </AnimatePresence>
     </div>
+    </motion.div>
   );
 }

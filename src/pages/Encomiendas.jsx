@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft, Clock, MapPin, Phone, Package,
   CheckCircle, X, ArrowRight, Send,
-  ThumbsUp, MessageSquare, Check, CheckCheck, Camera,
+  ThumbsUp, MessageSquare, Check, CheckCheck, Camera, Image,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
@@ -13,17 +13,14 @@ import { useAuth } from '../context/AuthContext.jsx';
 const EMPRESA_ID = '5c5ce5e7-25b8-4e53-be85-05af7a85a224';
 const COLOR      = '#D32F2F';
 
-const HORARIOS = [
-  { dia: 'Lunes a viernes', hora: '8:00 — 18:00', activo: true  },
-  { dia: 'Sábados',         hora: 'Consultar',     activo: false },
-  { dia: 'Domingos',        hora: 'Cerrado',        activo: false },
-];
-
-const BENEFICIOS = [
-  { icon: Package,     texto: 'Paquetes de hasta 20kg'          },
-  { icon: Clock,       texto: 'Entrega en el día (según hora)'  },
-  { icon: CheckCircle, texto: 'Seguimiento por WhatsApp'        },
-  { icon: MapPin,      texto: 'Retiro a domicilio disponible'   },
+const ALL_DAYS = [
+  { val: 'lunes',      label: 'Lunes'      },
+  { val: 'martes',     label: 'Martes'     },
+  { val: 'miercoles',  label: 'Miércoles'  },
+  { val: 'jueves',     label: 'Jueves'     },
+  { val: 'viernes',    label: 'Viernes'    },
+  { val: 'sabado',     label: 'Sábado'     },
+  { val: 'domingo',    label: 'Domingo'    },
 ];
 
 const PESOS = [
@@ -115,6 +112,7 @@ function SolicitudForm({ onClose, cfg }) {
   const [foto, setFoto]         = useState(null);
   const [fotoPreview, setFotoPreview] = useState(null);
   const fotoRef                 = useRef(null);
+  const galeriaRef              = useRef(null);
 
   useEffect(() => {
     if (profile) {
@@ -339,6 +337,8 @@ function SolicitudForm({ onClose, cfg }) {
               {/* Foto del paquete */}
               <div style={{ background: '#fff', borderRadius: 16, padding: 16 }}>
                 <Label>Foto del paquete (opcional)</Label>
+
+                {/* Input cámara */}
                 <input
                   ref={fotoRef}
                   type="file"
@@ -347,36 +347,79 @@ function SolicitudForm({ onClose, cfg }) {
                   style={{ display: 'none' }}
                   onChange={handleFotoChange}
                 />
+                {/* Input galería */}
+                <input
+                  ref={galeriaRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleFotoChange}
+                />
+
                 {fotoPreview ? (
-                  <div style={{ position: 'relative', display: 'inline-block' }}>
-                    <img
-                      src={fotoPreview}
-                      alt="Foto del paquete"
-                      style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 12, border: '2px solid #E5E7EB' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => { setFoto(null); setFotoPreview(null); }}
-                      style={{ position: 'absolute', top: -8, right: -8, background: '#DC2626', color: '#fff', border: 'none', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
-                    >
-                      <X size={12} />
-                    </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ position: 'relative', display: 'inline-block', flexShrink: 0 }}>
+                      <img
+                        src={fotoPreview}
+                        alt="Foto del paquete"
+                        style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12, border: '2px solid #E5E7EB', display: 'block' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => { setFoto(null); setFotoPreview(null); }}
+                        style={{ position: 'absolute', top: -8, right: -8, background: '#DC2626', color: '#fff', border: 'none', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <button
+                        type="button"
+                        onClick={() => fotoRef.current?.click()}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F3F4F6', color: '#374151', border: 'none', borderRadius: 9, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                      >
+                        <Camera size={13} /> Cambiar foto
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => galeriaRef.current?.click()}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F3F4F6', color: '#374151', border: 'none', borderRadius: 9, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                      >
+                        <Image size={13} /> Elegir otra
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => fotoRef.current?.click()}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      border: '2px dashed #E5E7EB', borderRadius: 12,
-                      padding: '12px 16px', background: '#F9FAFB',
-                      color: '#6B7280', fontSize: 13, fontWeight: 700,
-                      cursor: 'pointer', fontFamily: 'inherit', width: '100%',
-                    }}
-                  >
-                    <Camera size={16} color="#9CA3AF" />
-                    Adjuntar o sacar foto
-                  </button>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <button
+                      type="button"
+                      onClick={() => fotoRef.current?.click()}
+                      style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        border: '2px dashed #E5E7EB', borderRadius: 12,
+                        padding: '14px 8px', background: '#F9FAFB',
+                        color: '#6B7280', fontSize: 12, fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      <Camera size={20} color="#9CA3AF" />
+                      Sacar foto
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => galeriaRef.current?.click()}
+                      style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        border: '2px dashed #E5E7EB', borderRadius: 12,
+                        padding: '14px 8px', background: '#F9FAFB',
+                        color: '#6B7280', fontSize: 12, fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      <Image size={20} color="#9CA3AF" />
+                      Elegir de galería
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -685,6 +728,9 @@ function ChatClientModal({ encomienda, onClose, onRead }) {
   );
 }
 
+const ESTADOS_ACTIVOS   = ['pendiente', 'presupuestado', 'confirmado', 'en_camino'];
+const ESTADOS_HISTORIAL = ['entregado', 'cancelado'];
+
 function MisSolicitudes() {
   const { profile }                     = useAuth();
   const [items, setItems]               = useState([]);
@@ -694,6 +740,7 @@ function MisSolicitudes() {
   const [unreadCounts, setUnreadCounts] = useState({});
   const [confirmCancelEnc, setConfirmCancelEnc] = useState(null);
   const [cancelando, setCancelando]     = useState(false);
+  const [showHistorial, setShowHistorial] = useState(false);
   const openChatIdRef                   = useRef(null);
 
   const fetchUnreadCounts = async (ids) => {
@@ -816,14 +863,34 @@ function MisSolicitudes() {
     refrescarItems();
   };
 
+  const activos   = items.filter(e => ESTADOS_ACTIVOS.includes(e.estado));
+  const historial = items.filter(e => ESTADOS_HISTORIAL.includes(e.estado));
+  const visibles  = showHistorial ? historial : activos;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }}
       style={{ background: '#fff', borderRadius: 24, padding: '18px 20px', boxShadow: '0 4px 20px rgba(0,0,0,0.07)' }}
     >
-      <h2 style={{ fontSize: 16, fontWeight: 900, color: '#111', marginBottom: 14, letterSpacing: '-0.01em' }}>
-        Mis solicitudes
-      </h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 900, color: '#111', margin: 0, letterSpacing: '-0.01em' }}>
+          {showHistorial ? 'Historial' : 'Mis solicitudes'}
+        </h2>
+        {!loading && historial.length > 0 && (
+          <button
+            onClick={() => setShowHistorial(s => !s)}
+            style={{
+              background: showHistorial ? '#F3F4F6' : '#FFF0F0',
+              color: showHistorial ? '#374151' : COLOR,
+              border: 'none', borderRadius: 20, padding: '5px 12px',
+              fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'inherit',
+            }}
+          >
+            {showHistorial ? '← Activas' : 'Historial'}
+          </button>
+        )}
+      </div>
 
       {!profile?.telefono && (
         <p style={{ fontSize: 13, color: '#9CA3AF', textAlign: 'center', padding: '12px 0', lineHeight: 1.5 }}>
@@ -835,13 +902,19 @@ function MisSolicitudes() {
         <p style={{ fontSize: 13, color: '#9CA3AF', textAlign: 'center', padding: '12px 0' }}>Cargando...</p>
       )}
 
-      {profile?.telefono && !loading && items.length === 0 && (
+      {profile?.telefono && !loading && !showHistorial && activos.length === 0 && (
         <p style={{ fontSize: 13, color: '#9CA3AF', textAlign: 'center', padding: '12px 0' }}>
-          No tenés solicitudes aún.
+          {items.length === 0 ? 'No tenés solicitudes aún.' : 'No tenés solicitudes activas.'}
         </p>
       )}
 
-      {!loading && items.map(enc => {
+      {profile?.telefono && !loading && showHistorial && historial.length === 0 && (
+        <p style={{ fontSize: 13, color: '#9CA3AF', textAlign: 'center', padding: '12px 0' }}>
+          Sin historial de entregas.
+        </p>
+      )}
+
+      {!loading && visibles.map(enc => {
         const c = ESTADO_COLOR[enc.estado] || { bg: '#F3F4F6', text: '#374151' };
         const pres = enc.presupuestos_encomienda?.[0];
         const puedeResponder = enc.estado === 'presupuestado' && pres?.estado === 'pendiente';
@@ -1013,7 +1086,7 @@ export default function Encomiendas() {
   useEffect(() => {
     supabase
       .from('config_encomiendas')
-      .select('condiciones_deposito, condiciones_retiro, direccion_deposito')
+      .select('*')
       .eq('empresa_id', EMPRESA_ID)
       .maybeSingle()
       .then(({ data }) => setCfg(data));
@@ -1082,6 +1155,30 @@ export default function Encomiendas() {
           <ArrowRight size={18} />
         </motion.button>
 
+        {/* Quick info chips */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {[
+            { Icon: Package,     text: 'Hasta 20 kg'        },
+            { Icon: Clock,       text: 'Entrega en el día'  },
+            { Icon: CheckCircle, text: 'Seguimiento por WA' },
+            { Icon: MapPin,      text: 'Retiro disponible'  },
+          ].map(({ Icon, text }) => (
+            <div
+              key={text}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                background: '#fff', borderRadius: 20, padding: '7px 12px',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
+              }}
+            >
+              <Icon size={12} color={COLOR} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#374151', whiteSpace: 'nowrap' }}>
+                {text}
+              </span>
+            </div>
+          ))}
+        </div>
+
         {/* Mis solicitudes */}
         <MisSolicitudes />
 
@@ -1093,47 +1190,35 @@ export default function Encomiendas() {
           <h2 style={{ fontSize: 16, fontWeight: 900, color: '#111', marginBottom: 14, letterSpacing: '-0.01em' }}>
             Horarios de servicio
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {HORARIOS.map(h => (
-              <div key={h.dia} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 14, fontWeight: 600, color: h.activo ? '#111' : '#9CA3AF' }}>{h.dia}</span>
-                <span style={{
-                  fontSize: 13, fontWeight: 700,
-                  color: h.activo ? '#2E7D32' : '#9CA3AF',
-                  background: h.activo ? '#F0FDF4' : '#F9FAFB',
-                  padding: '3px 10px', borderRadius: 999,
-                }}>
-                  {h.hora}
-                </span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Beneficios */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          style={{ background: '#fff', borderRadius: 24, padding: '18px 20px', boxShadow: '0 4px 20px rgba(0,0,0,0.07)' }}
-        >
-          <h2 style={{ fontSize: 16, fontWeight: 900, color: '#111', marginBottom: 14, letterSpacing: '-0.01em' }}>
-            Por qué elegirnos
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            {BENEFICIOS.map(({ icon: Icon, texto }) => (
-              <div key={texto} style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
-                background: '#FFF8F8', borderRadius: 16, padding: '14px',
-              }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: '#EDE9FE', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Icon size={18} color="#7C3AED" strokeWidth={2} />
-                </div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#374151', lineHeight: 1.3 }}>{texto}</span>
-              </div>
-            ))}
-          </div>
+          {cfg?.dias_trabajo?.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {ALL_DAYS.map(d => {
+                const activo = cfg.dias_trabajo.includes(d.val);
+                const hora = activo
+                  ? (cfg.horario_recepcion_desde && cfg.horario_recepcion_hasta
+                      ? `${cfg.horario_recepcion_desde} — ${cfg.horario_recepcion_hasta}`
+                      : 'Abierto')
+                  : 'Cerrado';
+                return (
+                  <div key={d.val} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: activo ? '#111' : '#9CA3AF' }}>{d.label}</span>
+                    <span style={{
+                      fontSize: 13, fontWeight: 700,
+                      color: activo ? '#2E7D32' : '#9CA3AF',
+                      background: activo ? '#F0FDF4' : '#F9FAFB',
+                      padding: '3px 10px', borderRadius: 999,
+                    }}>
+                      {hora}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p style={{ fontSize: 13, color: '#9CA3AF', margin: 0 }}>
+              Horarios a confirmar — consultá por WhatsApp.
+            </p>
+          )}
         </motion.div>
 
         {/* Condiciones de servicio (desde config) */}
@@ -1186,10 +1271,14 @@ export default function Encomiendas() {
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[
-              { icon: MapPin, label: 'Dirección',     val: 'Av. San Martín 350, Vicuña Mackenna' },
-              { icon: Clock,  label: 'Salida diaria', val: '13:00 hs (lunes a viernes)'           },
-              { icon: Phone,  label: 'WhatsApp',      val: '+54 9 3571 000-000'                   },
-            ].map(({ icon: Icon, label, val }) => (
+              cfg?.direccion_deposito
+                ? { icon: MapPin, label: 'Depósito', val: cfg.direccion_deposito }
+                : null,
+              cfg?.horario_entrega_desde && cfg?.horario_entrega_hasta
+                ? { icon: Clock, label: 'Horario de entregas', val: `${cfg.horario_entrega_desde} — ${cfg.horario_entrega_hasta} hs` }
+                : null,
+              { icon: Phone, label: 'WhatsApp', val: '+54 9 3571 000-000' },
+            ].filter(Boolean).map(({ icon: Icon, label, val }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <div style={{
                   width: 34, height: 34, borderRadius: 10,
