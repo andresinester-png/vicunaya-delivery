@@ -127,8 +127,6 @@ export default function Home() {
     return list;
   }, [restaurants, search, catFilter, sortBy]);
 
-  const featured  = filtered[0] ?? null;
-  const gridItems = filtered.slice(1, 3);
 
   return (
     <div
@@ -306,14 +304,9 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <>
-            {featured && <FeaturedCard r={featured} navigate={navigate} />}
-            {gridItems.length > 0 && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
-                {gridItems.map(r => <GridCard key={r.id} r={r} navigate={navigate} />)}
-              </div>
-            )}
-          </>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {filtered.map(r => <FeaturedCard key={r.id} r={r} navigate={navigate} />)}
+          </div>
         )}
       </div>
 
@@ -551,44 +544,6 @@ function FeaturedCard({ r, navigate }) {
   );
 }
 
-function GridCard({ r, navigate }) {
-  const bg = catColor(r.category);
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => navigate(`/restaurant/${r.id}`)}
-      onKeyDown={e => e.key === 'Enter' && navigate(`/restaurant/${r.id}`)}
-      style={{ background: '#fff', borderRadius: 18, border: '1px solid #E9D5D8', padding: 10, cursor: 'pointer' }}
-    >
-      <div style={{
-        width: '100%', aspectRatio: '1 / 1', borderRadius: 14, marginBottom: 8, overflow: 'hidden',
-        background: `linear-gradient(145deg, ${bg}cc 0%, ${bg}88 100%)`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {r.image_url ? (
-          <img
-            src={r.image_url} alt={r.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: r.cover_position ?? '50% 50%' }}
-          />
-        ) : (
-          <span style={{ fontSize: 36, fontWeight: 900, color: 'rgba(255,255,255,0.4)' }}>
-            {r.name.charAt(0)}
-          </span>
-        )}
-      </div>
-      <div style={{ fontWeight: 700, fontSize: 13.5, color: '#241F1D', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {r.name}
-      </div>
-      <div style={{ fontSize: 11.5, color: '#8A8580', fontWeight: 500, marginTop: 2 }}>
-        {[
-          r.rating != null ? r.rating.toFixed(1) : null,
-          r.delivery_time != null ? `${r.delivery_time} min` : null,
-        ].filter(Boolean).join(' · ')}
-      </div>
-    </div>
-  );
-}
 
 function SkeletonSection() {
   return (

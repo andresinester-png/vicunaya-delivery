@@ -230,7 +230,7 @@ function NewRestaurantModal({ onClose, onSaved }) {
     try {
       const { data: restaurant, error: insertErr } = await supabase
         .from('restaurants')
-        .insert({ name: form.name.trim(), is_active: false })
+        .insert({ name: form.name.trim(), is_active: true })
         .select()
         .single();
 
