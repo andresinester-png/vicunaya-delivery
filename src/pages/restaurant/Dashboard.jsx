@@ -209,7 +209,15 @@ export default function Dashboard() {
 
   const { audioEnabled, muted, enableAudio, toggleMute } = usePendingOrdersAlert(pendingCount);
 
-  const filtered = orders.filter(o => filter === 'all' ? true : o.order_status === filter);
+  const STATUS_PRIORITY = { pending: 0, accepted: 1, preparing: 2, ready: 3, delivered: 4, rejected: 5 };
+  const filtered = orders
+    .filter(o => filter === 'all' ? true : o.order_status === filter)
+    .sort((a, b) => {
+      if (filter !== 'all') return new Date(b.created_at) - new Date(a.created_at);
+      const pd = (STATUS_PRIORITY[a.order_status] ?? 9) - (STATUS_PRIORITY[b.order_status] ?? 9);
+      if (pd !== 0) return pd;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
 
   // Horas pico
   const hourCounts = Array.from({ length: 24 }, () => 0);
