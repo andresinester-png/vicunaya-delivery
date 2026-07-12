@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Bell } from 'lucide-react';
@@ -33,6 +33,19 @@ export default function MainLayout() {
   const location = useLocation();
   const [cartOpen,  setCartOpen]  = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [shrunk,    setShrunk]    = useState(false);
+
+  // Encoge el header al scrollear hacia arriba
+  useEffect(() => {
+    const el = document.getElementById('main-scroll');
+    if (!el) return;
+    const onScroll = () => setShrunk(el.scrollTop > 50);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Resetea al navegar a otra tab
+  useEffect(() => { setShrunk(false); }, [location.pathname]);
 
   const count = useCartStore(s => s.count());
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
@@ -55,19 +68,35 @@ export default function MainLayout() {
         style={{ background: '#D32F2F', boxShadow: '0 2px 16px rgba(211,47,47,0.25)', paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         {/* Fila: Location + Brand | Bell */}
-        <div style={{ height: 56, display: 'flex', alignItems: 'center', padding: '0 18px', justifyContent: 'space-between' }}>
+        <div style={{
+          height: shrunk ? 44 : 56,
+          display: 'flex', alignItems: 'center',
+          padding: shrunk ? '0 14px' : '0 18px',
+          justifyContent: 'space-between',
+          transition: 'height 0.3s ease, padding 0.3s ease',
+          overflow: 'hidden',
+        }}>
 
           {/* Izquierda: MapPin + VicuñaYa + subtítulo */}
           <Link
             to="/"
-            style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', userSelect: 'none', flexShrink: 1, minWidth: 0 }}
+            style={{ display: 'flex', alignItems: 'center', gap: shrunk ? 7 : 10, textDecoration: 'none', userSelect: 'none', flexShrink: 1, minWidth: 0, transition: 'gap 0.3s ease' }}
           >
-            <MapPin size={22} color="white" strokeWidth={2.3} style={{ flexShrink: 0 }} />
+            <div style={{ transform: `scale(${shrunk ? 0.78 : 1})`, transition: 'transform 0.3s ease', transformOrigin: 'left center', flexShrink: 0, display: 'flex' }}>
+              <MapPin size={22} color="white" strokeWidth={2.3} />
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-              <span style={{ color: 'white', fontWeight: 800, fontSize: 15, lineHeight: 1.2, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <span style={{ color: 'white', fontWeight: 800, fontSize: shrunk ? 13 : 15, lineHeight: 1.2, fontFamily: "'Plus Jakarta Sans', sans-serif", transition: 'font-size 0.3s ease' }}>
                 VicuñaYa
               </span>
-              <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11.5, fontWeight: 500, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <span style={{
+                color: 'rgba(255,255,255,0.85)', fontSize: 11.5, fontWeight: 500,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                display: 'block', overflow: 'hidden',
+                maxHeight: shrunk ? 0 : 20,
+                opacity: shrunk ? 0 : 1,
+                transition: 'max-height 0.25s ease, opacity 0.2s ease',
+              }}>
                 Vicuña Mackenna, Córdoba
               </span>
             </div>
@@ -119,7 +148,13 @@ export default function MainLayout() {
 
         {/* Título de página – tabs que no son Inicio */}
         {title && (
-          <div style={{ padding: '0 16px 12px' }}>
+          <div style={{
+            padding: '0 16px 12px',
+            maxHeight: shrunk ? 0 : 48,
+            opacity: shrunk ? 0 : 1,
+            overflow: 'hidden',
+            transition: 'max-height 0.25s ease, opacity 0.2s ease',
+          }}>
             <h1 style={{ color: '#fff', fontWeight: 900, fontSize: 20, letterSpacing: '-0.02em', margin: 0 }}>
               {title}
             </h1>
