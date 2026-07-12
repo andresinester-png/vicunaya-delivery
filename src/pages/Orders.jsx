@@ -25,8 +25,15 @@ const TRIP_STATUS_LABEL = {
 const ACTIVE_STATUSES = ['pending', 'accepted', 'preparing', 'ready'];
 const PAST_STATUSES = ['delivered', 'rejected'];
 
-const ORDER_STEPS = ['Confirmado', 'Preparando', 'En camino', 'Entregado'];
 const ORDER_STEP_INDEX = { pending: 0, accepted: 0, preparing: 1, ready: 2, delivered: 3 };
+
+function getStatusForOrder(order) {
+  const base = ORDER_STATUS_LABEL[order.order_status] || ORDER_STATUS_LABEL.pending;
+  if (order.order_status === 'ready' && order.delivery_method === 'pickup') {
+    return { ...base, label: 'Listo para retirar' };
+  }
+  return base;
+}
 
 export default function Orders() {
   const phone = useProfileStore(s => s.phone);
@@ -40,7 +47,8 @@ export default function Orders() {
 
   useEffect(() => {
     if (!userId && !phone) { setLoading(false); return; }
-    const fetch = async () => {
+
+    const doFetch = async () => {
       let ordersQuery = supabase.from('orders').select('*, restaurants(name)').order('created_at', { ascending: false }).limit(30);
       if (userId) {
         ordersQuery = ordersQuery.eq('user_id', userId);
@@ -55,7 +63,24 @@ export default function Orders() {
       setTrips(t || []);
       setLoading(false);
     };
-    fetch();
+
+    doFetch();
+
+    if (userId) {
+      // Realtime para usuarios con sesión: escucha actualizaciones de sus pedidos
+      const channel = supabase
+        .channel(`client-orders-${userId}`)
+        .on('postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${userId}` },
+          ({ new: updated }) => setOrders(prev => prev.map(o => o.id === updated.id ? { ...updated, restaurants: o.restaurants } : o))
+        )
+        .subscribe();
+      return () => supabase.removeChannel(channel);
+    } else {
+      // Polling para invitados identificados por teléfono (sin sesión Supabase)
+      const interval = setInterval(doFetch, 15000);
+      return () => clearInterval(interval);
+    }
   }, [userId, phone]);
 
   if (!userId && !phone) return (
@@ -69,8 +94,9 @@ export default function Orders() {
 
   const activeOrder = orders.find(o => ACTIVE_STATUSES.includes(o.order_status));
   const pastOrders = orders.filter(o => PAST_STATUSES.includes(o.order_status));
-  const activeStatus = activeOrder && (ORDER_STATUS_LABEL[activeOrder.order_status] || ORDER_STATUS_LABEL.pending);
+  const activeStatus = activeOrder ? getStatusForOrder(activeOrder) : null;
   const activeStep = activeOrder ? (ORDER_STEP_INDEX[activeOrder.order_status] ?? 0) : 0;
+  const orderSteps = ['Confirmado', 'Preparando', activeOrder?.delivery_method === 'pickup' ? 'Listo para retirar' : 'En camino', 'Entregado'];
   const empty = tab === 'delivery' ? orders.length === 0 : trips.length === 0;
 
   return (
@@ -110,13 +136,13 @@ export default function Orders() {
                 {/* Barra de progreso */}
                 <div className="mt-4">
                   <div className="flex items-center">
-                    {ORDER_STEPS.map((_, idx) => (
+                    {orderSteps.map((_, idx) => (
                       <Fragment key={idx}>
                         <div
                           className="w-2.5 h-2.5 rounded-full shrink-0 transition-colors duration-300"
                           style={{ background: idx <= activeStep ? '#D32F2F' : '#E9D5D8' }}
                         />
-                        {idx < ORDER_STEPS.length - 1 && (
+                        {idx < orderSteps.length - 1 && (
                           <div
                             className="flex-1 h-1 rounded-full mx-1 transition-colors duration-300"
                             style={{ background: idx < activeStep ? '#D32F2F' : '#E9D5D8' }}
@@ -126,7 +152,7 @@ export default function Orders() {
                     ))}
                   </div>
                   <div className="flex justify-between mt-1.5">
-                    {ORDER_STEPS.map((label, idx) => (
+                    {orderSteps.map((label, idx) => (
                       <span key={label} className="text-[9px] font-bold" style={{ color: idx <= activeStep ? '#111' : '#9CA3AF' }}>
                         {label}
                       </span>
@@ -142,7 +168,7 @@ export default function Orders() {
               <h2 className="text-sm font-extrabold text-gray-900 mb-2 px-1">Pedidos anteriores</h2>
               <div className="space-y-2 grayscale">
                 {pastOrders.map(order => {
-                  const st = ORDER_STATUS_LABEL[order.order_status] || ORDER_STATUS_LABEL.pending;
+                  const st = getStatusForOrder(order);
                   return (
                     <Link key={order.id} to={`/pedido/${order.id}`} className="card flex items-center gap-3 p-3 hover:shadow-card-hover transition-all">
                       <div className="w-9 h-9 bg-primary-bg rounded-lg flex items-center justify-center shrink-0">

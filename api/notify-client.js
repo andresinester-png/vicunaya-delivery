@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 
   const { data: order, error } = await supabase
     .from('orders')
-    .select('client_push_subscription')
+    .select('client_push_subscription, delivery_method')
     .eq('id', orderId)
     .single();
 
@@ -42,7 +42,11 @@ export default async function handler(req, res) {
     process.env.VAPID_PRIVATE_KEY
   );
 
-  const { title, body } = MESSAGES[newStatus];
+  let { title, body } = MESSAGES[newStatus];
+  if (newStatus === 'ready' && order.delivery_method === 'pickup') {
+    title = 'Tu pedido está listo para retirar 🏪';
+    body  = 'Podés pasar a buscarlo al local.';
+  }
   const payload = JSON.stringify({
     title,
     body,

@@ -4,8 +4,6 @@ import { X, Share2, ChevronRight, StickyNote, Plus, Minus, MapPin } from 'lucide
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 
-const STEPS = ['Confirmado', 'Preparando', 'En camino', 'Entregado'];
-
 const STATUS_INFO = {
   pending:    { step: 0, label: 'En marcha: el local está preparando tu pedido' },
   accepted:   { step: 0, label: 'En marcha: el local está preparando tu pedido' },
@@ -191,7 +189,12 @@ export default function OrderTracking() {
     </div>
   );
 
-  const status = STATUS_INFO[order.order_status] || STATUS_INFO.pending;
+  const isPickup = order.delivery_method === 'pickup';
+  const STEPS = ['Confirmado', 'Preparando', isPickup ? 'Listo para retirar' : 'En camino', 'Entregado'];
+  const rawStatus = STATUS_INFO[order.order_status] || STATUS_INFO.pending;
+  const status = (rawStatus.step === 2 && isPickup)
+    ? { ...rawStatus, label: 'Tu pedido está listo para retirar 🏪' }
+    : rawStatus;
   const currentStep = status.step;
   const itemCount = (order.items || []).reduce((sum, i) => sum + (i.qty || 0), 0);
 

@@ -304,14 +304,9 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <>
-            <FeaturedCard r={filtered[0]} navigate={navigate} />
-            {filtered.length > 1 && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
-                {filtered.slice(1).map(r => <SmallCard key={r.id} r={r} navigate={navigate} />)}
-              </div>
-            )}
-          </>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {filtered.map(r => <FeaturedCard key={r.id} r={r} navigate={navigate} />)}
+          </div>
         )}
       </div>
 
@@ -471,7 +466,7 @@ function FeaturedCard({ r, navigate }) {
         boxShadow: '0 4px 14px rgba(0,0,0,0.06)', border: '1px solid #E9D5D8', cursor: 'pointer',
       }}
     >
-      <div style={{ position: 'relative', height: 170, borderRadius: '20px 20px 0 0', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', height: 140, borderRadius: '20px 20px 0 0', overflow: 'hidden' }}>
         {r.image_url ? (
           <img
             src={r.image_url} alt={r.name}
@@ -483,47 +478,47 @@ function FeaturedCard({ r, navigate }) {
             background: `linear-gradient(145deg, ${bg}cc 0%, ${bg}88 100%)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <span style={{ fontSize: 64, fontWeight: 900, color: 'rgba(255,255,255,0.4)', letterSpacing: '-0.04em' }}>
+            <span style={{ fontSize: 52, fontWeight: 900, color: 'rgba(255,255,255,0.4)', letterSpacing: '-0.04em' }}>
               {r.name.charAt(0)}
             </span>
           </div>
         )}
         <span style={{
-          position: 'absolute', top: 12, left: 12,
+          position: 'absolute', top: 10, left: 10,
           display: 'inline-flex', alignItems: 'center', gap: 5,
           background: isOpen ? '#2E7D32' : 'rgba(0,0,0,0.58)',
-          color: '#fff', padding: '5px 10px', borderRadius: 99,
-          fontSize: 10.5, fontWeight: 800, letterSpacing: '0.03em', textTransform: 'uppercase',
+          color: '#fff', padding: '4px 9px', borderRadius: 99,
+          fontSize: 10, fontWeight: 800, letterSpacing: '0.03em', textTransform: 'uppercase',
           boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
         }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', flexShrink: 0 }} />
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', flexShrink: 0 }} />
           {isOpen ? 'Abierto' : 'Cerrado'}
         </span>
         {/* Avatar logo — sobresale abajo */}
         <div style={{
-          position: 'absolute', bottom: -26, left: 14,
-          width: 60, height: 60, borderRadius: '50%',
+          position: 'absolute', bottom: -20, left: 14,
+          width: 44, height: 44, borderRadius: '50%',
           background: r.logo_url ? '#f9fafb' : '#241F1D',
-          border: '4px solid #fff', overflow: 'hidden',
+          border: '3px solid #fff', overflow: 'hidden',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 10px rgba(0,0,0,0.2)', zIndex: 1,
+          boxShadow: '0 3px 8px rgba(0,0,0,0.18)', zIndex: 1,
         }}>
           {r.logo_url
             ? <img src={r.logo_url} alt={r.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : <span style={{ color: '#fff', fontWeight: 800, fontSize: 9, textAlign: 'center', lineHeight: 1.15, padding: '0 4px', whiteSpace: 'pre-line' }}>
+            : <span style={{ color: '#fff', fontWeight: 800, fontSize: 7.5, textAlign: 'center', lineHeight: 1.15, padding: '0 3px', whiteSpace: 'pre-line' }}>
                 {r.name.split(' ').slice(0, 2).join('\n')}
               </span>
           }
         </div>
       </div>
 
-      <div style={{ padding: '34px 14px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderRadius: '0 0 20px 20px', overflow: 'hidden' }}>
+      <div style={{ padding: '26px 14px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderRadius: '0 0 20px 20px', overflow: 'hidden' }}>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 16, color: '#241F1D' }}>{r.name}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, fontSize: 12.5, color: '#8A8580', fontWeight: 500, flexWrap: 'wrap' }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: '#241F1D' }}>{r.name}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3, fontSize: 12, color: '#8A8580', fontWeight: 500, flexWrap: 'wrap' }}>
             {r.rating != null && (
               <span style={{ display: 'flex', alignItems: 'center', gap: 3, color: RED, fontWeight: 700 }}>
-                <Star size={12} fill={RED} color={RED} strokeWidth={0} />
+                <Star size={11} fill={RED} color={RED} strokeWidth={0} />
                 {r.rating.toFixed(1)}
               </span>
             )}
@@ -537,12 +532,12 @@ function FeaturedCard({ r, navigate }) {
         <button
           onClick={e => e.stopPropagation()}
           style={{
-            width: 38, height: 38, borderRadius: '50%', border: '1px solid #E9D5D8',
+            width: 34, height: 34, borderRadius: '50%', border: '1px solid #E9D5D8',
             background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0, cursor: 'pointer',
           }}
         >
-          <Heart size={17} color={RED} strokeWidth={2.2} />
+          <Heart size={15} color={RED} strokeWidth={2.2} />
         </button>
       </div>
     </div>
@@ -583,23 +578,16 @@ function SmallCard({ r, navigate }) {
 
 function SkeletonSection() {
   return (
-    <>
-      <div style={{ background: '#fff', borderRadius: 20, overflow: 'hidden', border: '1px solid #E9D5D8' }}>
-        <div style={{ height: 170 }} className="skeleton" />
-        <div style={{ padding: '34px 14px 14px' }}>
-          <div style={{ height: 16, width: '55%', borderRadius: 6, marginBottom: 8 }} className="skeleton" />
-          <div style={{ height: 12, width: '80%', borderRadius: 6 }} className="skeleton" />
-        </div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
-        {[0, 1].map(i => (
-          <div key={i} style={{ background: '#fff', borderRadius: 18, border: '1px solid #E9D5D8', padding: 10 }}>
-            <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 14, marginBottom: 8 }} className="skeleton" />
-            <div style={{ height: 14, width: '70%', borderRadius: 6, marginBottom: 4 }} className="skeleton" />
-            <div style={{ height: 11, width: '50%', borderRadius: 6 }} className="skeleton" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {[0, 1, 2].map(i => (
+        <div key={i} style={{ background: '#fff', borderRadius: 20, overflow: 'hidden', border: '1px solid #E9D5D8' }}>
+          <div style={{ height: 140 }} className="skeleton" />
+          <div style={{ padding: '26px 14px 12px' }}>
+            <div style={{ height: 15, width: '55%', borderRadius: 6, marginBottom: 7 }} className="skeleton" />
+            <div style={{ height: 11, width: '75%', borderRadius: 6 }} className="skeleton" />
           </div>
-        ))}
-      </div>
-    </>
+        </div>
+      ))}
+    </div>
   );
 }
