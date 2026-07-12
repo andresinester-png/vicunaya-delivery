@@ -4,7 +4,7 @@ import { useAuth } from './AuthContext.jsx';
 const VICUÑA_LAT  = -33.9088;
 const VICUÑA_LNG  = -64.3703;
 const MAX_KM      = 18;
-const ADMIN_EMAIL = 'admin@vicunaya.com';
+const BYPASS_EMAILS = ['admin@vicunaya.com', 'andresnester@hotmail.com'];
 
 function haversine(lat1, lng1, lat2, lng2) {
   const R    = 6371;
@@ -44,7 +44,7 @@ export function GeoProvider({ children }) {
 
   // Admin override — se aplica cuando la sesión está disponible
   useEffect(() => {
-    if (session?.user?.email === ADMIN_EMAIL) {
+    if (BYPASS_EMAILS.includes(session?.user?.email)) {
       setGeoState('inZone');
     }
   }, [session]);
