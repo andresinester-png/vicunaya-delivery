@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import { AuthProvider } from './context/AuthContext.jsx';
+import { GeoProvider } from './context/GeoContext.jsx';
+import GeoGate from './components/GeoGate.jsx';
 import UpdateBanner from './components/UpdateBanner.jsx';
 import SplashScreen from './components/SplashScreen.jsx';
 import CustomerGate from './components/CustomerGate.jsx';
@@ -73,6 +75,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <GeoProvider>
         <Toaster
           position="top-center"
           toastOptions={{
@@ -91,28 +94,35 @@ export default function App() {
           {/* ── Hub de servicios (pantalla de entrada) ── */}
           <Route path="/" element={<Hub />} />
 
-          {/* ── Tabs principales con bottom nav ── */}
+          {/* ── Tabs con bottom nav — no restringidas por geo ── */}
           <Route element={<MainLayout />}>
-            <Route path="/delivery" element={<Home />} />
-            {/* <Route path="/remises" element={<RemisesPage />} /> */}
-            <Route path="/pedidos" element={<Orders />} />
-            <Route path="/turnos"     element={<Turnos />}     />
-            <Route path="/mis-turnos" element={<MisTurnos />}  />
-            <Route path="/perfil"     element={<Profile />}    />
+            <Route path="/pedidos"     element={<Orders />}    />
+            <Route path="/perfil"      element={<Profile />}   />
             <Route path="/direcciones" element={<Addresses />} />
+
+            {/* Delivery y Turnos → geo-restringidas */}
+            <Route element={<GeoGate />}>
+              <Route path="/delivery"   element={<Home />}     />
+              <Route path="/turnos"     element={<Turnos />}   />
+              <Route path="/mis-turnos" element={<MisTurnos />} />
+            </Route>
           </Route>
 
-          {/* ── Secciones principales (sin bottom nav) ── */}
+          {/* ── Secciones geo-restringidas (sin bottom nav) ── */}
+          <Route element={<GeoGate />}>
+            <Route path="/restaurant/:id" element={<Restaurant />} />
+            <Route path="/carrito"        element={<Cart />}        />
+            <Route path="/checkout"       element={<Checkout />}    />
+            <Route path="/pedido/:id"     element={<OrderTracking />} />
+            <Route path="/turnos/:id"     element={<TurnoNegocio />} />
+          </Route>
+
+          {/* ── Siempre accesibles ── */}
           <Route path="/encomiendas" element={<Encomiendas />} />
-          <Route path="/anunciate" element={<Anunciate />} />
-          <Route path="/sorteo" element={<Sorteo />} />
-          <Route path="/banner/:id" element={<BannerDetail />} />
-          <Route path="/restaurant/:id" element={<Restaurant />} />
-          <Route path="/carrito" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/pedido/:id" element={<OrderTracking />} />
-          <Route path="/turnos/:id" element={<TurnoNegocio />} />
-          <Route path="/legal" element={<Legal />} />
+          <Route path="/anunciate"   element={<Anunciate />}   />
+          <Route path="/sorteo"      element={<Sorteo />}      />
+          <Route path="/banner/:id"  element={<BannerDetail />} />
+          <Route path="/legal"       element={<Legal />}       />
 
           {/* ── Flujo remises (sin bottom nav) — deshabilitado temporalmente ──
           <Route path="/remis/pedir" element={<RequestTrip />} />
@@ -174,6 +184,7 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </GeoProvider>
       </AuthProvider>
     </BrowserRouter>
   );
