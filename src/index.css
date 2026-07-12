@@ -5,9 +5,12 @@
 
 @layer base {
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body, #root {
+    background-color: #FFFFFF;
+    min-height: 100dvh;
+  }
   body {
     font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
-    background-color: #F8F8F8;
     color: #111;
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;

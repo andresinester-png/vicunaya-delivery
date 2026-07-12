@@ -216,6 +216,15 @@ export default function TurnoNegocio() {
     return () => clearTimeout(t);
   }, [success, navigate]);
 
+  // Dynamic status bar color while viewing this business
+  useEffect(() => {
+    if (!business) return;
+    const color = business.status_bar_color || business.background_color || '#D32F2F';
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', color);
+    return () => { if (meta) meta.setAttribute('content', '#D32F2F'); };
+  }, [business]);
+
   // ── Calendar computation ──────────────────────────────────────────────────
   const todayIso = toISODate(new Date());
   const nowMin   = new Date().getHours() * 60 + new Date().getMinutes();
@@ -412,8 +421,8 @@ export default function TurnoNegocio() {
   return (
     <div style={{ minHeight: '100dvh', background: business.background_color || '#FFFFFF', paddingBottom: 100 }}>
 
-      {/* Cover image header */}
-      <div style={{ position: 'relative', height: 220, overflow: 'hidden' }}>
+      {/* Cover image header — extends behind iOS status bar (black-translucent) */}
+      <div style={{ position: 'relative', height: 'calc(220px + env(safe-area-inset-top, 0px))', overflow: 'hidden' }}>
         {business.logo_url ? (
           <img
             src={business.logo_url}
@@ -439,11 +448,19 @@ export default function TurnoNegocio() {
           background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.18) 55%, rgba(0,0,0,0.32) 100%)',
         }} />
 
-        {/* Back button */}
+        {/* Status bar color strip — fills the safe area at the top so the bar shows this color */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0,
+          height: 'env(safe-area-inset-top, 0px)',
+          background: business.status_bar_color || business.background_color || '#D32F2F',
+          zIndex: 3,
+        }} />
+
+        {/* Back button — pushed below the status bar */}
         <button
           onClick={handleBack}
           style={{
-            position: 'absolute', top: 14, left: 14,
+            position: 'absolute', top: 'calc(14px + env(safe-area-inset-top, 0px))', left: 14,
             width: 36, height: 36, borderRadius: '50%',
             background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',

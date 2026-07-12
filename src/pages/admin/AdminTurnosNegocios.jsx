@@ -24,6 +24,14 @@ function parsePosition(str) {
   return { x: isNaN(x) ? 50 : x, y: isNaN(y) ? 50 : y };
 }
 
+function normalizeCategory(raw) {
+  if (!raw) return 'otro';
+  const byValue = CATEGORIES.find(c => c.value === raw);
+  if (byValue) return byValue.value;
+  const byLabel = CATEGORIES.find(c => c.label.toLowerCase() === raw.toLowerCase());
+  return byLabel ? byLabel.value : 'otro';
+}
+
 function slugify(name) {
   return name
     .toLowerCase()
@@ -31,6 +39,238 @@ function slugify(name) {
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+// ── Color picker helpers ──────────────────────────────────────────────────────
+function hsvToRgb(h, s, v) {
+  h = ((h % 360) + 360) % 360;
+  const c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c;
+  let r, g, b;
+  if (h < 60)       { r = c; g = x; b = 0; }
+  else if (h < 120) { r = x; g = c; b = 0; }
+  else if (h < 180) { r = 0; g = c; b = x; }
+  else if (h < 240) { r = 0; g = x; b = c; }
+  else if (h < 300) { r = x; g = 0; b = c; }
+  else              { r = c; g = 0; b = x; }
+  return [Math.round((r+m)*255), Math.round((g+m)*255), Math.round((b+m)*255)];
+}
+function rgbToHsv(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b), d = max - min;
+  let h = 0;
+  if (d) {
+    if (max === r)      h = ((g - b) / d % 6) * 60;
+    else if (max === g) h = ((b - r) / d + 2) * 60;
+    else                h = ((r - g) / d + 4) * 60;
+    if (h < 0) h += 360;
+  }
+  return [Math.round(h), max ? d / max : 0, max];
+}
+function cpHexToRgb(hex) {
+  const h = hex.replace('#', '');
+  return h.length === 3
+    ? [parseInt(h[0]+h[0],16), parseInt(h[1]+h[1],16), parseInt(h[2]+h[2],16)]
+    : [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+function cpRgbToHex(r, g, b) {
+  return '#' + [r,g,b].map(n => Math.max(0,Math.min(255,n)).toString(16).padStart(2,'0')).join('');
+}
+function hexToHsv(hex) {
+  try { return rgbToHsv(...cpHexToRgb(hex || '#FFFFFF')); }
+  catch { return [0, 0, 1]; }
+}
+
+function ColorPicker({ value, onChange, label, helpText, defaultColor = '#FFFFFF' }) {
+  const [hue, setHue]         = useState(() => hexToHsv(value)[0]);
+  const [sat, setSat]         = useState(() => hexToHsv(value)[1]);
+  const [val, setVal]         = useState(() => hexToHsv(value)[2]);
+  const [hexInput, setHexInput] = useState(() => (value || '#FFFFFF').toUpperCase());
+  const [open, setOpen]       = useState(false);
+
+  const hueR     = useRef(hue), satR = useRef(sat), valR = useRef(val);
+  const squareEl = useRef(null), hueEl = useRef(null), dragging = useRef(null);
+  const sqHandler  = useRef(null), hueHandler = useRef(null);
+
+  // Keep refs current so drag closures are always fresh
+  useEffect(() => { hueR.current = hue; }, [hue]);
+  useEffect(() => { satR.current = sat; }, [sat]);
+  useEffect(() => { valR.current = val; }, [val]);
+
+  // Sync from external value (e.g. parent resets the color)
+  useEffect(() => {
+    if (dragging.current) return;
+    const [nh, ns, nv] = hexToHsv(value);
+    setHue(nh); setSat(ns); setVal(nv);
+    hueR.current = nh; satR.current = ns; valR.current = nv;
+    setHexInput((value || '#FFFFFF').toUpperCase());
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Always-fresh handlers stored in refs to avoid stale closures in the drag effect
+  sqHandler.current = (cx, cy) => {
+    const rect = squareEl.current?.getBoundingClientRect();
+    if (!rect) return;
+    const ns = Math.max(0, Math.min(1, (cx - rect.left) / rect.width));
+    const nv = 1 - Math.max(0, Math.min(1, (cy - rect.top) / rect.height));
+    const hex = cpRgbToHex(...hsvToRgb(hueR.current, ns, nv));
+    setSat(ns); setVal(nv); satR.current = ns; valR.current = nv;
+    setHexInput(hex.toUpperCase());
+    onChange(hex);
+  };
+  hueHandler.current = (cx) => {
+    const rect = hueEl.current?.getBoundingClientRect();
+    if (!rect) return;
+    const nh = Math.round(Math.max(0, Math.min(360, (cx - rect.left) / rect.width * 360)));
+    const hex = cpRgbToHex(...hsvToRgb(nh, satR.current, valR.current));
+    setHue(nh); hueR.current = nh;
+    setHexInput(hex.toUpperCase());
+    onChange(hex);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const onMove = (e) => {
+      if (!dragging.current) return;
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      if (dragging.current === 'square') sqHandler.current?.(cx, cy);
+      if (dragging.current === 'hue')    hueHandler.current?.(cx);
+    };
+    const onUp = () => { dragging.current = null; };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+    };
+  }, [open]);
+
+  const handleHexInput = (e) => {
+    const raw = e.target.value.replace(/[^#0-9A-Fa-f]/g, '').toUpperCase();
+    setHexInput(raw);
+    const withHash = raw.startsWith('#') ? raw : '#' + raw;
+    if (/^#[0-9A-F]{6}$/i.test(withHash)) {
+      const [nh, ns, nv] = hexToHsv(withHash);
+      setHue(nh); setSat(ns); setVal(nv);
+      hueR.current = nh; satR.current = ns; valR.current = nv;
+      onChange(withHash);
+    }
+  };
+
+  const resetToDefault = () => {
+    const [nh, ns, nv] = hexToHsv(defaultColor);
+    setHue(nh); setSat(ns); setVal(nv);
+    hueR.current = nh; satR.current = ns; valR.current = nv;
+    setHexInput(defaultColor.toUpperCase());
+    onChange(defaultColor);
+  };
+
+  const hueColor = `hsl(${hue}, 100%, 50%)`;
+  const isDefault = (value || '').toLowerCase() === defaultColor.toLowerCase();
+
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+        {label}
+      </label>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: open ? 10 : 0 }}>
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          style={{
+            width: 40, height: 40, borderRadius: 10,
+            background: value || '#FFFFFF',
+            border: open ? '2px solid #D32F2F' : '2px solid #E5E7EB',
+            cursor: 'pointer', flexShrink: 0,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+            transition: 'border-color 0.15s',
+          }}
+        />
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#1F2937', margin: 0 }}>
+            {(value || '#FFFFFF').toUpperCase()}
+          </p>
+          {helpText && <p style={{ fontSize: 11, color: '#9CA3AF', margin: '2px 0 0' }}>{helpText}</p>}
+        </div>
+        {!isDefault && (
+          <button
+            type="button"
+            onClick={resetToDefault}
+            style={{ fontSize: 11, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 6, flexShrink: 0 }}
+          >
+            Resetear
+          </button>
+        )}
+      </div>
+
+      {open && (
+        <div style={{ background: '#1A1A1A', borderRadius: 14, padding: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          {/* Gradient square */}
+          <div
+            ref={squareEl}
+            style={{
+              position: 'relative', height: 160, borderRadius: 10, marginBottom: 12,
+              background: hueColor,
+              backgroundImage: 'linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent)',
+              cursor: 'crosshair', userSelect: 'none', touchAction: 'none',
+            }}
+            onMouseDown={e => { e.preventDefault(); dragging.current = 'square'; sqHandler.current?.(e.clientX, e.clientY); }}
+            onTouchStart={e => { dragging.current = 'square'; sqHandler.current?.(e.touches[0].clientX, e.touches[0].clientY); }}
+          >
+            <div style={{
+              position: 'absolute', left: `${sat * 100}%`, top: `${(1 - val) * 100}%`,
+              width: 16, height: 16, borderRadius: '50%',
+              border: '2px solid #fff',
+              boxShadow: '0 0 0 1.5px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.4)',
+              transform: 'translate(-50%, -50%)', pointerEvents: 'none',
+              background: value || '#FFFFFF',
+            }} />
+          </div>
+
+          {/* Hue strip */}
+          <div
+            ref={hueEl}
+            style={{
+              height: 16, borderRadius: 8, marginBottom: 12,
+              background: 'linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
+              cursor: 'pointer', position: 'relative', userSelect: 'none', touchAction: 'none',
+            }}
+            onMouseDown={e => { e.preventDefault(); dragging.current = 'hue'; hueHandler.current?.(e.clientX); }}
+            onTouchStart={e => { dragging.current = 'hue'; hueHandler.current?.(e.touches[0].clientX); }}
+          >
+            <div style={{
+              position: 'absolute', left: `${(hue / 360) * 100}%`, top: '50%',
+              width: 18, height: 18, borderRadius: '50%',
+              border: '2.5px solid #fff', boxShadow: '0 0 0 1px rgba(0,0,0,0.3)',
+              transform: 'translate(-50%, -50%)', pointerEvents: 'none',
+              background: hueColor,
+            }} />
+          </div>
+
+          {/* Preview swatch + hex input */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: value || '#FFFFFF', border: '1.5px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
+            <input
+              type="text"
+              value={hexInput}
+              onChange={handleHexInput}
+              maxLength={7}
+              spellCheck={false}
+              style={{
+                flex: 1, background: '#2C2C2C', border: '1px solid #3C3C3C',
+                borderRadius: 8, color: '#fff', fontSize: 13,
+                fontFamily: 'monospace', padding: '6px 10px', outline: 'none',
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function CoverPositionBox({
@@ -268,14 +508,15 @@ function NewBusinessModal({ onClose, onSaved }) {
 
 function EditBusinessModal({ business, onClose, onSaved }) {
   const [name,          setName]          = useState(business.name || '');
-  const [category,      setCategory]      = useState(business.category || 'otro');
+  const [category,      setCategory]      = useState(normalizeCategory(business.category));
   const [isActive,      setIsActive]      = useState(business.is_active ?? true);
   const [logoFile,      setLogoFile]      = useState(null);
   const [logoPreview,   setLogoPreview]   = useState(business.logo_url || null);
   const [logoDeleted,   setLogoDeleted]   = useState(false);
   const [coverPosition, setCoverPosition] = useState(parsePosition(business.cover_position));
-  const [bgColor,       setBgColor]       = useState(business.background_color || '#FFFFFF');
-  const [saving,        setSaving]        = useState(false);
+  const [bgColor,        setBgColor]        = useState(business.background_color || '#FFFFFF');
+  const [statusBarColor, setStatusBarColor] = useState(business.status_bar_color || '#D32F2F');
+  const [saving,         setSaving]         = useState(false);
   const logoRef = useRef(null);
 
   const handleSave = async () => {
@@ -288,6 +529,7 @@ function EditBusinessModal({ business, onClose, onSaved }) {
         is_active:        isActive,
         cover_position:   `${coverPosition.x}% ${coverPosition.y}%`,
         background_color: bgColor,
+        status_bar_color: statusBarColor,
       };
       if (logoDeleted) {
         updates.logo_url = null;
@@ -349,30 +591,21 @@ function EditBusinessModal({ business, onClose, onSaved }) {
               </select>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Color de fondo</label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={bgColor}
-                  onChange={e => setBgColor(e.target.value)}
-                  style={{ width: 44, height: 44, borderRadius: 8, border: '1px solid #E9D5D8', cursor: 'pointer', padding: 2, flexShrink: 0 }}
-                />
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', margin: 0 }}>{bgColor.toUpperCase()}</p>
-                  <p style={{ fontSize: 11, color: '#9CA3AF', margin: '2px 0 0' }}>Fondo de la pantalla de reserva</p>
-                </div>
-                {bgColor.toLowerCase() !== '#ffffff' && (
-                  <button
-                    type="button"
-                    onClick={() => setBgColor('#FFFFFF')}
-                    style={{ fontSize: 11, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}
-                  >
-                    Resetear
-                  </button>
-                )}
-              </div>
-            </div>
+            <ColorPicker
+              value={bgColor}
+              onChange={setBgColor}
+              label="Color de fondo"
+              helpText="Fondo de la pantalla de reserva"
+              defaultColor="#FFFFFF"
+            />
+
+            <ColorPicker
+              value={statusBarColor}
+              onChange={setStatusBarColor}
+              label="Color de barra superior"
+              helpText="Color que se ve en la barra de arriba del celular"
+              defaultColor="#D32F2F"
+            />
 
             <div className="flex items-center justify-between py-1">
               <div>

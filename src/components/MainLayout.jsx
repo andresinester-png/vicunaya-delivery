@@ -48,11 +48,11 @@ export default function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#FFF8F8' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#FFF8F8', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       {/* ── Header rojo ── */}
       <header
         className="sticky top-0 z-40 shrink-0"
-        style={{ background: '#D32F2F', boxShadow: '0 2px 16px rgba(211,47,47,0.25)' }}
+        style={{ background: '#D32F2F', boxShadow: '0 2px 16px rgba(211,47,47,0.25)', paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         {/* Fila: Location + Brand | Bell */}
         <div style={{ height: 56, display: 'flex', alignItems: 'center', padding: '0 18px', justifyContent: 'space-between' }}>
