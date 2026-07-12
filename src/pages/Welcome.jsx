@@ -74,7 +74,13 @@ export default function Welcome() {
           password: form.password,
         });
         if (error) throw error;
-        if (!data.session) toast.success('Revisá tu email para confirmar la cuenta');
+        if (!data.session) {
+          // SMTP no funciona — enviamos el email de confirmación via Resend (Edge Function)
+          await supabase.functions.invoke('send-email', {
+            body: { email: form.email.trim() },
+          });
+          toast.success('Revisá tu email para confirmar la cuenta');
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: form.email.trim(),
