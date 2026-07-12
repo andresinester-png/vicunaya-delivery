@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -31,8 +31,10 @@ const inputStyle = {
 
 export default function Welcome() {
   const { session, profileComplete, loading } = useAuth();
-  const [mode, setMode] = useState('welcome'); // 'welcome' | 'signup' | 'login'
+  const [mode, setMode] = useState('welcome'); // 'welcome' | 'signup' | 'login' | 'forgot'
   const [form, setForm] = useState({ email: '', password: '' });
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   if (loading) {
@@ -60,6 +62,23 @@ export default function Welcome() {
     if (error) toast.error('No se pudo conectar con Google');
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) { toast.error('Ingresá tu email'); return; }
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+        redirectTo: 'https://vicunaya-delivery.vercel.app/reset-password',
+      });
+      if (error) throw error;
+      setForgotSent(true);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleEmailAuth = async (e) => {
     e.preventDefault();
     if (!form.email.trim() || !form.password.trim()) {
@@ -76,10 +95,27 @@ export default function Welcome() {
         if (error) throw error;
         if (!data.session) {
           // SMTP no funciona — enviamos el email de confirmación via Resend (Edge Function)
-          await supabase.functions.invoke('send-email', {
+          const { data: fnData, error: fnError } = await supabase.functions.invoke('send-email', {
             body: { email: form.email.trim() },
           });
-          toast.success('Revisá tu email para confirmar la cuenta');
+
+          if (fnError) {
+            let errBody = null;
+            try {
+              errBody = typeof fnError.context?.json === 'function'
+                ? await fnError.context.json()
+                : null;
+            } catch (_) {}
+
+            if (errBody?.error === 'email_already_confirmed') {
+              toast.error(errBody.message ?? 'Ya tenés cuenta en VicuñaYa. Iniciá sesión con tu email y contraseña.');
+              setMode('login');
+              return;
+            }
+            toast.error('Error al enviar el email de confirmación. Intentá de nuevo.');
+          } else {
+            toast.success('Revisá tu email para confirmar la cuenta');
+          }
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -193,7 +229,6 @@ export default function Welcome() {
               transition={{ duration: 0.3 }}
               style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
             >
-              {/* Continuar con Google */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={handleGoogle}
@@ -208,7 +243,6 @@ export default function Welcome() {
                 <GoogleIcon /> Continuar con Google
               </motion.button>
 
-              {/* Registrarse con email — glass */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setMode('signup')}
@@ -226,7 +260,6 @@ export default function Welcome() {
                 Registrarse con email
               </motion.button>
 
-              {/* Ya tengo cuenta */}
               <button
                 type="button"
                 onClick={() => setMode('login')}
@@ -240,6 +273,101 @@ export default function Welcome() {
                 Ya tengo cuenta, iniciar sesión
               </button>
             </motion.div>
+
+          ) : mode === 'forgot' ? (
+            <motion.div
+              key="forgot"
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3 }}
+            >
+              {forgotSent ? (
+                /* Estado: email enviado */
+                <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                  <div style={{
+                    width: 56, height: 56, borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.12)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 16px',
+                  }}>
+                    <Mail size={26} color="#fff" strokeWidth={1.8} />
+                  </div>
+                  <h2 style={{ color: '#fff', fontWeight: 900, fontSize: 20, margin: '0 0 10px' }}>
+                    Email enviado
+                  </h2>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 1.6, margin: '0 0 24px' }}>
+                    Te enviamos un link para restablecer tu contraseña. Revisá tu bandeja de entrada.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setForgotSent(false); setMode('login'); }}
+                    style={{
+                      background: 'none', border: 'none',
+                      color: 'rgba(255,255,255,0.65)',
+                      fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    Volver a iniciar sesión
+                  </button>
+                </div>
+              ) : (
+                /* Estado: formulario de recuperación */
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+                    <button
+                      type="button"
+                      onClick={() => setMode('login')}
+                      style={{
+                        width: 36, height: 36, borderRadius: '50%',
+                        border: '1.5px solid rgba(255,255,255,0.25)',
+                        background: 'rgba(255,255,255,0.12)',
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', flexShrink: 0,
+                      }}
+                    >
+                      <ChevronLeft size={18} color="#fff" strokeWidth={2.5} />
+                    </button>
+                    <h2 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>
+                      Recuperar contraseña
+                    </h2>
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, margin: '0 0 16px' }}>
+                    Ingresá tu email y te enviamos un link para restablecer tu contraseña.
+                  </p>
+                  <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <input
+                      type="email"
+                      required
+                      value={forgotEmail}
+                      onChange={e => setForgotEmail(e.target.value)}
+                      placeholder="Email"
+                      className="wl-input"
+                      style={inputStyle}
+                      autoCapitalize="none"
+                    />
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      type="submit"
+                      disabled={submitting}
+                      style={{
+                        background: '#D32F2F', color: '#fff', border: 'none', borderRadius: 16,
+                        padding: '16px 20px', fontSize: 15, fontWeight: 800,
+                        cursor: submitting ? 'default' : 'pointer',
+                        opacity: submitting ? 0.7 : 1,
+                        marginTop: 4,
+                        boxShadow: '0 6px 24px rgba(211,47,47,0.45)',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {submitting ? 'Enviando...' : 'Enviar link'}
+                    </motion.button>
+                  </form>
+                </>
+              )}
+            </motion.div>
+
           ) : (
             <motion.div
               key="form"
@@ -307,6 +435,23 @@ export default function Welcome() {
                 </motion.button>
               </form>
 
+              {/* Link "Olvidé mi contraseña" — solo en login */}
+              {mode === 'login' && (
+                <button
+                  type="button"
+                  onClick={() => { setForgotEmail(form.email); setMode('forgot'); }}
+                  style={{
+                    background: 'none', border: 'none',
+                    color: 'rgba(255,255,255,0.5)',
+                    fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    padding: '14px 0 0', width: '100%',
+                    textAlign: 'center', fontFamily: 'inherit',
+                  }}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
@@ -314,7 +459,7 @@ export default function Welcome() {
                   background: 'none', border: 'none',
                   color: 'rgba(255,255,255,0.65)',
                   fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                  padding: '16px 0 0', width: '100%',
+                  padding: mode === 'login' ? '8px 0 0' : '16px 0 0', width: '100%',
                   textAlign: 'center', fontFamily: 'inherit',
                 }}
               >

@@ -67,6 +67,7 @@ import TurnosPanelMiNegocio from './pages/turnos-panel/MiNegocio.jsx';
 // import DriverDashboard from './pages/driver/DriverDashboard.jsx';
 import GoogleCallback from './pages/GoogleCallback.jsx';
 import Legal from './pages/Legal.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 
 export default function App() {
   return (
@@ -169,6 +170,7 @@ export default function App() {
 
         {/* ── OAuth callback ── */}
         <Route path="/auth/callback" element={<GoogleCallback />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

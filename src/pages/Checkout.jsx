@@ -228,6 +228,10 @@ export default function Checkout() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [successOrderId, setSuccessOrderId] = useState(null);
 
+  // Modo de entrega — puede cambiarse localmente sin tocar el store
+  const [localFulfillment, setLocalFulfillment] = useState(fulfillmentMethod);
+  const [fulfillmentSheetOpen, setFulfillmentSheetOpen] = useState(false);
+
   // Address state (sólo relevante para delivery)
   const [address, setAddress] = useState('');
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -348,7 +352,7 @@ export default function Checkout() {
       toast.error('Subí el comprobante de transferencia para continuar');
       return;
     }
-    if (fulfillmentMethod === 'delivery' && !address.trim()) {
+    if (localFulfillment === 'delivery' && !address.trim()) {
       toast.error('Ingresá la dirección de entrega');
       return;
     }
@@ -369,8 +373,8 @@ export default function Checkout() {
         user_id: session?.user?.id || null,
         customer_name: customerName,
         customer_phone: effectivePhone,
-        customer_address: fulfillmentMethod === 'delivery' ? address.trim() : 'Retira en el local',
-        delivery_method: fulfillmentMethod,
+        customer_address: localFulfillment === 'delivery' ? address.trim() : 'Retira en el local',
+        delivery_method: localFulfillment,
         items: orderItems,
         subtotal: totalVal,
         total: totalVal,
@@ -430,7 +434,7 @@ export default function Checkout() {
       <div className="max-w-2xl mx-auto px-4 space-y-4" style={{ paddingTop: 20 }}>
 
         {/* Dirección de entrega / retiro en local */}
-        {fulfillmentMethod === 'delivery' ? (
+        {localFulfillment === 'delivery' ? (
           <div className="card p-4 flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-lg">📍</div>
             <div className="flex-1 min-w-0">
@@ -451,17 +455,24 @@ export default function Checkout() {
           </div>
         )}
 
-        {/* Modo de envío */}
+        {/* Modo de entrega */}
         <div className="card p-4 flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-lg">
-            {fulfillmentMethod === 'delivery' ? '🛵' : '🏪'}
+            {localFulfillment === 'delivery' ? '🛵' : '🏪'}
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-bold text-sm">Modo de entrega</p>
             <p className="text-xs text-gray-500 mt-0.5">
-              {fulfillmentMethod === 'delivery' ? 'Delivery' : 'Retirar en el local'}
+              {localFulfillment === 'delivery' ? 'Delivery' : 'Retirar en el local'}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setFulfillmentSheetOpen(true)}
+            className="shrink-0 text-sm font-bold text-primary"
+          >
+            Cambiar
+          </button>
         </div>
 
         {/* Método de pago */}
@@ -698,6 +709,63 @@ export default function Checkout() {
           onChangeNewAddrForm={setNewAddrForm}
           onSaveNewAddress={saveNewAddress}
         />
+      )}
+
+      {/* Bottom sheet — Modo de entrega */}
+      {fulfillmentSheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setFulfillmentSheetOpen(false)} />
+          <div className="relative w-full max-w-lg rounded-t-2xl bg-white">
+            <div className="flex items-center justify-between border-b border-gray-100 p-4">
+              <h3 className="font-bold text-base">Modo de entrega</h3>
+              <button
+                type="button"
+                onClick={() => setFulfillmentSheetOpen(false)}
+                className="rounded-full p-1 hover:bg-gray-100 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <button
+                type="button"
+                onClick={() => { setLocalFulfillment('delivery'); setFulfillmentSheetOpen(false); }}
+                className="flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left transition-colors"
+                style={{
+                  borderColor: localFulfillment === 'delivery' ? '#D32F2F' : '#E5E7EB',
+                  background: localFulfillment === 'delivery' ? '#FFF8F8' : '#fff',
+                }}
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-xl">🛵</div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm">Delivery</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Te lo llevamos a tu domicilio</p>
+                </div>
+                {localFulfillment === 'delivery' && <CheckCircle size={18} className="text-primary shrink-0" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setLocalFulfillment('pickup'); setFulfillmentSheetOpen(false); }}
+                className="flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left transition-colors"
+                style={{
+                  borderColor: localFulfillment === 'pickup' ? '#D32F2F' : '#E5E7EB',
+                  background: localFulfillment === 'pickup' ? '#FFF8F8' : '#fff',
+                }}
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-xl">🏪</div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm">Retiro en el local</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Retirás vos mismo en el negocio</p>
+                </div>
+                {localFulfillment === 'pickup' && <CheckCircle size={18} className="text-primary shrink-0" />}
+              </button>
+            </div>
+
+            <div className="h-4" />
+          </div>
+        </div>
       )}
     </div>
   );
