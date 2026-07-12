@@ -29,6 +29,16 @@ function timeToMin(t) { const [h, m] = String(t).split(':').map(Number); return 
 function minToTime(min) { return `${pad(Math.floor(min / 60))}:${pad(min % 60)}:00`; }
 function fmtTime(t) { return t ? t.slice(0, 5) : ''; }
 
+function getContrastColor(hex) {
+  if (!hex || hex.length < 4) return '#1A1A1A';
+  const h = hex.replace('#', '');
+  const r = parseInt(h.length === 3 ? h[0]+h[0] : h.substring(0,2), 16) / 255;
+  const g = parseInt(h.length === 3 ? h[1]+h[1] : h.substring(2,4), 16) / 255;
+  const b = parseInt(h.length === 3 ? h[2]+h[2] : h.substring(4,6), 16) / 255;
+  const l = (Math.max(r,g,b) + Math.min(r,g,b)) / 2;
+  return l > 0.5 ? '#1A1A1A' : '#FFFFFF';
+}
+
 function getMondayOf(date) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -378,6 +388,21 @@ export default function TurnoNegocio() {
   }
 
   const catInfo = CATEGORY_INFO[business.category] || CATEGORY_INFO.otro;
+
+  const GLASS = {
+    background: 'rgba(255,255,255,0.15)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255,255,255,0.3)',
+    borderRadius: 16,
+    boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+  };
+
+  const textColor  = getContrastColor(business.background_color || '#FFFFFF');
+  const isLight    = textColor === '#1A1A1A';
+  const mutedColor = isLight ? '#6B7280' : 'rgba(255,255,255,0.55)';
+  const dimColor   = isLight ? '#E9D5D8' : 'rgba(255,255,255,0.2)';
+
   const visibleLabels  = professionals.length === 1
     ? STEP_LABELS.filter(l => l !== 'Profesional')
     : STEP_LABELS;
@@ -385,47 +410,102 @@ export default function TurnoNegocio() {
 
   // ── Main render ───────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen" style={{ background: '#F9FAFB', paddingBottom: 100 }}>
-      <RedHeader title={business.name} onBack={handleBack} />
+    <div style={{ minHeight: '100dvh', background: business.background_color || '#FFFFFF', paddingBottom: 100 }}>
 
-      <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+      {/* Cover image header */}
+      <div style={{ position: 'relative', height: 220, overflow: 'hidden' }}>
+        {business.logo_url ? (
+          <img
+            src={business.logo_url}
+            alt={business.name}
+            style={{
+              width: '100%', height: '100%', objectFit: 'cover',
+              objectPosition: business.cover_position || '50% 50%',
+            }}
+          />
+        ) : (
+          <div style={{
+            width: '100%', height: '100%',
+            background: `linear-gradient(145deg, ${catInfo.color}cc 0%, ${catInfo.color}66 100%)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ fontSize: 64, opacity: 0.35 }}>{catInfo.emoji}</span>
+          </div>
+        )}
 
-        {/* Business info */}
-        <div className="card p-4 flex items-center gap-3">
-          <div
-            className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 overflow-hidden"
-            style={{ background: catInfo.bg }}
-          >
-            {business.logo_url
-              ? <img src={business.logo_url} alt={business.name} className="w-full h-full object-cover" />
-              : catInfo.emoji}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-sm truncate">{business.name}</p>
-            {business.address && (
-              <p className="text-xs text-gray-500 truncate mt-0.5 flex items-center gap-1">
-                <MapPin size={11} /> {business.address}
-              </p>
-            )}
-          </div>
-          <span className="badge text-xs shrink-0" style={{ background: catInfo.bg, color: catInfo.color }}>
-            {catInfo.label}
-          </span>
+        {/* Gradient overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.18) 55%, rgba(0,0,0,0.32) 100%)',
+        }} />
+
+        {/* Back button */}
+        <button
+          onClick={handleBack}
+          style={{
+            position: 'absolute', top: 14, left: 14,
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <ChevronLeft size={20} color="#fff" />
+        </button>
+
+        {/* Business info at bottom of header */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 16px 16px' }}>
+          <p style={{ margin: '0 0 4px' }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              color: '#fff', padding: '3px 10px', borderRadius: 99,
+              fontSize: 11, fontWeight: 700,
+              border: '1px solid rgba(255,255,255,0.22)',
+            }}>
+              {catInfo.emoji} {catInfo.label}
+            </span>
+          </p>
+          <h1 style={{
+            color: '#fff', fontWeight: 800, fontSize: 22, margin: 0,
+            lineHeight: 1.2, textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+          }}>
+            {business.name}
+          </h1>
+          {business.address && (
+            <p style={{
+              color: 'rgba(255,255,255,0.8)', fontSize: 12, margin: '4px 0 0',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              <MapPin size={11} /> {business.address}
+            </p>
+          )}
         </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+        {business.description && (
+          <p style={{ color: mutedColor, fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+            {business.description}
+          </p>
+        )}
 
         {/* Step indicator */}
-        <div className="card p-4">
+        <div className="card p-4" style={GLASS}>
           <div className="flex items-center">
             {visibleLabels.map((_, idx) => (
               <Fragment key={idx}>
                 <div
                   className="w-2.5 h-2.5 rounded-full shrink-0 transition-colors duration-300"
-                  style={{ background: idx <= indicatorStep - 1 ? '#D32F2F' : '#E9D5D8' }}
+                  style={{ background: idx <= indicatorStep - 1 ? '#D32F2F' : dimColor }}
                 />
                 {idx < visibleLabels.length - 1 && (
                   <div
                     className="flex-1 h-1 rounded-full mx-1 transition-colors duration-300"
-                    style={{ background: idx < indicatorStep - 1 ? '#D32F2F' : '#E9D5D8' }}
+                    style={{ background: idx < indicatorStep - 1 ? '#D32F2F' : dimColor }}
                   />
                 )}
               </Fragment>
@@ -433,7 +513,7 @@ export default function TurnoNegocio() {
           </div>
           <div className="flex justify-between mt-1.5">
             {visibleLabels.map((label, idx) => (
-              <span key={label} className="text-[9px] font-bold" style={{ color: idx <= indicatorStep - 1 ? '#111' : '#9CA3AF' }}>
+              <span key={label} className="text-[9px] font-bold" style={{ color: idx <= indicatorStep - 1 ? textColor : mutedColor }}>
                 {label}
               </span>
             ))}
@@ -453,10 +533,10 @@ export default function TurnoNegocio() {
 
             {/* Step 1: Servicio */}
             {step === 1 && (
-              <div className="card p-5 space-y-3">
-                <h2 className="font-bold text-base">Elegí el servicio</h2>
+              <div className="card p-5 space-y-3" style={GLASS}>
+                <h2 className="font-bold text-base" style={{ color: textColor }}>Elegí el servicio</h2>
                 {services.length === 0 ? (
-                  <p className="text-sm text-gray-400">Este negocio no tiene servicios configurados todavía.</p>
+                  <p className="text-sm" style={{ color: mutedColor }}>Este negocio no tiene servicios configurados todavía.</p>
                 ) : services.map(s => {
                   const active = selectedService?.id === s.id;
                   return (
@@ -481,10 +561,10 @@ export default function TurnoNegocio() {
 
             {/* Step 2: Profesional */}
             {step === 2 && (
-              <div className="card p-5 space-y-3">
-                <h2 className="font-bold text-base">Elegí el profesional</h2>
+              <div className="card p-5 space-y-3" style={GLASS}>
+                <h2 className="font-bold text-base" style={{ color: textColor }}>Elegí el profesional</h2>
                 {professionals.length === 0 ? (
-                  <p className="text-sm text-gray-400">No hay profesionales disponibles.</p>
+                  <p className="text-sm" style={{ color: mutedColor }}>No hay profesionales disponibles.</p>
                 ) : professionals.map(prof => {
                   const active = selectedProfessional?.id === prof.id;
                   return (
@@ -509,11 +589,11 @@ export default function TurnoNegocio() {
               <div className="space-y-3">
 
                 {/* Week calendar card */}
-                <div className="card p-4 space-y-3">
+                <div className="card p-4 space-y-3" style={GLASS}>
 
                   {/* Month label - tracks selected day */}
                   {selectedDay && (
-                    <p className="text-sm font-bold text-gray-800 capitalize">
+                    <p className="text-sm font-bold capitalize" style={{ color: textColor }}>
                       {selectedDay.date.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}
                     </p>
                   )}
@@ -541,7 +621,7 @@ export default function TurnoNegocio() {
                           style={{
                             minWidth: 44,
                             background: isSelected ? '#111' : 'transparent',
-                            color: isSelected ? '#fff' : isDisabled ? '#D1D5DB' : '#374151',
+                            color: isSelected ? '#fff' : isDisabled ? dimColor : textColor,
                             cursor: isDisabled ? 'not-allowed' : 'pointer',
                           }}
                         >
@@ -558,13 +638,13 @@ export default function TurnoNegocio() {
                 </div>
 
                 {/* Slot grid card */}
-                <div className="card p-5 space-y-4">
+                <div className="card p-5 space-y-4" style={GLASS}>
                   {selectedDay ? (
                     <>
-                      <p className="text-sm font-semibold text-gray-800 capitalize">
+                      <p className="text-sm font-semibold capitalize" style={{ color: textColor }}>
                         {selectedDay.date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
                         {selectedProfessional && professionals.length > 1 && (
-                          <span className="font-normal text-gray-400"> · {selectedProfessional.name}</span>
+                          <span className="font-normal" style={{ color: mutedColor }}> · {selectedProfessional.name}</span>
                         )}
                       </p>
 
@@ -573,7 +653,7 @@ export default function TurnoNegocio() {
                           <div className="w-5 h-5 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
                         </div>
                       ) : calendarSlots.length === 0 ? (
-                        <p className="text-sm text-gray-400 py-4 text-center">
+                        <p className="text-sm py-4 text-center" style={{ color: mutedColor }}>
                           No hay horarios para este día. Elegí otro día.
                         </p>
                       ) : (
@@ -616,20 +696,20 @@ export default function TurnoNegocio() {
 
                       {/* Legend */}
                       {calendarSlots.length > 0 && (
-                        <div className="flex items-center gap-4 pt-1 border-t border-gray-100 flex-wrap">
+                        <div className="flex items-center gap-4 pt-1 flex-wrap" style={{ borderTop: `1px solid ${dimColor}` }}>
                           <div className="flex items-center gap-1.5">
                             <div className="w-3 h-3 rounded" style={{ background: '#bbf7d0', border: '1px solid #86efac' }} />
-                            <span className="text-xs text-gray-400">Disponible</span>
+                            <span className="text-xs" style={{ color: mutedColor }}>Disponible</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <div className="w-3 h-3 rounded" style={{ background: '#fee2e2', border: '1px solid #fecaca' }} />
-                            <span className="text-xs text-gray-400">Reservado</span>
+                            <span className="text-xs" style={{ color: mutedColor }}>Reservado</span>
                           </div>
                         </div>
                       )}
                     </>
                   ) : (
-                    <p className="text-sm text-gray-400 text-center py-6">
+                    <p className="text-sm text-center py-6" style={{ color: mutedColor }}>
                       Seleccioná un día para ver los horarios disponibles
                     </p>
                   )}
@@ -641,10 +721,10 @@ export default function TurnoNegocio() {
             {step === 4 && (
               <>
                 {!session ? (
-                  <div className="card p-5 space-y-4">
+                  <div className="card p-5 space-y-4" style={GLASS}>
                     <div>
-                      <h2 className="font-bold text-base">Iniciá sesión para confirmar</h2>
-                      <p className="text-sm text-gray-500 mt-1">Guardamos tu turno en tu cuenta y te avisamos 2hs antes.</p>
+                      <h2 className="font-bold text-base" style={{ color: textColor }}>Iniciá sesión para confirmar</h2>
+                      <p className="text-sm mt-1" style={{ color: mutedColor }}>Guardamos tu turno en tu cuenta y te avisamos 2hs antes.</p>
                     </div>
                     {loginMode !== 'email' ? (
                       <div className="space-y-3">
@@ -670,7 +750,7 @@ export default function TurnoNegocio() {
                         <button type="submit" disabled={loginSubmitting} className="btn-primary w-full">
                           {loginSubmitting ? 'Un momento...' : 'Iniciar sesión'}
                         </button>
-                        <button type="button" onClick={() => setLoginMode(null)} className="w-full py-1 text-sm font-bold text-gray-400 text-center">
+                        <button type="button" onClick={() => setLoginMode(null)} className="w-full py-1 text-sm font-bold text-center" style={{ color: mutedColor }}>
                           Volver
                         </button>
                       </form>
@@ -678,24 +758,24 @@ export default function TurnoNegocio() {
                   </div>
                 ) : (
                   <>
-                    <div className="card p-5 space-y-3">
-                      <h2 className="font-bold text-base">Tus datos</h2>
+                    <div className="card p-5 space-y-3" style={GLASS}>
+                      <h2 className="font-bold text-base" style={{ color: textColor }}>Tus datos</h2>
                       <div>
-                        <label className="text-xs font-medium text-gray-600 mb-1 block">Tu nombre</label>
+                        <label className="text-xs font-medium mb-1 block" style={{ color: mutedColor }}>Tu nombre</label>
                         <input
                           value={form.name} placeholder="Juan García" className="input"
                           onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-gray-600 mb-1 block">Teléfono</label>
+                        <label className="text-xs font-medium mb-1 block" style={{ color: mutedColor }}>Teléfono</label>
                         <input
                           value={form.phone} placeholder="3571-123456" className="input"
                           onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-gray-600 mb-1 block">Notas (opcional)</label>
+                        <label className="text-xs font-medium mb-1 block" style={{ color: mutedColor }}>Notas (opcional)</label>
                         <input
                           value={form.notes} placeholder="Algo que quieras avisar..." className="input"
                           onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
@@ -703,36 +783,36 @@ export default function TurnoNegocio() {
                       </div>
                     </div>
 
-                    <div className="card p-5">
-                      <h2 className="font-bold text-base mb-3">Resumen</h2>
+                    <div className="card p-5" style={GLASS}>
+                      <h2 className="font-bold text-base mb-3" style={{ color: textColor }}>Resumen</h2>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Negocio</span>
-                          <span className="font-semibold text-right">{business.name}</span>
+                          <span style={{ color: mutedColor }}>Negocio</span>
+                          <span className="font-semibold text-right" style={{ color: textColor }}>{business.name}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Servicio</span>
-                          <span className="font-semibold text-right">{selectedService?.name}</span>
+                          <span style={{ color: mutedColor }}>Servicio</span>
+                          <span className="font-semibold text-right" style={{ color: textColor }}>{selectedService?.name}</span>
                         </div>
                         {selectedProfessional && (
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Profesional</span>
-                            <span className="font-semibold text-right">{selectedProfessional.name}</span>
+                            <span style={{ color: mutedColor }}>Profesional</span>
+                            <span className="font-semibold text-right" style={{ color: textColor }}>{selectedProfessional.name}</span>
                           </div>
                         )}
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Día</span>
-                          <span className="font-semibold text-right capitalize">
+                          <span style={{ color: mutedColor }}>Día</span>
+                          <span className="font-semibold text-right capitalize" style={{ color: textColor }}>
                             {selectedDay?.date.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Horario</span>
-                          <span className="font-semibold text-right">{fmtTime(selectedTime)}</span>
+                          <span style={{ color: mutedColor }}>Horario</span>
+                          <span className="font-semibold text-right" style={{ color: textColor }}>{fmtTime(selectedTime)}</span>
                         </div>
                         {selectedService?.price != null && (
-                          <div className="border-t border-neutral-100 mt-2 pt-2 flex justify-between font-bold text-base">
-                            <span>Precio</span>
+                          <div className="mt-2 pt-2 flex justify-between font-bold text-base" style={{ borderTop: `1px solid ${dimColor}` }}>
+                            <span style={{ color: textColor }}>Precio</span>
                             <span className="text-primary">${Number(selectedService.price).toLocaleString('es-AR')}</span>
                           </div>
                         )}

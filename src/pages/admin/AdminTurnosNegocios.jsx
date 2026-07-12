@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
-import { Calendar, Pencil, Upload, X, Loader2, Check, ToggleLeft, ToggleRight, Image, Plus, Key, ShieldCheck } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { Calendar, Pencil, Upload, X, Loader2, Check, ToggleLeft, ToggleRight, Image, Plus, Key, ShieldCheck, Move, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase.js';
 import { CreateAccessModal, ResetPasswordModal, generatePassword, PasswordRow, CredentialsBox } from '../../components/OwnerAccessModal.jsx';
@@ -11,11 +11,18 @@ const CATEGORIES = [
   { value: 'estetica',    label: 'Estética'     },
   { value: 'taller',      label: 'Taller'       },
   { value: 'veterinaria', label: 'Veterinaria'  },
-  { value: 'lavadero',    label: 'Lavadero'     },
+  { value: 'medico',      label: 'Médico'       },
+  { value: 'odontologia', label: 'Odontología'  },
+  { value: 'gimnasio',    label: 'Gimnasio'     },
   { value: 'otro',        label: 'Otro'         },
 ];
 
 const CAT_LABELS = Object.fromEntries(CATEGORIES.map(c => [c.value, c.label]));
+
+function parsePosition(str) {
+  const [x, y] = (str || '50% 50%').split(' ').map(v => parseInt(v));
+  return { x: isNaN(x) ? 50 : x, y: isNaN(y) ? 50 : y };
+}
 
 function slugify(name) {
   return name
@@ -26,27 +33,135 @@ function slugify(name) {
     .replace(/^-|-$/g, '');
 }
 
-function LogoUploadBox({ preview, inputRef, onChange }) {
+function CoverPositionBox({
+  preview, inputRef, onChange, position, onPositionChange,
+  onDelete,
+  vertical = false,
+  label    = 'Foto de portada',
+  specText = 'Tamaño recomendado: 800 × 400 px · Formato: JPG o PNG · Relación 2:1 (horizontal)',
+}) {
+  const [positioning, setPositioning] = useState(false);
+  const [dragging,    setDragging]    = useState(false);
+  const containerRef   = useRef(null);
+  const dragStart      = useRef(null);
+  const prevPreviewRef = useRef(preview);
+
+  useEffect(() => {
+    if (preview && preview !== prevPreviewRef.current) setPositioning(true);
+    prevPreviewRef.current = preview;
+  }, [preview]);
+
+  const startDrag = (clientX, clientY) => {
+    dragStart.current = { clientX, clientY, pos: { ...position } };
+    setDragging(true);
+  };
+
+  const moveDrag = useCallback((clientX, clientY) => {
+    if (!dragging || !dragStart.current || !containerRef.current) return;
+    const { width, height } = containerRef.current.getBoundingClientRect();
+    const dx = clientX - dragStart.current.clientX;
+    const dy = clientY - dragStart.current.clientY;
+    const newX = Math.round(Math.max(0, Math.min(100, dragStart.current.pos.x - (dx / width)  * 100)));
+    const newY = Math.round(Math.max(0, Math.min(100, dragStart.current.pos.y - (dy / height) * 100)));
+    onPositionChange({ x: newX, y: newY });
+  }, [dragging, onPositionChange]);
+
+  const endDrag = () => { setDragging(false); dragStart.current = null; };
+
+  const boxHeight   = vertical ? 480 : 140;
+  const wrapStyle   = vertical ? { maxWidth: 270, margin: '0 auto' } : {};
+
   return (
     <div>
-      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Logo / Foto</p>
-      <div
-        onClick={() => inputRef.current?.click()}
-        className="relative cursor-pointer rounded-xl overflow-hidden border-2 border-dashed border-neutral-200 hover:border-primary transition-colors"
-        style={{ height: 100, background: '#F9FAFB' }}
-      >
-        {preview ? (
-          <img src={preview} alt="logo" className="w-full h-full object-cover" />
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full gap-1.5 text-gray-400">
-            <Image size={22} strokeWidth={1.5} />
-            <span className="text-xs font-medium">Subir imagen</span>
-          </div>
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</p>
+        {preview && !positioning && (
+          <button
+            type="button"
+            onClick={() => setPositioning(true)}
+            className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+          >
+            <Move size={11} /> Reposicionar
+          </button>
         )}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity rounded-xl">
-          <Upload size={20} color="#fff" />
-        </div>
       </div>
+
+      <div style={wrapStyle}>
+        <div
+          ref={containerRef}
+          className="relative rounded-xl overflow-hidden border-2 border-dashed transition-colors"
+          style={{
+            height: boxHeight,
+            background: '#F9FAFB',
+            borderColor: positioning ? '#e31b23' : '#e5e7eb',
+            cursor: !preview ? 'pointer' : positioning ? (dragging ? 'grabbing' : 'grab') : 'default',
+            userSelect: 'none',
+          }}
+          onMouseDown={e => { if (positioning && preview) { e.preventDefault(); startDrag(e.clientX, e.clientY); } }}
+          onMouseMove={e => moveDrag(e.clientX, e.clientY)}
+          onMouseUp={endDrag}
+          onMouseLeave={endDrag}
+          onTouchStart={e => { if (positioning && preview) startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
+          onTouchMove={e => { if (positioning && preview) { e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY); } }}
+          onTouchEnd={endDrag}
+        >
+          {preview ? (
+            <img
+              src={preview}
+              alt="portada"
+              draggable={false}
+              className="w-full h-full"
+              style={{ objectFit: 'cover', objectPosition: `${position.x}% ${position.y}%` }}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full gap-1.5 text-gray-400">
+              <Image size={22} strokeWidth={1.5} />
+              <span className="text-xs font-medium">Subir imagen</span>
+            </div>
+          )}
+
+          {positioning && preview && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="bg-black/40 backdrop-blur-sm rounded-full p-2.5">
+                <Move size={18} color="#fff" />
+              </div>
+            </div>
+          )}
+
+          {!positioning && (
+            <div
+              className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity rounded-xl cursor-pointer"
+              onClick={() => inputRef.current?.click()}
+            >
+              <Upload size={20} color="#fff" />
+            </div>
+          )}
+        </div>
+
+        <p className="text-[11px] text-gray-400 mt-1.5 leading-snug">{specText}</p>
+
+        {positioning && preview && (
+          <button
+            type="button"
+            onClick={() => setPositioning(false)}
+            className="mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary-dark transition-colors"
+            style={{ boxShadow: '0 4px 12px rgba(211,47,47,0.28)' }}
+          >
+            <Check size={15} /> Confirmar posición
+          </button>
+        )}
+
+        {!positioning && preview && onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="mt-1.5 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-red-400 hover:text-red-600 hover:bg-red-50 border border-red-100 transition-colors"
+          >
+            <Trash2 size={13} /> Eliminar imagen
+          </button>
+        )}
+      </div>
+
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onChange} />
     </div>
   );
@@ -152,19 +267,31 @@ function NewBusinessModal({ onClose, onSaved }) {
 }
 
 function EditBusinessModal({ business, onClose, onSaved }) {
-  const [name,        setName]        = useState(business.name || '');
-  const [isActive,    setIsActive]    = useState(business.is_active ?? true);
-  const [logoFile,    setLogoFile]    = useState(null);
-  const [logoPreview, setLogoPreview] = useState(business.logo_url || null);
-  const [saving,      setSaving]      = useState(false);
+  const [name,          setName]          = useState(business.name || '');
+  const [category,      setCategory]      = useState(business.category || 'otro');
+  const [isActive,      setIsActive]      = useState(business.is_active ?? true);
+  const [logoFile,      setLogoFile]      = useState(null);
+  const [logoPreview,   setLogoPreview]   = useState(business.logo_url || null);
+  const [logoDeleted,   setLogoDeleted]   = useState(false);
+  const [coverPosition, setCoverPosition] = useState(parsePosition(business.cover_position));
+  const [bgColor,       setBgColor]       = useState(business.background_color || '#FFFFFF');
+  const [saving,        setSaving]        = useState(false);
   const logoRef = useRef(null);
 
   const handleSave = async () => {
     if (!name.trim()) { toast.error('El nombre es obligatorio'); return; }
     setSaving(true);
     try {
-      const updates = { name: name.trim(), is_active: isActive };
-      if (logoFile) {
+      const updates = {
+        name:             name.trim(),
+        category,
+        is_active:        isActive,
+        cover_position:   `${coverPosition.x}% ${coverPosition.y}%`,
+        background_color: bgColor,
+      };
+      if (logoDeleted) {
+        updates.logo_url = null;
+      } else if (logoFile) {
         const ext  = logoFile.name.split('.').pop().toLowerCase();
         const path = `turnos-negocios/logo_${business.id}_${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, logoFile, { upsert: true });
@@ -191,14 +318,19 @@ function EditBusinessModal({ business, onClose, onSaved }) {
         </div>
 
         <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-          <LogoUploadBox
+          <CoverPositionBox
+            label="Foto de portada (listado)"
             preview={logoPreview}
             inputRef={logoRef}
+            position={coverPosition}
+            onPositionChange={setCoverPosition}
+            onDelete={() => { setLogoPreview(null); setLogoFile(null); setLogoDeleted(true); }}
             onChange={e => {
               const file = e.target.files?.[0];
               if (!file) return;
               setLogoFile(file);
               setLogoPreview(URL.createObjectURL(file));
+              setLogoDeleted(false);
             }}
           />
 
@@ -206,6 +338,40 @@ function EditBusinessModal({ business, onClose, onSaved }) {
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre del negocio</label>
               <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ej: Peluquería López" className="input" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Categoría</label>
+              <select value={category} onChange={e => setCategory(e.target.value)} className="input bg-white">
+                {CATEGORIES.map(c => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Color de fondo</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={bgColor}
+                  onChange={e => setBgColor(e.target.value)}
+                  style={{ width: 44, height: 44, borderRadius: 8, border: '1px solid #E9D5D8', cursor: 'pointer', padding: 2, flexShrink: 0 }}
+                />
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', margin: 0 }}>{bgColor.toUpperCase()}</p>
+                  <p style={{ fontSize: 11, color: '#9CA3AF', margin: '2px 0 0' }}>Fondo de la pantalla de reserva</p>
+                </div>
+                {bgColor.toLowerCase() !== '#ffffff' && (
+                  <button
+                    type="button"
+                    onClick={() => setBgColor('#FFFFFF')}
+                    style={{ fontSize: 11, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}
+                  >
+                    Resetear
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center justify-between py-1">

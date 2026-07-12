@@ -231,9 +231,15 @@ export default function Turnos() {
 
         {/* Business list */}
         {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 24 }}>
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="animate-pulse" style={{ height: 84, borderRadius: 16, background: '#E9D5D8', opacity: 0.5 }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 24 }}>
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="animate-pulse" style={{ background: '#fff', borderRadius: 20, overflow: 'hidden', border: '1px solid #E9D5D8' }}>
+                <div style={{ height: 140, background: '#E9D5D8' }} />
+                <div style={{ padding: '26px 14px 12px' }}>
+                  <div style={{ height: 15, width: '55%', borderRadius: 6, background: '#E9D5D8', marginBottom: 7 }} />
+                  <div style={{ height: 11, width: '75%', borderRadius: 6, background: '#E9D5D8' }} />
+                </div>
+              </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -256,61 +262,79 @@ export default function Turnos() {
             initial="hidden"
             animate="show"
             variants={{ show: { transition: { staggerChildren: 0.06 } } }}
-            style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 24 }}
+            style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 24 }}
           >
             {filtered.map(b => {
-              const info = CATEGORY_INFO[b.category] || CATEGORY_INFO.otro;
-              const image = b.logo_url || CATEGORY_IMAGES[b.category];
+              const info       = CATEGORY_INFO[b.category] || CATEGORY_INFO.otro;
+              const coverImg   = b.logo_url || CATEGORY_IMAGES[b.category];
               const FallbackIcon = info.Icon;
               return (
                 <motion.div key={b.id} variants={cardVariants}>
                   <Link
                     to={`/turnos/${b.id}`}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 12, padding: 10,
-                      background: '#fff', borderRadius: 16, border: '1px solid #E9D5D8',
-                      boxShadow: '0 4px 14px rgba(0,0,0,0.06)', textDecoration: 'none',
+                      display: 'block', textDecoration: 'none',
+                      background: '#fff', borderRadius: 20,
+                      border: '1px solid #E9D5D8',
+                      boxShadow: '0 4px 14px rgba(0,0,0,0.06)',
+                      overflow: 'hidden', cursor: 'pointer',
                     }}
                   >
-                    {/* Thumbnail */}
-                    <div style={{
-                      width: 64, height: 64, borderRadius: 12, flexShrink: 0, overflow: 'hidden',
-                      background: info.bg, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      {image ? (
-                        <img src={image} alt={b.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : FallbackIcon ? (
-                        <FallbackIcon size={28} strokeWidth={1.5} color={info.color} />
+                    {/* Cover image */}
+                    <div style={{ position: 'relative', height: 140, overflow: 'hidden' }}>
+                      {coverImg ? (
+                        <img
+                          src={coverImg} alt={b.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
                       ) : (
-                        <span style={{ fontSize: 24 }}>{info.emoji}</span>
-                      )}
-                    </div>
-
-                    {/* Text block */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{
-                        fontWeight: 700, fontSize: 14.5, color: '#241F1D',
-                        margin: '0 0 3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>
-                        {b.name}
-                      </p>
-                      {b.description && (
-                        <p style={{
-                          fontSize: 12, color: '#8A8580', margin: '0 0 6px',
-                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        <div style={{
+                          width: '100%', height: '100%',
+                          background: `linear-gradient(145deg, ${info.color}cc 0%, ${info.color}66 100%)`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                          {b.description}
-                        </p>
+                          {FallbackIcon
+                            ? <FallbackIcon size={48} strokeWidth={1.2} color="rgba(255,255,255,0.5)" />
+                            : <span style={{ fontSize: 52, opacity: 0.45 }}>{info.emoji}</span>
+                          }
+                        </div>
                       )}
+
+                      {/* Category badge top-left */}
                       <span style={{
-                        display: 'inline-block', fontSize: 10.5, fontWeight: 700,
-                        padding: '3px 8px', borderRadius: 99, background: '#FBEAEA', color: RED,
+                        position: 'absolute', top: 10, left: 10,
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        background: info.color,
+                        color: '#fff', padding: '4px 9px', borderRadius: 99,
+                        fontSize: 10, fontWeight: 800, letterSpacing: '0.03em',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
                       }}>
-                        {info.label}
+                        {info.emoji} {info.label}
                       </span>
+
                     </div>
 
-                    <ChevronRight size={18} color="#B7B0A8" style={{ flexShrink: 0 }} />
+                    {/* Content */}
+                    <div style={{ padding: '12px 14px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontWeight: 800, fontSize: 15, color: '#241F1D', marginBottom: 3 }}>{b.name}</div>
+                        {b.description && (
+                          <p style={{
+                            margin: 0, fontSize: 12, color: '#8A8580', fontWeight: 500,
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                          }}>
+                            {b.description}
+                          </p>
+                        )}
+                      </div>
+                      <div style={{
+                        width: 34, height: 34, borderRadius: '50%', border: '1px solid #E9D5D8',
+                        background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0, marginLeft: 10,
+                      }}>
+                        <ChevronRight size={15} color={RED} strokeWidth={2.2} />
+                      </div>
+                    </div>
                   </Link>
                 </motion.div>
               );

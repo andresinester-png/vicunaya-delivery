@@ -13,10 +13,17 @@ const parsePosition = (pos) => {
 };
 
 function CoverPositionBox({ preview, inputRef, onChange, position, onPositionChange }) {
-  const [moveMode, setMoveMode]   = useState(false);
-  const [dragging, setDragging]   = useState(false);
-  const containerRef              = useRef(null);
-  const dragStart                 = useRef(null);
+  const [positioning, setPositioning] = useState(false);
+  const [dragging,    setDragging]    = useState(false);
+  const containerRef   = useRef(null);
+  const dragStart      = useRef(null);
+  const prevPreviewRef = useRef(preview);
+
+  // Auto-enter positioning mode when a NEW image is selected
+  useEffect(() => {
+    if (preview && preview !== prevPreviewRef.current) setPositioning(true);
+    prevPreviewRef.current = preview;
+  }, [preview]);
 
   const startDrag = (clientX, clientY) => {
     dragStart.current = { clientX, clientY, pos: { ...position } };
@@ -39,16 +46,13 @@ function CoverPositionBox({ preview, inputRef, onChange, position, onPositionCha
     <div>
       <div className="flex items-center justify-between mb-1.5">
         <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Foto de portada</p>
-        {preview && (
+        {preview && !positioning && (
           <button
             type="button"
-            onClick={() => setMoveMode(m => !m)}
-            className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full transition-colors ${
-              moveMode ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-            }`}
+            onClick={() => setPositioning(true)}
+            className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
           >
-            <Move size={11} />
-            {moveMode ? 'Listo' : 'Reposicionar'}
+            <Move size={11} /> Reposicionar
           </button>
         )}
       </div>
@@ -59,17 +63,16 @@ function CoverPositionBox({ preview, inputRef, onChange, position, onPositionCha
         style={{
           height: 140,
           background: '#F9FAFB',
-          borderColor: moveMode ? '#e31b23' : '#e5e7eb',
-          cursor: !preview ? 'pointer' : moveMode ? (dragging ? 'grabbing' : 'grab') : 'pointer',
+          borderColor: positioning ? '#e31b23' : '#e5e7eb',
+          cursor: !preview ? 'pointer' : positioning ? (dragging ? 'grabbing' : 'grab') : 'default',
           userSelect: 'none',
         }}
-        onClick={() => { if (!moveMode) inputRef.current?.click(); }}
-        onMouseDown={e => { if (moveMode && preview) { e.preventDefault(); startDrag(e.clientX, e.clientY); } }}
+        onMouseDown={e => { if (positioning && preview) { e.preventDefault(); startDrag(e.clientX, e.clientY); } }}
         onMouseMove={e => moveDrag(e.clientX, e.clientY)}
         onMouseUp={endDrag}
         onMouseLeave={endDrag}
-        onTouchStart={e => { if (moveMode && preview) { startDrag(e.touches[0].clientX, e.touches[0].clientY); } }}
-        onTouchMove={e => { if (moveMode) { e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY); } }}
+        onTouchStart={e => { if (positioning && preview) startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
+        onTouchMove={e => { if (positioning && preview) { e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY); } }}
         onTouchEnd={endDrag}
       >
         {preview ? (
@@ -87,7 +90,7 @@ function CoverPositionBox({ preview, inputRef, onChange, position, onPositionCha
           </div>
         )}
 
-        {moveMode && preview && (
+        {positioning && preview && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="bg-black/40 backdrop-blur-sm rounded-full p-2.5">
               <Move size={18} color="#fff" />
@@ -95,12 +98,33 @@ function CoverPositionBox({ preview, inputRef, onChange, position, onPositionCha
           </div>
         )}
 
-        {!moveMode && (
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity rounded-xl">
+        {/* Hover overlay to change image when not positioning */}
+        {!positioning && (
+          <div
+            className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity rounded-xl cursor-pointer"
+            onClick={() => inputRef.current?.click()}
+          >
             <Upload size={20} color="#fff" />
           </div>
         )}
       </div>
+
+      {/* Spec hint */}
+      <p className="text-[11px] text-gray-400 mt-1.5 leading-snug">
+        Tamaño recomendado: 800 × 400 px · Formato: JPG o PNG · Relación 2:1 (horizontal)
+      </p>
+
+      {/* Confirmar posición — aparece solo mientras se está posicionando */}
+      {positioning && preview && (
+        <button
+          type="button"
+          onClick={() => setPositioning(false)}
+          className="mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary-dark transition-colors"
+          style={{ boxShadow: '0 4px 12px rgba(211,47,47,0.28)' }}
+        >
+          <Check size={15} /> Confirmar posición
+        </button>
+      )}
 
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onChange} />
     </div>
