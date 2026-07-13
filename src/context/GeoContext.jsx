@@ -4,7 +4,7 @@ import { useAuth } from './AuthContext.jsx';
 const VICUÑA_LAT  = -33.9088;
 const VICUÑA_LNG  = -64.3703;
 const MAX_KM      = 18;
-const BYPASS_EMAILS = ['admin@vicunaya.com', 'andresnester@hotmail.com'];
+const BYPASS_EMAILS = ['admin@vicunaya.com', 'andresnester@hotmail.com', 'andresinester@gmail.com'];
 
 function haversine(lat1, lng1, lat2, lng2) {
   const R    = 6371;
