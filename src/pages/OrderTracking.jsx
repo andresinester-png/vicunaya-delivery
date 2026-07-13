@@ -424,7 +424,7 @@ export default function OrderTracking() {
                   return (
                     <div key={mi.id} className="rounded-2xl border border-gray-100 p-3 flex items-center gap-3">
                       {mi.image_url ? (
-                        <img src={mi.image_url} alt={mi.name} className="w-12 h-12 rounded-xl object-cover shrink-0" />
+                        <img src={mi.image_url} alt={mi.name} loading="lazy" className="w-12 h-12 rounded-xl object-cover shrink-0" />
                       ) : (
                         <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-xl shrink-0">🍽️</div>
                       )}

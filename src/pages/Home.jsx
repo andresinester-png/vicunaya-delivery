@@ -504,7 +504,7 @@ function FeaturedCard({ r, navigate }) {
           boxShadow: '0 3px 8px rgba(0,0,0,0.18)', zIndex: 1,
         }}>
           {r.logo_url
-            ? <img src={r.logo_url} alt={r.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ? <img src={r.logo_url} alt={r.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             : <span style={{ color: '#fff', fontWeight: 800, fontSize: 7.5, textAlign: 'center', lineHeight: 1.15, padding: '0 3px', whiteSpace: 'pre-line' }}>
                 {r.name.split(' ').slice(0, 2).join('\n')}
               </span>
@@ -557,7 +557,7 @@ function SmallCard({ r, navigate }) {
     >
       <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 14, overflow: 'hidden', marginBottom: 8 }}>
         {r.image_url ? (
-          <img src={r.image_url} alt={r.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={r.image_url} alt={r.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <div style={{
             width: '100%', height: '100%',

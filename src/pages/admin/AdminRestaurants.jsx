@@ -439,7 +439,7 @@ export default function AdminRestaurants() {
                 </span>
                 {r.logo_url && (
                   <div className="absolute -bottom-4 left-4 w-10 h-10 rounded-lg overflow-hidden border-2 border-white shadow-md bg-white">
-                    <img src={r.logo_url} alt="logo" className="w-full h-full object-cover" />
+                    <img src={r.logo_url} alt="logo" loading="lazy" className="w-full h-full object-cover" />
                   </div>
                 )}
               </div>

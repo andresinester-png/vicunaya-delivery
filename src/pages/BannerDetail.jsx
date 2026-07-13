@@ -59,7 +59,7 @@ export default function BannerDetail() {
               initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
               style={{ borderRadius:24, overflow:'hidden', boxShadow:'0 4px 20px rgba(0,0,0,0.07)' }}
             >
-              <img src={image} alt={title} style={{ width:'100%', height:200, objectFit:'cover', display:'block' }} />
+              <img src={image} alt={title} loading="lazy" style={{ width:'100%', height:200, objectFit:'cover', display:'block' }} />
             </motion.div>
           )}
 

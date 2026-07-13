@@ -92,7 +92,7 @@ export default function CartPanel({ open, onClose }) {
                         className="flex items-center gap-3"
                       >
                         {item.image_url ? (
-                          <img src={item.image_url} alt={item.name} className="w-14 h-14 rounded-2xl object-cover shrink-0" />
+                          <img src={item.image_url} alt={item.name} loading="lazy" className="w-14 h-14 rounded-2xl object-cover shrink-0" />
                         ) : (
                           <div className="w-14 h-14 rounded-2xl bg-primary-bg flex items-center justify-center text-2xl shrink-0">🍽️</div>
                         )}

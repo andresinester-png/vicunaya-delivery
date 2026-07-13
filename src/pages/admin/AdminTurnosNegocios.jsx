@@ -721,7 +721,7 @@ export default function AdminTurnosNegocios() {
               <div className="flex items-start gap-3">
                 <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
                   {neg.logo_url
-                    ? <img src={neg.logo_url} alt={neg.name} className="w-full h-full object-cover" />
+                    ? <img src={neg.logo_url} alt={neg.name} loading="lazy" className="w-full h-full object-cover" />
                     : <Calendar size={22} className="text-gray-300" strokeWidth={1.5} />}
                 </div>
                 <div className="flex-1 min-w-0">

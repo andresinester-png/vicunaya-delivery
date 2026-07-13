@@ -169,7 +169,7 @@ export default function Banners() {
             <div key={banner.id} className="card p-3 flex items-center gap-3">
               <GripVertical size={16} className="text-gray-300 shrink-0" />
               <div className="w-24 h-16 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                <img src={banner.image_url} alt={banner.title || 'banner'} className="w-full h-full object-cover" />
+                <img src={banner.image_url} alt={banner.title || 'banner'} loading="lazy" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate">{banner.title || <span className="text-gray-400 italic">Sin título</span>}</p>

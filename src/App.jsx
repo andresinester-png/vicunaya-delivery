@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
@@ -9,67 +10,61 @@ import SplashScreen from './components/SplashScreen.jsx';
 import CustomerGate from './components/CustomerGate.jsx';
 import MainLayout from './components/MainLayout.jsx';
 import AdminGuard from './components/AdminGuard.jsx';
-// import DriverGuard from './components/DriverGuard.jsx'; // Remises: deshabilitado temporalmente
 import RestaurantGuard from './components/RestaurantGuard.jsx';
 import TurnosPanelGuard from './components/TurnosPanelGuard.jsx';
-
-import Welcome from './pages/Welcome.jsx';
-import CompleteProfile from './pages/CompleteProfile.jsx';
-import Hub from './pages/Hub.jsx';
-import Home from './pages/Home.jsx';
-// import RemisesPage from './pages/Remises.jsx'; // Remises: deshabilitado temporalmente
-import Orders from './pages/Orders.jsx';
-import Profile from './pages/Profile.jsx';
-import Addresses from './pages/Addresses.jsx';
-
-import Encomiendas from './pages/Encomiendas.jsx';
-import Anunciate from './pages/Anunciate.jsx';
-import Sorteo from './pages/Sorteo.jsx';
-import BannerDetail from './pages/BannerDetail.jsx';
-import Restaurant from './pages/Restaurant.jsx';
-import Cart from './pages/Cart.jsx';
-import Checkout from './pages/Checkout.jsx';
-import OrderTracking from './pages/OrderTracking.jsx';
-import Turnos from './pages/Turnos.jsx';
-import TurnoNegocio from './pages/TurnoNegocio.jsx';
-import MisTurnos from './pages/MisTurnos.jsx';
-
-// Remises: deshabilitado temporalmente
-// import RequestTrip from './pages/RequestTrip.jsx';
-// import TripTracking from './pages/TripTracking.jsx';
-// import RateDriver from './pages/RateDriver.jsx';
-
-import AdminLogin from './pages/admin/AdminLogin.jsx';
-import AdminDashboard from './pages/admin/AdminDashboard.jsx';
-import AdminRestaurants from './pages/admin/AdminRestaurants.jsx';
-import AdminTurnosNegocios from './pages/admin/AdminTurnosNegocios.jsx';
-import MenuManagement from './pages/admin/MenuManagement.jsx';
-import Earnings from './pages/admin/Earnings.jsx';
-import Banners from './pages/admin/Banners.jsx';
-
-import RestaurantLogin from './pages/restaurant/RestaurantLogin.jsx';
-import RestaurantDashboard from './pages/restaurant/Dashboard.jsx';
-import RestaurantMenu from './pages/restaurant/Menu.jsx';
-import RestaurantProfile from './pages/restaurant/Profile.jsx';
-import RestaurantEarnings from './pages/restaurant/Earnings.jsx';
-
-import EncomiendaPanelLogin from './pages/encomiendas-panel/EncomiendaPanelLogin.jsx';
-import EncomiendaPanel from './pages/encomiendas-panel/EncomiendaPanel.jsx';
-import EncomiendaConfig from './pages/encomiendas-panel/EncomiendaConfig.jsx';
 import EncomiendaPanelGuard from './components/EncomiendaPanelGuard.jsx';
-import TurnosPanelLogin from './pages/turnos-panel/TurnosPanelLogin.jsx';
-import TurnosPanelAgenda from './pages/turnos-panel/Agenda.jsx';
-import TurnosPanelServicios from './pages/turnos-panel/Servicios.jsx';
-import TurnosPanelProfesionales from './pages/turnos-panel/Profesionales.jsx';
-import TurnosPanelHorarios from './pages/turnos-panel/Horarios.jsx';
-import TurnosPanelMiNegocio from './pages/turnos-panel/MiNegocio.jsx';
 
-// Remises: deshabilitado temporalmente
-// import DriverLogin from './pages/driver/DriverLogin.jsx';
-// import DriverDashboard from './pages/driver/DriverDashboard.jsx';
-import GoogleCallback from './pages/GoogleCallback.jsx';
-import Legal from './pages/Legal.jsx';
-import ResetPassword from './pages/ResetPassword.jsx';
+// ── Customer pages ──────────────────────────────────────────────────────────
+const Welcome         = lazy(() => import('./pages/Welcome.jsx'));
+const CompleteProfile = lazy(() => import('./pages/CompleteProfile.jsx'));
+const Hub             = lazy(() => import('./pages/Hub.jsx'));
+const Home            = lazy(() => import('./pages/Home.jsx'));
+const Orders          = lazy(() => import('./pages/Orders.jsx'));
+const Profile         = lazy(() => import('./pages/Profile.jsx'));
+const Addresses       = lazy(() => import('./pages/Addresses.jsx'));
+const Encomiendas     = lazy(() => import('./pages/Encomiendas.jsx'));
+const Anunciate       = lazy(() => import('./pages/Anunciate.jsx'));
+const Sorteo          = lazy(() => import('./pages/Sorteo.jsx'));
+const BannerDetail    = lazy(() => import('./pages/BannerDetail.jsx'));
+const Restaurant      = lazy(() => import('./pages/Restaurant.jsx'));
+const Cart            = lazy(() => import('./pages/Cart.jsx'));
+const Checkout        = lazy(() => import('./pages/Checkout.jsx'));
+const OrderTracking   = lazy(() => import('./pages/OrderTracking.jsx'));
+const Turnos          = lazy(() => import('./pages/Turnos.jsx'));
+const TurnoNegocio    = lazy(() => import('./pages/TurnoNegocio.jsx'));
+const MisTurnos       = lazy(() => import('./pages/MisTurnos.jsx'));
+const Legal           = lazy(() => import('./pages/Legal.jsx'));
+const ResetPassword   = lazy(() => import('./pages/ResetPassword.jsx'));
+const GoogleCallback  = lazy(() => import('./pages/GoogleCallback.jsx'));
+
+// ── Admin panel ─────────────────────────────────────────────────────────────
+const AdminLogin          = lazy(() => import('./pages/admin/AdminLogin.jsx'));
+const AdminDashboard      = lazy(() => import('./pages/admin/AdminDashboard.jsx'));
+const AdminRestaurants    = lazy(() => import('./pages/admin/AdminRestaurants.jsx'));
+const AdminTurnosNegocios = lazy(() => import('./pages/admin/AdminTurnosNegocios.jsx'));
+const MenuManagement      = lazy(() => import('./pages/admin/MenuManagement.jsx'));
+const Earnings            = lazy(() => import('./pages/admin/Earnings.jsx'));
+const Banners             = lazy(() => import('./pages/admin/Banners.jsx'));
+
+// ── Restaurant panel ────────────────────────────────────────────────────────
+const RestaurantLogin     = lazy(() => import('./pages/restaurant/RestaurantLogin.jsx'));
+const RestaurantDashboard = lazy(() => import('./pages/restaurant/Dashboard.jsx'));
+const RestaurantMenu      = lazy(() => import('./pages/restaurant/Menu.jsx'));
+const RestaurantProfile   = lazy(() => import('./pages/restaurant/Profile.jsx'));
+const RestaurantEarnings  = lazy(() => import('./pages/restaurant/Earnings.jsx'));
+
+// ── Encomiendas panel ───────────────────────────────────────────────────────
+const EncomiendaPanelLogin = lazy(() => import('./pages/encomiendas-panel/EncomiendaPanelLogin.jsx'));
+const EncomiendaPanel      = lazy(() => import('./pages/encomiendas-panel/EncomiendaPanel.jsx'));
+const EncomiendaConfig     = lazy(() => import('./pages/encomiendas-panel/EncomiendaConfig.jsx'));
+
+// ── Turnos panel ────────────────────────────────────────────────────────────
+const TurnosPanelLogin         = lazy(() => import('./pages/turnos-panel/TurnosPanelLogin.jsx'));
+const TurnosPanelAgenda        = lazy(() => import('./pages/turnos-panel/Agenda.jsx'));
+const TurnosPanelServicios     = lazy(() => import('./pages/turnos-panel/Servicios.jsx'));
+const TurnosPanelProfesionales = lazy(() => import('./pages/turnos-panel/Profesionales.jsx'));
+const TurnosPanelHorarios      = lazy(() => import('./pages/turnos-panel/Horarios.jsx'));
+const TurnosPanelMiNegocio     = lazy(() => import('./pages/turnos-panel/MiNegocio.jsx'));
 
 export default function App() {
   return (
@@ -85,6 +80,7 @@ export default function App() {
         />
         <SplashScreen />
         <UpdateBanner />
+        <Suspense fallback={null}>
         <Routes>
         {/* ── Registro / login / perfil ── */}
         <Route path="/welcome" element={<Welcome />} />
@@ -123,12 +119,6 @@ export default function App() {
           <Route path="/sorteo"      element={<Sorteo />}      />
           <Route path="/banner/:id"  element={<BannerDetail />} />
           <Route path="/legal"       element={<Legal />}       />
-
-          {/* ── Flujo remises (sin bottom nav) — deshabilitado temporalmente ──
-          <Route path="/remis/pedir" element={<RequestTrip />} />
-          <Route path="/remis/viaje/:id" element={<TripTracking />} />
-          <Route path="/remis/viaje/:id/calificar" element={<RateDriver />} />
-          ── */}
         </Route>
 
         {/* ── Panel admin (sidebar propio) ── */}
@@ -153,13 +143,6 @@ export default function App() {
           <Route path="ganancias" element={<RestaurantEarnings />} />
         </Route>
 
-        {/* ── Panel conductor — deshabilitado temporalmente ──
-        <Route path="/driver/login" element={<DriverLogin />} />
-        <Route path="/driver" element={<DriverGuard />}>
-          <Route index element={<DriverDashboard />} />
-        </Route>
-        ── */}
-
         {/* ── Panel de turnos (dueños de negocio) ── */}
         <Route path="/turnos/panel/login" element={<TurnosPanelLogin />} />
         <Route path="/turnos/panel" element={<TurnosPanelGuard />}>
@@ -178,12 +161,13 @@ export default function App() {
           <Route path="/encomiendas/panel/configuracion" element={<EncomiendaConfig />} />
         </Route>
 
-        {/* ── OAuth callback ── */}
-        <Route path="/auth/callback" element={<GoogleCallback />} />
+        {/* ── OAuth callback + auth ── */}
+        <Route path="/auth/callback"  element={<GoogleCallback />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
         </GeoProvider>
       </AuthProvider>
     </BrowserRouter>

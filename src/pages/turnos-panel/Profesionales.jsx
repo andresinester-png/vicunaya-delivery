@@ -217,7 +217,7 @@ export default function Profesionales() {
                 ) : (
                   <div className="flex items-center gap-3">
                     {prof.avatar_url
-                      ? <img src={prof.avatar_url} alt={prof.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                      ? <img src={prof.avatar_url} alt={prof.name} loading="lazy" className="w-10 h-10 rounded-full object-cover shrink-0" />
                       : <UserCircle size={40} className="text-gray-300 shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <p className={`font-medium text-sm ${prof.is_active ? 'text-gray-900' : 'text-gray-400 line-through'}`}>{prof.name}</p>

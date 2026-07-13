@@ -631,7 +631,7 @@ export default function Checkout() {
               return (
                 <div key={i.id} className="flex items-center gap-3">
                   {i.image_url ? (
-                    <img src={i.image_url} alt={i.name} className="w-12 h-12 rounded-xl object-cover shrink-0" />
+                    <img src={i.image_url} alt={i.name} loading="lazy" className="w-12 h-12 rounded-xl object-cover shrink-0" />
                   ) : (
                     <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-xl shrink-0">🍽️</div>
                   )}

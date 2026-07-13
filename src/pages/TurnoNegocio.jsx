@@ -591,7 +591,7 @@ export default function TurnoNegocio() {
                       style={{ borderColor: active ? '#D32F2F' : '#E9D5D8', background: active ? '#FFF8F8' : '#fff' }}
                     >
                       {prof.avatar_url
-                        ? <img src={prof.avatar_url} alt={prof.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                        ? <img src={prof.avatar_url} alt={prof.name} loading="lazy" className="w-10 h-10 rounded-full object-cover shrink-0" />
                         : <UserCircle size={40} className="text-gray-300 shrink-0" />}
                       <span className="font-semibold text-sm flex-1">{prof.name}</span>
                       {active && <CheckCircle size={18} className="text-primary shrink-0" />}

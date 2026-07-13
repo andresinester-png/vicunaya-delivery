@@ -63,7 +63,7 @@ export default function MenuManagement() {
                       <div key={item.id} className="flex items-center gap-3 py-3">
                         <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0">
                           {item.image_url
-                            ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                            ? <img src={item.image_url} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
                             : <div className="w-full h-full flex items-center justify-center text-xl">🍽️</div>}
                         </div>
                         <div className="flex-1 min-w-0">

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VicuñaYa - Seguimiento de Pedido</title>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style data-purpose="custom-animations">
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .animate-pulse-soft {
+      animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+<style data-purpose="typography">
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+<!-- BEGIN: MainHeader -->
+<header class="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-3">
+<button aria-label="Volver" class="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<h1 class="text-lg font-bold text-gray-800">VicuñaYa</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-orange-500 transition-colors">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span>Compartir</span>
+</button>
+</div>
+</header>
+<!-- END: MainHeader -->
+<main class="max-w-md mx-auto pb-24">
+<!-- BEGIN: OrderStatusCard -->
+<section class="m-4 p-6 bg-white rounded-3xl shadow-sm border border-gray-100" data-purpose="status-overview">
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="text-green-600 font-bold text-sm uppercase tracking-wide">En hora</p>
+<h2 class="text-3xl font-extrabold text-gray-900 mt-1 tracking-tight">12:16 – 12:46</h2>
+</div>
+</div>
+<!-- Modern Progress Bar -->
+<div class="relative mt-8 mb-4">
+<div class="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 rounded-full"></div>
+<!-- Active Progress Segment -->
+<div class="absolute top-1/2 left-0 w-1/3 h-1 bg-green-500 -translate-y-1/2 rounded-full"></div>
+<div class="relative flex justify-between">
+<!-- Step 1: Confirmed (Active) -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-4 h-4 rounded-full bg-green-500 ring-4 ring-green-100"></div>
+<span class="text-[10px] font-bold text-gray-900">Confirmado</span>
+</div>
+<!-- Step 2: Preparing -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-4 h-4 rounded-full bg-gray-200 border-2 border-white"></div>
+<span class="text-[10px] font-medium text-gray-400">Preparando</span>
+</div>
+<!-- Step 3: On the way -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-4 h-4 rounded-full bg-gray-200 border-2 border-white"></div>
+<span class="text-[10px] font-medium text-gray-400">En camino</span>
+</div>
+<!-- Step 4: Delivered -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-4 h-4 rounded-full bg-gray-200 border-2 border-white"></div>
+<span class="text-[10px] font-medium text-gray-400">Entregado</span>
+</div>
+</div>
+</div>
+<div class="mt-8 flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+<div class="flex-shrink-0">
+<div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse-soft"></div>
+</div>
+<p class="text-blue-800 text-sm font-medium">
+          En marcha: el local está preparando tu pedido
+        </p>
+</div>
+</section>
+<!-- END: OrderStatusCard -->
+<!-- BEGIN: NavigationTabs -->
+<nav class="px-4 border-b border-gray-200 flex" data-purpose="section-navigation">
+<button class="flex-1 py-4 text-center border-b-2 border-orange-500 font-bold text-sm text-gray-900">
+        Detalle del pedido
+      </button>
+<button class="flex-1 py-4 text-center border-b-2 border-transparent font-medium text-sm text-gray-400 hover:text-gray-600 transition-colors">
+        Agregar productos
+      </button>
+</nav>
+<!-- END: NavigationTabs -->
+<!-- BEGIN: OrderDetailsList -->
+<section class="p-4 space-y-3" data-purpose="order-info-list">
+<!-- Product Summary -->
+<div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm transition-transform active:scale-[0.98]">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center border border-gray-100">
+<img alt="Producto" class="w-8 h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVtdi_2rKBgObtCuCW3EDZGKfT1v1wpS6wEvsBbgrNY8QvxnZgjA7f6LikIMMhDSBL6q0snEGBSzbolcRd7u_TB5fjMLZFlIgU9KHHJkZsBgLM4d99NcnGDDvmxp6SiKRyPtCWOJykez1YhHVcfuD0vYZeU4KvdlISSmtpL2GT8iSkEyTNasGAoOsNCEAnxPo3iwYkeAIO2hrWEzE660iBIqqjKDoqU94mz-pBKHFcL7TCJjmxNbqLMvfanYLMv0NdqmWi7WUHkZfM"/>
+</div>
+<div>
+<h3 class="font-bold text-gray-900">1 producto</h3>
+<p class="text-sm text-gray-500">Don jonns</p>
+</div>
+</div>
+<button class="text-orange-500 font-bold text-sm">Ver detalle</button>
+</div>
+<!-- Payment Method -->
+<div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center border border-gray-100">
+<svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div>
+<h3 class="font-bold text-gray-900">Efectivo</h3>
+</div>
+</div>
+<span class="font-bold text-gray-900">$25.000</span>
+</div>
+<!-- Delivery Address -->
+<div class="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm space-y-4">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center border border-orange-100">
+<svg class="h-6 w-6 text-orange-500" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div>
+<p class="text-sm text-gray-500 font-medium">Lo recibís en</p>
+<h3 class="font-bold text-gray-900">Leandro n alem 572</h3>
+</div>
+</div>
+<button class="text-orange-500 font-bold text-sm">Cambiar</button>
+</div>
+<div class="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+<svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<p class="text-xs text-gray-500">Podés cambiarla durante 4:57</p>
+</div>
+</div>
+</section>
+<!-- END: OrderDetailsList -->
+</main>
+<!-- BEGIN: BottomNavigation -->
+<footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 flex justify-around items-center" data-purpose="footer-help">
+<button class="flex flex-col items-center gap-1">
+<div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-[10px] font-bold text-gray-600">Ayuda</span>
+</button>
+<button class="bg-orange-500 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-orange-200 transition-transform active:scale-95">
+      Contactar soporte
+    </button>
+</footer>
+<!-- END: BottomNavigation -->
+</body></html>

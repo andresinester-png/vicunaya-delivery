@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+  <style>
+    ::-webkit-scrollbar { display: none; }
+    .vy-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    .msym { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; word-wrap: normal; direction: ltr; font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  </style>
+</helmet>
+
+<div style="width:100%; min-height:100vh; background:oklch(0.94 0.004 60); display:flex; justify-content:center; font-family:'Plus Jakarta Sans',sans-serif; padding:24px 0; box-sizing:border-box;">
+<div style="width:402px; max-width:100%; min-height:844px; background:#FFF8F8; border-radius:36px; overflow:hidden; box-shadow:0 30px 60px -20px rgba(0,0,0,0.25); display:flex; flex-direction:column; position:relative;">
+
+  <!-- HEADER -->
+  <div style="background:#D32F2F; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <div style="display:flex; flex-direction:column;">
+        <span style="color:white; font-weight:800; font-size:15px; line-height:1.2;">VicuñaYa</span>
+        <span style="color:rgba(255,255,255,0.85); font-size:11.5px; font-weight:500;">Vicuña Mackenna, Córdoba</span>
+      </div>
+    </div>
+    <div style="width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    </div>
+  </div>
+
+  <!-- SCROLLABLE CONTENT -->
+  <div class="vy-scroll" style="flex:1; overflow-y:auto; padding-bottom:12px;">
+
+    <!-- SEARCH FIELD -->
+    <div style="padding:16px 18px 0 18px;">
+      <div style="position:relative;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A8580" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; left:14px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input placeholder="Buscar comidas, bebidas o tiendas..." style="width:100%; height:46px; padding:0 14px 0 42px; background:white; border:1px solid #E9D5D8; border-radius:14px; font-family:inherit; font-size:14px; color:#241F1D; box-sizing:border-box; box-shadow:0 2px 8px rgba(0,0,0,0.05); outline:none;" />
+      </div>
+    </div>
+
+    <!-- HERO BENTO BANNER -->
+    <div style="padding:16px 18px 0 18px;">
+      <div style="position:relative; width:100%; height:190px; border-radius:20px; overflow:hidden; background-image:url('https://images.unsplash.com/photo-1526367790999-0150786686a2?w=800&auto=format&fit=crop&q=60'); background-size:cover; background-position:center;">
+        <div style="position:absolute; inset:0; background:linear-gradient(90deg, rgba(211,47,47,0.88) 12%, rgba(183,28,28,0.28) 60%);"></div>
+        <div style="position:absolute; inset:0; padding:20px; display:flex; flex-direction:column; justify-content:flex-end; gap:8px;">
+          <h1 style="margin:0; color:white; font-weight:800; font-size:22px; line-height:1.15; max-width:210px; letter-spacing:-0.01em;">¿Tenés un negocio?</h1>
+          <p style="margin:0; color:rgba(255,255,255,0.9); font-size:13px; font-weight:500; max-width:220px;">Llegá a miles de vecinos con VicuñaYa.</p>
+          <button style="margin-top:4px; width:fit-content; background:white; color:#D32F2F; border:none; padding:10px 18px; border-radius:99px; font-family:inherit; font-weight:700; font-size:13px; box-shadow:0 4px 10px rgba(0,0,0,0.15);">¡Sumate a VicuñaYa!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATEGORIES (horizontal scroll) -->
+    <div style="padding:22px 0 0 0;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; padding:0 18px; margin-bottom:12px;">
+        <span style="font-weight:800; font-size:16.5px; color:#241F1D; letter-spacing:-0.01em;">Categorías</span>
+        <span style="font-size:12.5px; font-weight:700; color:#D32F2F;">Ver todas</span>
+      </div>
+      <div class="vy-scroll" style="display:flex; gap:14px; overflow-x:auto; padding:0 18px 4px 18px;">
+
+        <div style="display:flex; flex-direction:column; align-items:center; gap:7px; min-width:64px;">
+          <div style="width:60px; height:60px; border-radius:18px; background:#D32F2F; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(211,47,47,0.3);">
+            <span class="msym" style="color:white;">restaurant</span>
+          </div>
+          <span style="font-size:11.5px; font-weight:700; color:#241F1D;">Todo</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:center; gap:7px; min-width:64px;">
+          <div style="width:60px; height:60px; border-radius:18px; background:white; border:1px solid #E9D5D8; display:flex; align-items:center; justify-content:center;">
+            <span class="msym" style="color:#D32F2F;">bakery_dining</span>
+          </div>
+          <span style="font-size:11.5px; font-weight:600; color:#5B5450;">Empanadas</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:center; gap:7px; min-width:64px;">
+          <div style="width:60px; height:60px; border-radius:18px; background:white; border:1px solid #E9D5D8; display:flex; align-items:center; justify-content:center;">
+            <span class="msym" style="color:#D32F2F;">local_pizza</span>
+          </div>
+          <span style="font-size:11.5px; font-weight:600; color:#5B5450;">Pizza</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:center; gap:7px; min-width:64px;">
+          <div style="width:60px; height:60px; border-radius:18px; background:white; border:1px solid #E9D5D8; display:flex; align-items:center; justify-content:center;">
+            <span class="msym" style="color:#D32F2F;">local_bar</span>
+          </div>
+          <span style="font-size:11.5px; font-weight:600; color:#5B5450;">Bebidas</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:center; gap:7px; min-width:64px;">
+          <div style="width:60px; height:60px; border-radius:18px; background:white; border:1px solid #E9D5D8; display:flex; align-items:center; justify-content:center;">
+            <span class="msym" style="color:#D32F2F;">lunch_dining</span>
+          </div>
+          <span style="font-size:11.5px; font-weight:600; color:#5B5450;">Lomitos</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:center; gap:7px; min-width:64px;">
+          <div style="width:60px; height:60px; border-radius:18px; background:white; border:1px solid #E9D5D8; display:flex; align-items:center; justify-content:center;">
+            <span class="msym" style="color:#D32F2F;">cake</span>
+          </div>
+          <span style="font-size:11.5px; font-weight:600; color:#5B5450;">Pastelerías</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FILTER CHIPS -->
+    <div class="vy-scroll" style="display:flex; gap:8px; overflow-x:auto; padding:14px 18px 0 18px;">
+      <button style="display:flex; align-items:center; gap:5px; background:white; border:1px solid #E9D5D8; padding:8px 14px; border-radius:99px; white-space:nowrap; font-family:inherit; font-size:12.5px; font-weight:600; color:#3A332F;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3A332F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        Relevancia
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3A332F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <button style="background:#D32F2F; color:white; border:none; padding:8px 18px; border-radius:99px; white-space:nowrap; font-family:inherit; font-size:12.5px; font-weight:700;">Todos</button>
+      <button style="background:white; border:1px solid #E9D5D8; padding:8px 18px; border-radius:99px; white-space:nowrap; font-family:inherit; font-size:12.5px; font-weight:600; color:#5B5450;">Rotisería</button>
+      <button style="background:white; border:1px solid #E9D5D8; padding:8px 18px; border-radius:99px; white-space:nowrap; font-family:inherit; font-size:12.5px; font-weight:600; color:#5B5450;">Empanadas</button>
+    </div>
+
+    <!-- PROMOTED STORES -->
+    <div style="padding:22px 18px 0 18px;">
+      <div style="font-weight:800; font-size:16.5px; color:#241F1D; margin-bottom:12px; letter-spacing:-0.01em;">Rotiserías destacadas</div>
+
+      <!-- Featured big card -->
+      <div style="background:white; border-radius:20px; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,0.06); border:1px solid #E9D5D8; margin-bottom:16px;">
+        <div style="position:relative; height:170px; width:100%; background-image:url('https://images.unsplash.com/photo-1598515213692-5f252f9018a6?w=800&auto=format&fit=crop&q=60'); background-size:cover; background-position:center;">
+          <div style="position:absolute; top:12px; left:12px; background:#2E7D32; color:white; padding:5px 10px; border-radius:99px; display:flex; align-items:center; gap:5px; box-shadow:0 2px 6px rgba(0,0,0,0.15);">
+            <span style="width:6px; height:6px; border-radius:50%; background:white;"></span>
+            <span style="font-size:10.5px; font-weight:800; letter-spacing:0.03em; text-transform:uppercase;">Abierto</span>
+          </div>
+          <div style="position:absolute; bottom:-26px; left:14px; width:60px; height:60px; border-radius:50%; background:#241F1D; border:4px solid white; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+            <span style="color:white; font-weight:800; font-size:9px; text-align:center; line-height:1.1;">Lo de<br/>Beto</span>
+          </div>
+        </div>
+        <div style="padding:34px 14px 14px 14px; display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div style="font-weight:800; font-size:16px; color:#241F1D;">Lo de Beto</div>
+            <div style="display:flex; align-items:center; gap:6px; margin-top:4px; font-size:12.5px; color:#8A8580; font-weight:500;">
+              <span style="display:flex; align-items:center; gap:3px; color:#D32F2F; font-weight:700;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#D32F2F" stroke="#D32F2F" stroke-width="1"><polygon points="12 2 15.09 8.63 22 9.27 17 14.14 18.18 21 12 17.77 5.82 21 7 14.14 2 9.27 8.91 8.63"/></svg>
+                4.9
+              </span>
+              <span>(100+)</span>
+              <span>·</span>
+              <span>30-45 min</span>
+              <span>·</span>
+              <span>$500 envío</span>
+            </div>
+          </div>
+          <button style="width:38px; height:38px; border-radius:50%; border:1px solid #E9D5D8; background:white; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#D32F2F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid of two smaller cards -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div style="background:white; border-radius:18px; border:1px solid #E9D5D8; padding:10px;">
+          <div style="width:100%; aspect-ratio:1; border-radius:14px; background-image:url('https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=400&auto=format&fit=crop&q=60'); background-size:cover; background-position:center; margin-bottom:8px;"></div>
+          <div style="font-weight:700; font-size:13.5px; color:#241F1D;">Sabores del Valle</div>
+          <div style="font-size:11.5px; color:#8A8580; font-weight:500; margin-top:2px;">4.6 · 25 min</div>
+        </div>
+        <div style="background:white; border-radius:18px; border:1px solid #E9D5D8; padding:10px;">
+          <div style="width:100%; aspect-ratio:1; border-radius:14px; background-image:url('https://images.unsplash.com/photo-1544025162-d76694265947?w=400&auto=format&fit=crop&q=60'); background-size:cover; background-position:center; margin-bottom:8px;"></div>
+          <div style="font-weight:700; font-size:13.5px; color:#241F1D;">La Parrilla de Oscar</div>
+          <div style="font-size:11.5px; color:#8A8580; font-weight:500; margin-top:2px;">4.9 · 40 min</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FAB CART -->
+  <button style="position:absolute; right:20px; bottom:92px; width:52px; height:52px; border-radius:50%; background:#D32F2F; border:2px solid white; box-shadow:0 6px 16px rgba(255,59,92,0.4); display:flex; align-items:center; justify-content:center;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    <span style="position:absolute; top:-2px; right:-2px; width:18px; height:18px; border-radius:50%; background:#241F1D; color:white; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center; border:2px solid white;">2</span>
+  </button>
+
+  <!-- BOTTOM NAV -->
+  <div style="flex-shrink:0; background:white; border-top:1px solid #E9D5D8; display:flex; align-items:center; justify-content:space-around; padding:10px 8px calc(10px + env(safe-area-inset-bottom, 0px)) 8px;">
+
+    <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D32F2F" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-7 9 7"/><path d="M5 9v11a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9"/></svg>
+      <span style="font-size:10.5px; font-weight:700; color:#D32F2F;">Inicio</span>
+    </div>
+
+    <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B7B0A8" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l3 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>
+      <span style="font-size:10.5px; font-weight:600; color:#B7B0A8;">Pedidos</span>
+    </div>
+
+    <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B7B0A8" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 15l2 2 4-4"/></svg>
+      <span style="font-size:10.5px; font-weight:600; color:#B7B0A8;">Mis Turnos</span>
+    </div>
+
+    <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B7B0A8" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      <span style="font-size:10.5px; font-weight:600; color:#B7B0A8;">Perfil</span>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:450,&quot;height&quot;:900}}"></script>
+</body>
+</html>

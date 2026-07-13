@@ -105,7 +105,7 @@ function OptionGrid({ options, value, onChange }) {
 }
 
 function SolicitudForm({ onClose, cfg }) {
-  const { profile }             = useAuth();
+  const { profile, session }    = useAuth();
   const [form, setForm]         = useState(EMPTY_FORM);
   const [loading, setLoading]   = useState(false);
   const [enviado, setEnviado]   = useState(false);
@@ -154,6 +154,7 @@ function SolicitudForm({ onClose, cfg }) {
 
     const { data: encData, error } = await supabase.from('encomiendas').insert({
       empresa_id:            EMPRESA_ID,
+      user_id:               session?.user?.id ?? null,
       cliente_nombre:        form.cliente_nombre.trim(),
       cliente_telefono:      form.cliente_telefono.trim(),
       telefono_destinatario: form.telefono_destinatario.trim(),
@@ -537,7 +538,6 @@ function ChatClientModal({ encomienda, onClose, onRead }) {
   const bottomRef                 = useRef(null);
 
   const cargarYMarcar = async () => {
-    console.log('[Chat cliente] Cargando mensajes para encomienda_id:', encomienda.id);
     const { data, error } = await supabase
       .from('mensajes_encomienda')
       .select('*')
@@ -545,11 +545,9 @@ function ChatClientModal({ encomienda, onClose, onRead }) {
       .order('created_at', { ascending: true });
 
     if (error) {
-      console.error('[Chat cliente] Error SELECT:', error);
       setLoadError(error.message);
       return;
     }
-    console.log('[Chat cliente] Mensajes cargados:', data?.length ?? 0);
     setMensajes(data || []);
 
     // Marcar mensajes de la empresa como leídos
@@ -578,7 +576,6 @@ function ChatClientModal({ encomienda, onClose, onRead }) {
         filter: `encomienda_id=eq.${encomienda.id}`,
       }, async (payload) => {
         const msg = payload.new;
-        console.log('[Chat cliente] Realtime INSERT:', msg);
         setMensajes(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
         // Si es de la empresa, marcarlo como leído inmediatamente (chat abierto)
         if (msg.remitente === 'empresa') {
@@ -594,9 +591,7 @@ function ChatClientModal({ encomienda, onClose, onRead }) {
         // Empresa leyó mensajes del cliente → actualizar tilde doble
         setMensajes(prev => prev.map(m => m.id === payload.new.id ? { ...m, leido: payload.new.leido } : m));
       })
-      .subscribe((status, err) => {
-        console.log('[Chat cliente] Realtime status:', status, err ?? '');
-      });
+      .subscribe();
 
     return () => supabase.removeChannel(ch);
   }, [encomienda.id]);
@@ -612,7 +607,6 @@ function ChatClientModal({ encomienda, onClose, onRead }) {
     setSending(true);
     setTexto('');
 
-    console.log('[Chat cliente] Insertando:', { encomienda_id: encomienda.id, remitente: 'cliente' });
     const { data, error } = await supabase
       .from('mensajes_encomienda')
       .insert({ encomienda_id: encomienda.id, remitente: 'cliente', mensaje: msg })
@@ -620,7 +614,6 @@ function ChatClientModal({ encomienda, onClose, onRead }) {
       .single();
 
     if (error) {
-      console.error('[Chat cliente] Error INSERT:', error);
       toast.error('Error al enviar el mensaje');
       setTexto(msg);
     } else {

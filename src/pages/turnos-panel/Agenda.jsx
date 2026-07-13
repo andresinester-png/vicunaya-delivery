@@ -228,7 +228,7 @@ export default function Agenda() {
                 }}
               >
                 {prof.avatar_url
-                  ? <img src={prof.avatar_url} alt={prof.name} className="w-5 h-5 rounded-full object-cover shrink-0" />
+                  ? <img src={prof.avatar_url} alt={prof.name} loading="lazy" className="w-5 h-5 rounded-full object-cover shrink-0" />
                   : <UserCircle size={16} className={isActive ? 'text-white/70' : 'text-gray-300'} />}
                 {prof.name}
                 {booked > 0 && (
@@ -259,7 +259,7 @@ export default function Agenda() {
           {selectedProf && (
             <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
               {selectedProf.avatar_url
-                ? <img src={selectedProf.avatar_url} alt={selectedProf.name} className="w-7 h-7 rounded-full object-cover shrink-0" />
+                ? <img src={selectedProf.avatar_url} alt={selectedProf.name} loading="lazy" className="w-7 h-7 rounded-full object-cover shrink-0" />
                 : <UserCircle size={28} className="text-gray-300 shrink-0" />}
               <span className="font-semibold text-sm text-gray-900">{selectedProf.name}</span>
               <div className="ml-auto flex items-center gap-2 text-xs">

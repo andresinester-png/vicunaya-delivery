@@ -66,7 +66,7 @@ export default function RestaurantCard({ restaurant }) {
         {/* ── Foto de portada ── */}
         <div style={{ position:'relative', height:160, overflow:'hidden', background:'#f3f4f6' }}>
           {image_url ? (
-            <img src={image_url} alt={name}
+            <img src={image_url} alt={name} loading="lazy"
               style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition: cover_position || '50% 50%' }} />
           ) : (
             <div style={{
@@ -116,7 +116,7 @@ export default function RestaurantCard({ restaurant }) {
               boxShadow:'0 2px 8px rgba(0,0,0,0.10)',
             }}>
               {logo_url ? (
-                <img src={logo_url} alt={name}
+                <img src={logo_url} alt={name} loading="lazy"
                   style={{ width:'100%', height:'100%', objectFit:'cover' }} />
               ) : (
                 <span style={{ color:'#fff', fontWeight:900, fontSize:18 }}>

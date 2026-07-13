@@ -129,7 +129,7 @@ export default function ProductModal({ item, restaurant, onClose }) {
           {/* Image */}
           {item.image_url ? (
             <div style={{ width: '100%', height: 200, overflow: 'hidden', background: '#F3F4F6', marginTop: 12 }}>
-              <img src={item.image_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <img src={item.image_url} alt={item.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </div>
           ) : (
             <div style={{ width: '100%', height: 120, marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F9FAFB', fontSize: 56 }}>
