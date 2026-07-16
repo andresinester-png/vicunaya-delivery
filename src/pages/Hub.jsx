@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import { ChevronRight, Lock, MapPin, Navigation, Store, Smartphone, Package } from 'lucide-react';
+import { ChevronRight, Lock, MapPin, Navigation, Store, Smartphone, Package, Bike, CalendarDays, Flame, Car } from 'lucide-react';
 import bgImage from '../screen.png';
 import BottomNav from '../components/BottomNav.jsx';
 import { useGeo } from '../context/GeoContext.jsx';
@@ -139,50 +139,30 @@ function HubBannerCarousel() {
   );
 }
 
-// ── Service cards ────────────────────────────────────────────────────────────
-const CARDS = [
-  {
-    id: 'delivery',
-    title: 'Delivery',
-    subtitle: 'Rotiserías, empanadas y más',
-    image: 'https://hvmdumuedqfoifgayleh.supabase.co/storage/v1/object/public/IMAGES/ChatGPT%20Image%2012%20may%202026,%2019_14_30.png',
-    to: '/delivery',
-    geoRestricted: true,
-  },
-  {
-    id: 'turnos',
-    title: 'Turnos',
-    subtitle: 'Peluquerías, talleres y más',
-    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80',
-    to: '/turnos',
-    geoRestricted: true,
-  },
-  {
-    id: 'encomiendas',
-    title: 'Encomiendas a Río Cuarto',
-    subtitle: 'Servicio lunes a viernes',
-    image: 'https://hvmdumuedqfoifgayleh.supabase.co/storage/v1/object/public/IMAGES/ChatGPT%20Image%2012%20may%202026,%2021_25_26.png',
-    to: '/encomiendas',
-    geoRestricted: false,
-  },
-  {
-    id: 'remises',
-    title: 'Remises',
-    subtitle: 'Viajes en la ciudad y zona',
-    image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80',
-    to: '/remises',
-    geoRestricted: true,
-  },
+// ── Tiles del grid principal (2×2) ──────────────────────────────────────────
+const TILES = [
+  { id: 'delivery',    label: 'Delivery',  sub: 'Comida y más',         Icon: Bike,        to: '/delivery',    geo: true  },
+  { id: 'turnos',      label: 'Turnos',    sub: 'Turnos online',        Icon: CalendarDays, to: '/turnos',      geo: true  },
+  { id: 'gas',         label: 'Gas',       sub: 'A domicilio',          Icon: Flame,       to: '/gas',         geo: false },
+  { id: 'remises',     label: 'Remises',   sub: 'Viajes en la ciudad',  Icon: Car,         to: '/remises',     geo: true  },
 ];
 
-const containerVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.1 } },
+// ── Card ancha: Encomiendas ──────────────────────────────────────────────────
+const ENCOMIENDAS_CARD = {
+  id: 'encomiendas',
+  title: 'Encomiendas a Río Cuarto',
+  subtitle: 'Servicio lunes a viernes',
+  image: 'https://hvmdumuedqfoifgayleh.supabase.co/storage/v1/object/public/IMAGES/ChatGPT%20Image%2012%20may%202026,%2021_25_26.png',
+  to: '/encomiendas',
 };
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 28 },
-  show:   { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } },
+const tileVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show:   { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 240, damping: 22 } },
+};
+const containerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07 } },
 };
 
 // ── Fondo parallax ───────────────────────────────────────────────────────────
@@ -373,97 +353,179 @@ export default function Hub() {
           </motion.div>
         )}
 
-        {/* Cards de servicios */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
-        >
-          {CARDS.map(card => {
-            const locked = outZone && card.geoRestricted;
+        {/* ── Sección blanca: servicios + cerca de vos ─────────────── */}
+        <div style={{
+          background: '#F8F9FF',
+          borderRadius: '28px 28px 0 0',
+          margin: '4px -20px -104px',
+          padding: '24px 20px 120px',
+        }}>
 
-            return (
-              <motion.div
-                key={card.id}
-                variants={cardVariants}
-                whileTap={locked ? undefined : { scale: 0.97 }}
-                whileHover={locked ? undefined : { scale: 1.015, y: -3 }}
-                transition={{ type: 'spring', stiffness: 350, damping: 24 }}
-                onClick={locked ? undefined : () => navigate(card.to)}
-                style={{
-                  position: 'relative', height: 140, borderRadius: 28,
-                  overflow: 'hidden',
-                  cursor: locked ? 'default' : 'pointer',
-                  boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
-                  opacity: locked ? 0.72 : 1,
-                  transition: 'opacity 0.2s ease',
-                }}
-              >
-                {/* Foto de fondo */}
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-
-                {/* Gradient overlay */}
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: 'linear-gradient(160deg, rgba(0,0,0,0.00) 0%, rgba(0,0,0,0.48) 60%, rgba(0,0,0,0.70) 100%)',
-                }} />
-
-                {/* Lock overlay */}
-                {locked && (
+          {/* Grid 2×2 de tiles */}
+          <p style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 14px' }}>
+            Servicios
+          </p>
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}
+          >
+            {TILES.map(tile => {
+              const locked = outZone && tile.geo;
+              return (
+                <motion.button
+                  key={tile.id}
+                  variants={tileVariants}
+                  whileTap={locked ? undefined : { scale: 0.96 }}
+                  onClick={locked ? undefined : () => navigate(tile.to)}
+                  style={{
+                    background: '#fff',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: 20,
+                    padding: '18px 14px 16px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                    cursor: locked ? 'default' : 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
+                  {/* Icon box 56×56 */}
                   <div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'rgba(0,0,0,0.45)',
-                    backdropFilter: 'blur(1.5px)',
-                    WebkitBackdropFilter: 'blur(1.5px)',
-                    display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center',
-                    gap: 6, zIndex: 5,
-                  }}>
-                    <Lock size={22} color="rgba(255,255,255,0.9)" strokeWidth={2} />
-                    <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                      Solo en Vicuña Mackenna
-                    </span>
-                  </div>
-                )}
-
-                {/* Flecha glassmorphism */}
-                {!locked && (
-                  <div style={{
-                    position: 'absolute', top: 16, right: 16,
-                    background: 'rgba(255,255,255,0.18)',
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255,255,255,0.28)',
-                    borderRadius: 999, width: 32, height: 32,
+                    width: 56, height: 56, borderRadius: 16,
+                    background: locked ? '#F1F5F9' : '#F0FDFA',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
                   }}>
-                    <ChevronRight size={16} color="#fff" strokeWidth={2.5} />
+                    <tile.Icon
+                      size={26}
+                      color={locked ? '#94A3B8' : (tile.id === 'gas' ? '#0D9488' : '#0F172A')}
+                      strokeWidth={1.9}
+                    />
                   </div>
-                )}
+                  <div>
+                    <p style={{ fontWeight: 800, fontSize: 14, color: locked ? '#94A3B8' : '#0F172A', margin: 0, letterSpacing: '-0.01em' }}>
+                      {tile.label}
+                    </p>
+                    <p style={{ fontSize: 11, color: '#94A3B8', margin: '3px 0 0', fontWeight: 500 }}>
+                      {tile.sub}
+                    </p>
+                  </div>
+                  {/* Lock badge */}
+                  {locked && (
+                    <div style={{
+                      position: 'absolute', top: 8, right: 8,
+                      background: 'rgba(0,0,0,0.08)', borderRadius: 999,
+                      padding: '2px 4px',
+                    }}>
+                      <Lock size={10} color="#94A3B8" strokeWidth={2} />
+                    </div>
+                  )}
+                </motion.button>
+              );
+            })}
+          </motion.div>
 
-                {/* Texto inferior */}
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px 22px' }}>
-                  <h2 style={{
-                    color: '#fff', fontSize: 22, fontWeight: 900,
-                    letterSpacing: '-0.02em', lineHeight: 1.1,
-                    textShadow: '0 2px 8px rgba(0,0,0,0.4)',
-                    margin: '0 0 4px',
-                  }}>
-                    {card.title}
-                  </h2>
-                  <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: 13, fontWeight: 600, margin: 0 }}>
-                    {card.subtitle}
+          {/* Encomiendas — card ancha */}
+          <motion.div
+            variants={tileVariants}
+            initial="hidden"
+            animate="show"
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate(ENCOMIENDAS_CARD.to)}
+            style={{
+              position: 'relative', height: 110, borderRadius: 20,
+              overflow: 'hidden', cursor: 'pointer',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.10)',
+              marginBottom: 28,
+            }}
+          >
+            <img src={ENCOMIENDAS_CARD.image} alt={ENCOMIENDAS_CARD.title}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(90deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.25) 100%)',
+            }} />
+            <div style={{
+              position: 'absolute', top: 16, right: 16,
+              background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.28)',
+              borderRadius: 999, width: 30, height: 30,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <ChevronRight size={14} color="#fff" strokeWidth={2.5} />
+            </div>
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 18px 16px' }}>
+              <h2 style={{ color: '#fff', fontSize: 17, fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 3px', textShadow: '0 1px 6px rgba(0,0,0,0.4)' }}>
+                {ENCOMIENDAS_CARD.title}
+              </h2>
+              <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: 12, fontWeight: 600, margin: 0 }}>
+                {ENCOMIENDAS_CARD.subtitle}
+              </p>
+            </div>
+          </motion.div>
+
+          {/* ── Cerca de vos ─────────────────────────────────────────── */}
+          <p style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 14px' }}>
+            Cerca de vos
+          </p>
+
+          {/* Themtham Gas card */}
+          <motion.button
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, type: 'spring', stiffness: 220, damping: 22 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/gas')}
+            style={{
+              width: '100%', background: '#fff',
+              border: '1px solid #E2E8F0',
+              borderRadius: 20, overflow: 'hidden',
+              display: 'flex', alignItems: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              textAlign: 'left', padding: 0,
+            }}
+          >
+            {/* Logo */}
+            <div style={{ width: 90, height: 90, flexShrink: 0, overflow: 'hidden', borderRadius: '20px 0 0 20px' }}>
+              <img
+                src="/themtham-gas.png"
+                alt="Themtham Gas"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+
+            {/* Info */}
+            <div style={{ flex: 1, padding: '14px 14px 14px 16px', minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontWeight: 800, fontSize: 14, color: '#0F172A', margin: 0, letterSpacing: '-0.01em' }}>
+                    Themtham Gas
                   </p>
+                  <p style={{ fontSize: 12, color: '#64748B', margin: '3px 0 8px', lineHeight: 1.4 }}>
+                    Tubos de gas y agua a domicilio
+                  </p>
+                  {/* Badge */}
+                  <span style={{
+                    display: 'inline-block',
+                    background: '#F0FDFA', color: '#0D9488',
+                    fontSize: 11, fontWeight: 700,
+                    borderRadius: 999, padding: '3px 10px',
+                    border: '1px solid rgba(13,148,136,0.2)',
+                  }}>
+                    Gas · Agua
+                  </span>
                 </div>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+                <ChevronRight size={16} color="#CBD5E1" strokeWidth={2} style={{ flexShrink: 0, marginTop: 2 }} />
+              </div>
+            </div>
+          </motion.button>
+        </div>
       </div>
 
       <BottomNav />

@@ -37,6 +37,7 @@ const Legal           = lazy(() => import('./pages/Legal.jsx'));
 const ResetPassword   = lazy(() => import('./pages/ResetPassword.jsx'));
 const GoogleCallback  = lazy(() => import('./pages/GoogleCallback.jsx'));
 const Remises         = lazy(() => import('./pages/Remises.jsx'));
+const Gas             = lazy(() => import('./pages/Gas.jsx'));
 
 // ── Admin panel ─────────────────────────────────────────────────────────────
 const AdminLogin          = lazy(() => import('./pages/admin/AdminLogin.jsx'));
@@ -116,6 +117,7 @@ export default function App() {
           </Route>
 
           {/* ── Siempre accesibles ── */}
+          <Route path="/gas"         element={<Gas />}         />
           <Route path="/encomiendas" element={<Encomiendas />} />
           <Route path="/anunciate"   element={<Anunciate />}   />
           <Route path="/sorteo"      element={<Sorteo />}      />
