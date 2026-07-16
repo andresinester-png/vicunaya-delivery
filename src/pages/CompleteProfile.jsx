@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, User, Phone, CreditCard } from 'lucide-react';
@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const RED  = '#D32F2F';
+const RED  = '#0F172A';
 const FONT = "'Plus Jakarta Sans', sans-serif";
 
 const inputBase = {
@@ -60,7 +60,7 @@ function BtnPrimary({ children, onClick, disabled }) {
         color: '#fff', border: 'none', borderRadius: 16,
         padding: '16px 24px', fontSize: 16, fontWeight: 800,
         cursor: disabled ? 'default' : 'pointer',
-        boxShadow: disabled ? 'none' : '0 8px 24px rgba(211,47,47,0.28)',
+        boxShadow: disabled ? 'none' : '0 8px 24px rgba(13,148,136,0.28)',
         fontFamily: FONT, display: 'flex', alignItems: 'center',
         justifyContent: 'center', gap: 8, transition: 'opacity 0.15s',
       }}
@@ -123,7 +123,7 @@ export default function CompleteProfile() {
       });
       if (error) throw error;
       await refreshProfile();
-      toast.success('¡Bienvenido a VicuñaYa!');
+      toast.success('¡Bienvenido a Kyvra!');
     } catch (err) {
       toast.error('Error: ' + err.message);
     } finally {
@@ -137,7 +137,7 @@ export default function CompleteProfile() {
       {/* Logo */}
       <div style={{ textAlign: 'center', padding: '28px 0 0' }}>
         <span style={{ fontFamily: FONT, fontWeight: 900, fontSize: 24, color: RED, letterSpacing: '-0.02em' }}>
-          VicuñaYa
+          Kyvra
         </span>
       </div>
 
@@ -159,7 +159,7 @@ export default function CompleteProfile() {
             <div style={{ fontSize: 72, lineHeight: 1, marginBottom: 24 }}>👋</div>
 
             <h1 style={{ fontSize: 28, fontWeight: 900, color: '#111', letterSpacing: '-0.02em', margin: '0 0 12px', lineHeight: 1.2, fontFamily: FONT }}>
-              Bienvenido a<br />VicuñaYa
+              Bienvenido a<br />Kyvra
             </h1>
             <p style={{ fontSize: 15, fontWeight: 500, color: '#6B7280', margin: '0 0 44px', maxWidth: 280, lineHeight: 1.65, fontFamily: FONT }}>
               Para poder hacer pedidos necesitamos algunos datos tuyos

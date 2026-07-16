@@ -1,26 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <!-- Background -->
-  <rect width="512" height="512" fill="#D32F2F"/>
+  <rect width="512" height="512" rx="112" fill="#0F172A"/>
 
-  <!-- V shape using thick polyline (no font dependency) -->
-  <polyline
-    points="68,88 256,418 444,88"
-    fill="none"
-    stroke="white"
-    stroke-width="80"
-    stroke-linecap="round"
-    stroke-linejoin="miter"
-    stroke-miterlimit="2"
+  <!-- K letter: vertical stroke + two diagonal arms -->
+  <!-- Vertical bar -->
+  <rect x="140" y="112" width="72" height="288" rx="20" fill="#86f2e4"/>
+  <!-- Upper arm: from mid-left to top-right -->
+  <polygon
+    points="212,256 380,112 448,112 448,176 280,290"
+    fill="#86f2e4"
   />
-
-  <!-- "Ya" white pill badge, bottom-right -->
-  <rect x="298" y="352" width="162" height="76" rx="22" fill="white"/>
-  <text
-    x="379" y="406"
-    text-anchor="middle"
-    font-family="sans-serif"
-    font-weight="bold"
-    font-size="50"
-    fill="#D32F2F"
-  >Ya</text>
+  <!-- Lower arm: from mid-left to bottom-right -->
+  <polygon
+    points="212,256 280,222 448,400 448,400 380,400"
+    fill="#86f2e4"
+  />
 </svg>

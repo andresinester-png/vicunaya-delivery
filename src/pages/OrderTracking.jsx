@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+﻿import { Fragment, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { X, Share2, ChevronRight, StickyNote, Plus, Minus, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -94,7 +94,7 @@ export default function OrderTracking() {
   const handleShare = async () => {
     const url = window.location.href;
     if (navigator.share) {
-      try { await navigator.share({ title: 'Mi pedido · VicuñaYa', url }); } catch { /* cancelado por el usuario */ }
+      try { await navigator.share({ title: 'Mi pedido · Kyvra', url }); } catch { /* cancelado por el usuario */ }
     } else {
       await navigator.clipboard.writeText(url);
       toast.success('Enlace copiado');
@@ -407,7 +407,7 @@ export default function OrderTracking() {
           </div>
         ) : (
           <div>
-            <p className="text-xs font-semibold mb-3" style={{ color: '#D32F2F' }}>
+            <p className="text-xs font-semibold mb-3" style={{ color: '#0F172A' }}>
               ⏱ Podés agregar productos por {fmtCountdown(itemsCountdown)} min
             </p>
 
@@ -430,7 +430,7 @@ export default function OrderTracking() {
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-gray-900 truncate">{mi.name}</p>
-                        <p className="text-sm font-bold mt-0.5" style={{ color: '#D32F2F' }}>${mi.price.toLocaleString('es-AR')}</p>
+                        <p className="text-sm font-bold mt-0.5" style={{ color: '#0F172A' }}>${mi.price.toLocaleString('es-AR')}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {qty > 0 && (
@@ -541,7 +541,7 @@ export default function OrderTracking() {
 
             <div className="border-t border-gray-100 pt-3 flex justify-between font-bold text-base mb-5">
               <span>Total nuevo del pedido</span>
-              <span style={{ color: '#D32F2F' }}>${newOrderTotal.toLocaleString('es-AR')}</span>
+              <span style={{ color: '#0F172A' }}>${newOrderTotal.toLocaleString('es-AR')}</span>
             </div>
 
             <div className="flex gap-3">

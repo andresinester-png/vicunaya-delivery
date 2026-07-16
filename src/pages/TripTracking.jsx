@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+ï»¿import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -7,14 +7,14 @@ import { supabase, MAP_CENTER } from '../lib/supabase.js';
 
 const driverIcon = new L.DivIcon({
   className: '',
-  html: `<div style="background:#e31b23;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 12px rgba(227,27,35,0.4);font-size:21px">??</div>`,
+  html: `<div style="background:#006a61;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 12px rgba(15,23,42,0.4);font-size:21px">??</div>`,
   iconSize: [42, 42],
   iconAnchor: [21, 21],
 });
 
 const originIcon = new L.DivIcon({
   className: '',
-  html: `<div style="background:#e31b23;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>`,
+  html: `<div style="background:#006a61;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>`,
   iconSize: [16, 16],
   iconAnchor: [8, 8],
 });
@@ -41,7 +41,7 @@ const STATUS_INFO = {
   accepted:    { label: 'Conductor en camino',   icon: Car,         color: 'text-blue-500'  },
   arriving:    { label: 'Llegando a buscarte',   icon: Car,         color: 'text-blue-500'  },
   in_progress: { label: 'En viaje',              icon: Navigation,  color: 'text-primary'   },
-  completed:   { label: '¡Llegaste!',            icon: CheckCircle, color: 'text-green-500' },
+  completed:   { label: 'ï¿½Llegaste!',            icon: CheckCircle, color: 'text-green-500' },
   cancelled:   { label: 'Cancelado',             icon: X,           color: 'text-red-500'   },
 };
 
@@ -99,7 +99,7 @@ export default function TripTracking() {
           {routePositions.length >= 2 && <FitBounds positions={routePositions} />}
           {originPos && <Marker position={originPos} icon={originIcon}><Popup>Origen</Popup></Marker>}
           {destPos && <Marker position={destPos} icon={destIcon}><Popup>Destino</Popup></Marker>}
-          {routePositions.length >= 2 && <Polyline positions={routePositions} color="#e31b23" weight={3} dashArray="8,6" />}
+          {routePositions.length >= 2 && <Polyline positions={routePositions} color="#006a61" weight={3} dashArray="8,6" />}
           {driverPos && <Marker position={driverPos} icon={driverIcon}><Popup>{driver.name}</Popup></Marker>}
         </MapContainer>
 
@@ -122,7 +122,7 @@ export default function TripTracking() {
             </div>
             <div className="flex-1">
               <p className="font-bold">{driver.name}</p>
-              <p className="text-sm text-gray-500">{driver.vehicle} · {driver.license_plate}</p>
+              <p className="text-sm text-gray-500">{driver.vehicle} ï¿½ {driver.license_plate}</p>
               <div className="flex items-center gap-1 text-amber-500 text-sm">
                 <Star size={13} fill="currentColor" />
                 <span className="font-semibold">{driver.rating?.toFixed(1)}</span>

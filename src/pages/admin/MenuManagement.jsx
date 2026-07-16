@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase.js';
 
 export default function MenuManagement() {
@@ -33,7 +33,7 @@ export default function MenuManagement() {
   if (!restaurantId) return (
     <div className="card p-10 text-center text-gray-400">
       <p>Tu cuenta no tiene un restaurante asociado.</p>
-      <p className="text-sm mt-1">Contactá con el administrador de VicuñaYa.</p>
+      <p className="text-sm mt-1">Contactá con el administrador de Kyvra.</p>
     </div>
   );
 

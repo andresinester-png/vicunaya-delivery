@@ -1,16 +1,17 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, ClipboardList, Calendar, CalendarCheck, User } from 'lucide-react';
+import { Home, Receipt, CalendarDays, CalendarCheck, User } from 'lucide-react';
 
 const TABS = [
   { to: '/',           icon: Home,          label: 'Inicio'     },
-  { to: '/pedidos',    icon: ClipboardList, label: 'Pedidos'    },
-  { to: '/turnos',     icon: Calendar,      label: 'Turnos'     },
+  { to: '/pedidos',    icon: Receipt,       label: 'Pedidos'    },
+  { to: '/turnos',     icon: CalendarDays,  label: 'Turnos'     },
   { to: '/mis-turnos', icon: CalendarCheck, label: 'Mis turnos' },
   { to: '/perfil',     icon: User,          label: 'Perfil'     },
 ];
 
-const ACTIVE_RED = '#D32F2F';
+const TEAL_LT = '#5EEAD4';
+const TEAL_BG = 'rgba(13,148,136,0.25)';
 
 export default function BottomNav() {
   const location = useLocation();
@@ -19,20 +20,19 @@ export default function BottomNav() {
     <nav style={{
       position: 'fixed',
       bottom: 16,
-      left: '50%',
-      transform: 'translateX(-50%)',
-      width: 'max-content',
-      maxWidth: 'calc(100% - 48px)',
+      left: 20,
+      right: 20,
       zIndex: 50,
-      background: 'rgba(20,20,20,0.50)',
-      backdropFilter: 'blur(28px)',
-      WebkitBackdropFilter: 'blur(28px)',
-      borderRadius: 28,
-      boxShadow: '0 8px 32px rgba(0,0,0,0.40), 0 2px 8px rgba(0,0,0,0.25)',
+      background: 'rgba(15,23,42,0.90)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderRadius: 24,
+      border: '1px solid rgba(255,255,255,0.08)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
       padding: '8px 4px',
       paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
         {TABS.map(({ to, icon: Icon, label }) => {
           const active = to === '/'
             ? location.pathname === '/' || location.pathname === '/delivery'
@@ -44,22 +44,19 @@ export default function BottomNav() {
               to={to}
               end={to === '/'}
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 3,
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 3,
                 textDecoration: 'none',
-                padding: '2px 8px',
+                padding: '2px 8px', flex: 1,
               }}
             >
-              {/* Contenedor del ícono con píldora activa */}
               <div style={{ position: 'relative', width: 44, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {active && (
                   <motion.div
                     layoutId="island-pill"
                     style={{
                       position: 'absolute', inset: 0,
-                      background: ACTIVE_RED,
+                      background: TEAL_BG,
                       borderRadius: 14,
                     }}
                     transition={{ type: 'spring', stiffness: 420, damping: 32 }}
@@ -73,14 +70,13 @@ export default function BottomNav() {
                   <Icon
                     size={19}
                     strokeWidth={active ? 2.5 : 1.8}
-                    color={active ? '#fff' : 'rgba(255,255,255,0.45)'}
+                    color={active ? TEAL_LT : 'rgba(255,255,255,0.50)'}
                   />
                 </motion.div>
               </div>
 
-              {/* Etiqueta */}
               <motion.span
-                animate={{ color: active ? ACTIVE_RED : 'rgba(255,255,255,0.38)' }}
+                animate={{ color: active ? TEAL_LT : 'rgba(255,255,255,0.40)' }}
                 transition={{ duration: 0.18 }}
                 style={{
                   fontSize: 9.5,

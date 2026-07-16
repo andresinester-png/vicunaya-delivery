@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+﻿import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Search, SlidersHorizontal, ChevronDown, X, Check } from 'lucide-react';
@@ -34,8 +34,8 @@ const CATEGORIES = [
 ];
 
 const BANNERS = [
-  { id:1, title:'¡Envío gratis!',   subtitle:'En tu primer pedido de Rotiserías',     gradient:'linear-gradient(135deg, #ff5b5f 0%, #D32F2F 100%)' },
-  { id:2, title:'2x1 en Empanadas', subtitle:'Hoy en locales seleccionados',          gradient:'linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%)' },
+  { id:1, title:'¡Envío gratis!',   subtitle:'En tu primer pedido de Rotiserías',     gradient:'linear-gradient(135deg, #006a61 0%, #0F172A 100%)' },
+  { id:2, title:'2x1 en Empanadas', subtitle:'Hoy en locales seleccionados',          gradient:'linear-gradient(135deg, #0F172A 0%, #0b1220 100%)' },
 ];
 
 const cardVariants = {
@@ -151,7 +151,7 @@ export default function Rotiserias() {
       }} />
 
       {/* ── Header rojo ── */}
-      <div style={{ background:'#D32F2F', paddingBottom:14, position:'relative', zIndex:10 }}>
+      <div style={{ background:'#0D9488', paddingBottom:14, position:'relative', zIndex:10 }}>
         {/* Fila título */}
         <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px 0' }}>
           <motion.button
@@ -287,7 +287,7 @@ export default function Rotiserias() {
               key={i}
               style={{
                 width:6, height:6, borderRadius:'50%',
-                background: i === activeBanner ? '#D32F2F' : '#E9D5D8',
+                background: i === activeBanner ? '#0D9488' : '#E9D5D8',
                 transition:'background 0.2s',
               }}
             />
@@ -318,7 +318,7 @@ export default function Rotiserias() {
                   onTouchEnd={() => setHoveredCat(null)}
                   style={{
                     width:88, height:88, borderRadius:16,
-                    border: active ? '2px solid #D32F2F' : '2px solid transparent',
+                    border: active ? '2px solid #0F172A' : '2px solid transparent',
                     boxSizing:'border-box', padding:2,
                     display:'flex', alignItems:'center', justifyContent:'center',
                     overflow:'hidden', background: active ? '#fff0f0' : '#EFEFEF',
@@ -344,7 +344,7 @@ export default function Rotiserias() {
                 <span style={{
                   fontSize:13, lineHeight:1.2, textAlign:'center',
                   fontWeight: active ? 800 : 600,
-                  color: active ? '#D32F2F' : '#374151',
+                  color: active ? '#0F172A' : '#374151',
                 }}>
                   {cat.label}
                 </span>
@@ -372,7 +372,7 @@ export default function Rotiserias() {
               style={{
                 display:'flex', alignItems:'center', gap:5,
                 padding:'7px 12px', borderRadius:20,
-                background: sortBy !== 'relevance' ? '#D32F2F' : '#fff',
+                background: sortBy !== 'relevance' ? '#0D9488' : '#fff',
                 color: sortBy !== 'relevance' ? '#fff' : '#374151',
                 border: sortBy !== 'relevance' ? 'none' : '1.5px solid #E9D5D8',
                 fontSize:13, fontWeight:700, cursor:'pointer',
@@ -410,7 +410,7 @@ export default function Rotiserias() {
                         display:'flex', alignItems:'center', justifyContent:'space-between',
                         width:'100%', padding:'12px 16px',
                         background: sortBy === opt.id ? '#FFF8F8' : '#fff',
-                        color: sortBy === opt.id ? '#D32F2F' : '#374151',
+                        color: sortBy === opt.id ? '#0F172A' : '#374151',
                         border:'none', textAlign:'left',
                         fontSize:14, fontWeight: sortBy === opt.id ? 700 : 600,
                         cursor:'pointer', fontFamily:"'Plus Jakarta Sans', sans-serif",
@@ -418,7 +418,7 @@ export default function Rotiserias() {
                       }}
                     >
                       {opt.label}
-                      {sortBy === opt.id && <Check size={15} color="#D32F2F" strokeWidth={2.5} />}
+                      {sortBy === opt.id && <Check size={15} color="#0F172A" strokeWidth={2.5} />}
                     </button>
                   ))}
                 </motion.div>
@@ -438,7 +438,7 @@ export default function Rotiserias() {
                   style={{
                     flexShrink:0,
                     padding:'7px 13px', borderRadius:20,
-                    background: active ? '#D32F2F' : '#fff',
+                    background: active ? '#0D9488' : '#fff',
                     color: active ? '#fff' : '#374151',
                     border: active ? 'none' : '1.5px solid #E9D5D8',
                     fontSize:13, fontWeight:700, cursor:'pointer',
@@ -471,7 +471,7 @@ export default function Rotiserias() {
             <p style={{ fontWeight:700, color:'#6B7280', fontSize:15 }}>Sin resultados</p>
             <button
               onClick={() => { setSearch(''); setCatFilter('Todos'); }}
-              style={{ marginTop:8, color:'#D32F2F', fontWeight:700, fontSize:14, background:'none', border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans', sans-serif" }}
+              style={{ marginTop:8, color:'#0D9488', fontWeight:700, fontSize:14, background:'none', border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans', sans-serif" }}
             >
               Limpiar filtros
             </button>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+﻿import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Star, ChevronLeft, ShoppingCart, Bike, Search, X } from 'lucide-react';
@@ -14,7 +14,7 @@ const CAT_GRADIENT = {
   'Rotisería': ['#FF9A3C','#FF6B00'], 'Parrilla': ['#EF4444','#B91C1C'],
   'Pizza':     ['#F59E0B','#D97706'], 'Empanadas': ['#10B981','#059669'],
   'Sushi':     ['#6366F1','#4338CA'], 'Vegano': ['#22C55E','#15803D'],
-  default:     ['#D32F2F','#C2003C'],
+  default:     ['#0F172A','#C2003C'],
 };
 const CAT_EMOJI = {
   'Rotisería':'🍗','Parrilla':'🥩','Pizza':'🍕','Empanadas':'🥟',
@@ -269,7 +269,7 @@ export default function Restaurant() {
           </div>
 
           {/* Red accent bar — same pattern as Home page cards */}
-          <div style={{ marginTop: 14, height: 3, width: 40, borderRadius: 2, background: '#D32F2F' }} />
+          <div style={{ marginTop: 14, height: 3, width: 40, borderRadius: 2, background: '#0D9488' }} />
         </div>
       </div>
 
@@ -367,10 +367,10 @@ export default function Restaurant() {
                   fontSize: 13, fontWeight: 700,
                   border: 'none', cursor: 'pointer',
                   transition: 'background 0.18s, color 0.18s, box-shadow 0.18s',
-                  background: activeCategory === cat.id ? '#D32F2F' : '#fff',
+                  background: activeCategory === cat.id ? '#0D9488' : '#fff',
                   color:      activeCategory === cat.id ? '#fff'     : '#374151',
                   boxShadow:  activeCategory === cat.id
-                    ? '0 4px 12px rgba(211,47,47,0.30)'
+                    ? '0 4px 12px rgba(13,148,136,0.30)'
                     : '0 1px 6px rgba(0,0,0,0.08)',
                 }}
               >
@@ -446,7 +446,7 @@ export default function Restaurant() {
                   </h2>
                   {(itemsByCategory[cat.id]?.length ?? 0) > 0 && (
                     <span style={{
-                      fontSize: 11, fontWeight: 800, color: '#D32F2F',
+                      fontSize: 11, fontWeight: 800, color: '#0F172A',
                       background: '#FFF8F8', padding: '2px 8px', borderRadius: 999,
                     }}>
                       {itemsByCategory[cat.id].length}
@@ -521,11 +521,11 @@ export default function Restaurant() {
               style={{
                 flex: 1,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                background: isOpen ? '#D32F2F' : '#9CA3AF', color: '#fff',
+                background: isOpen ? '#0D9488' : '#9CA3AF', color: '#fff',
                 fontWeight: 800, fontSize: 15,
                 padding: '14px 22px',
                 borderRadius: 999, border: 'none', cursor: isOpen ? 'pointer' : 'not-allowed',
-                boxShadow: isOpen ? '0 6px 20px rgba(211,47,47,0.35)' : 'none',
+                boxShadow: isOpen ? '0 6px 20px rgba(13,148,136,0.35)' : 'none',
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
               }}
             >

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, Trash2, Minus, Plus, ChevronRight } from 'lucide-react';
@@ -88,7 +88,7 @@ export default function Cart() {
               onClick={() => setFulfillmentMethod(opt.key)}
               className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
               style={{
-                background: fulfillmentMethod === opt.key ? '#D32F2F' : 'transparent',
+                background: fulfillmentMethod === opt.key ? '#0D9488' : 'transparent',
                 color: fulfillmentMethod === opt.key ? '#fff' : '#6B7280',
               }}
             >
@@ -149,7 +149,7 @@ export default function Cart() {
                     whileTap={{ scale: 0.85 }}
                     onClick={() => updateQty(item.id, item.qty + 1)}
                     className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-dark transition-colors"
-                    style={{ boxShadow: '0 3px 10px rgba(211,47,47,0.3)' }}
+                    style={{ boxShadow: '0 3px 10px rgba(15,23,42,0.3)' }}
                   >
                     <Plus size={13} />
                   </motion.button>
@@ -239,7 +239,7 @@ export default function Cart() {
                       }}>
                         {item.name}
                       </p>
-                      <p style={{ fontSize: 12, fontWeight: 800, color: '#D32F2F', margin: '4px 0 0' }}>
+                      <p style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', margin: '4px 0 0' }}>
                         ${item.price.toLocaleString('es-AR')}
                       </p>
                     </div>
@@ -251,11 +251,11 @@ export default function Cart() {
                       style={{
                         position: 'absolute', bottom: 8, right: 8,
                         width: 26, height: 26, borderRadius: '50%',
-                        background: justAdded ? '#2E7D32' : '#D32F2F',
+                        background: justAdded ? '#2E7D32' : '#0D9488',
                         color: '#fff',
                         border: 'none', cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 3px 8px rgba(211,47,47,0.35)',
+                        boxShadow: '0 3px 8px rgba(13,148,136,0.35)',
                         transition: 'background 0.2s',
                       }}
                     >

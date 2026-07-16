@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+﻿import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, Star, Shield, Clock, ChevronRight, Navigation } from 'lucide-react';
@@ -104,20 +104,20 @@ export default function RemisesPage() {
           <div style="
             position: absolute;
             inset: 0;
-            background: rgba(227,27,35,0.2);
+            background: rgba(15,23,42,0.2);
             border-radius: 50%;
             animation: pulse 2s infinite;
           "></div>
           <div style="
             position: absolute;
             inset: 4px;
-            background: #e31b23;
+            background: #006a61;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             border: 2px solid rgba(255,255,255,0.9);
-            box-shadow: 0 4px 20px rgba(227,27,35,0.5);
+            box-shadow: 0 4px 20px rgba(15,23,42,0.5);
             font-size: 18px;
           ">🚗</div>
         </div>
@@ -240,7 +240,7 @@ export default function RemisesPage() {
           transition: 'bottom 0.3s ease',
         }}
       >
-        <Navigation size={18} color="#e31b23" />
+        <Navigation size={18} color="#006a61" />
       </motion.button>
 
       {/* Bottom Sheet */}
@@ -287,7 +287,7 @@ export default function RemisesPage() {
           >
             <div style={{
               width: 36, height: 36, borderRadius: 10,
-              background: '#e31b23',
+              background: '#006a61',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
             }}>

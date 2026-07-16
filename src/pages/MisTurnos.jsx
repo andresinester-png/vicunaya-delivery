@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarCheck, Clock, MapPin, User as UserIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -77,7 +77,7 @@ function LoginPrompt() {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
       <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#FFF8F8' }}>
-        <CalendarCheck size={28} style={{ color: '#D32F2F' }} />
+        <CalendarCheck size={28} style={{ color: '#0F172A' }} />
       </div>
       <h2 className="font-extrabold text-lg text-gray-900 mb-1">Iniciá sesión</h2>
       <p className="text-sm text-gray-500 mb-6">Para ver tus turnos necesitás estar logueado.</p>
@@ -200,7 +200,7 @@ function AppointmentCard({ appt, index, updating, onUpdateStatus }) {
             className="flex-1 py-2 rounded-xl text-xs font-bold transition-colors"
             style={{
               background: isUpdating('cancelled') ? '#FEE2E2' : '#FFF8F8',
-              color: '#D32F2F',
+              color: '#0F172A',
               border: '1.5px solid #FECACA',
               opacity: !!updating ? 0.7 : 1,
             }}
@@ -272,7 +272,7 @@ export default function MisTurnos() {
 
         {/* Título */}
         <div className="flex items-center gap-2 mb-4">
-          <CalendarCheck size={20} style={{ color: '#D32F2F' }} />
+          <CalendarCheck size={20} style={{ color: '#0F172A' }} />
           <h1 className="font-extrabold text-lg text-gray-900">Mis turnos</h1>
         </div>
 
@@ -292,7 +292,7 @@ export default function MisTurnos() {
             {activeAppts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#fff', border: '1.5px solid #E9D5D8' }}>
-                  <CalendarCheck size={28} style={{ color: '#D32F2F' }} />
+                  <CalendarCheck size={28} style={{ color: '#0F172A' }} />
                 </div>
                 <p className="font-bold text-gray-700">No tenés turnos próximos</p>
                 <p className="text-sm text-gray-400 mt-1">Buscá un negocio en Turnos y reservá.</p>

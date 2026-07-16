@@ -1,8 +1,8 @@
-import { motion, AnimatePresence } from 'framer-motion';
+﻿import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, Package, ChefHat, Bike, CheckCircle2, Calendar, Clock } from 'lucide-react';
 
 const FONT   = "'Plus Jakarta Sans', sans-serif";
-const RED    = '#D32F2F';
+const RED    = '#0F172A';
 const PURPLE = '#7C3AED';
 
 const TIPO_CONFIG = {

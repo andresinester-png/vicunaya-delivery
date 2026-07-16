@@ -36,6 +36,7 @@ const MisTurnos       = lazy(() => import('./pages/MisTurnos.jsx'));
 const Legal           = lazy(() => import('./pages/Legal.jsx'));
 const ResetPassword   = lazy(() => import('./pages/ResetPassword.jsx'));
 const GoogleCallback  = lazy(() => import('./pages/GoogleCallback.jsx'));
+const Remises         = lazy(() => import('./pages/Remises.jsx'));
 
 // ── Admin panel ─────────────────────────────────────────────────────────────
 const AdminLogin          = lazy(() => import('./pages/admin/AdminLogin.jsx'));
@@ -75,7 +76,7 @@ export default function App() {
           position="top-center"
           toastOptions={{
             style: { borderRadius: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px' },
-            success: { iconTheme: { primary: '#e31b23', secondary: '#fff' } },
+            success: { iconTheme: { primary: '#006a61', secondary: '#fff' } },
           }}
         />
         <SplashScreen />
@@ -96,11 +97,12 @@ export default function App() {
             <Route path="/perfil"      element={<Profile />}   />
             <Route path="/direcciones" element={<Addresses />} />
 
-            {/* Delivery y Turnos → geo-restringidas */}
+            {/* Delivery, Turnos y Remises → geo-restringidas */}
             <Route element={<GeoGate />}>
               <Route path="/delivery"   element={<Home />}     />
               <Route path="/turnos"     element={<Turnos />}   />
               <Route path="/mis-turnos" element={<MisTurnos />} />
+              <Route path="/remises"    element={<Remises />}  />
             </Route>
           </Route>
 

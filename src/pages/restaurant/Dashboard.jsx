@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import {
   CheckCircle, XCircle, Clock, ChefHat, Bike, PackageCheck, Bell,
   DollarSign, ShoppingBag, BarChart3, Star, MapPin, Wallet, Timer,
@@ -206,7 +206,7 @@ export default function Dashboard() {
           // Local notification for when the panel is open in background
           if (Notification.permission === 'granted') {
             navigator.serviceWorker.ready.then(reg => {
-              reg.showNotification('🛵 Nuevo pedido — VicuñaYa', {
+              reg.showNotification('🛵 Nuevo pedido — Kyvra', {
                 body:    `${order.customer_name} · ${order.items?.length ?? 0} productos · $${(order.total ?? 0).toLocaleString('es-AR')}`,
                 tag:     'new-order',
                 renotify: true,

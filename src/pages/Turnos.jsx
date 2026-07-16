@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+﻿import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase.js';
 
-const RED = '#D32F2F';
+const RED = '#0F172A';
 
 export const CATEGORY_INFO = {
   peluqueria:  { label: 'Peluquería',  emoji: '💇', Icon: Scissors,   bg: '#EFF6FF', color: '#2563EB' },
@@ -125,7 +125,7 @@ export default function Turnos() {
         >
           <div style={{
             position: 'absolute', inset: 0,
-            background: 'linear-gradient(to right, rgba(211,47,47,0.88) 12%, rgba(183,28,28,0.28) 60%)',
+            background: 'linear-gradient(to right, rgba(15,23,42,0.88) 12%, rgba(183,28,28,0.28) 60%)',
           }} />
           <div style={{ position: 'relative', padding: '0 20px 20px' }}>
             <p style={{ color: '#fff', fontWeight: 800, fontSize: 22, margin: 0, lineHeight: 1.2 }}>
@@ -179,7 +179,7 @@ export default function Turnos() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: active ? RED : '#fff',
                     border: active ? 'none' : '1px solid #E9D5D8',
-                    boxShadow: active ? '0 4px 14px rgba(211,47,47,0.38)' : '0 2px 8px rgba(0,0,0,0.06)',
+                    boxShadow: active ? '0 4px 14px rgba(15,23,42,0.38)' : '0 2px 8px rgba(0,0,0,0.06)',
                     color: active ? '#fff' : RED,
                     transition: 'all 0.18s',
                   }}>
@@ -219,7 +219,7 @@ export default function Turnos() {
                   border: active ? 'none' : '1px solid #E9D5D8',
                   background: active ? RED : '#fff',
                   color: active ? '#fff' : '#5B5450',
-                  boxShadow: active ? '0 4px 12px rgba(211,47,47,0.30)' : 'none',
+                  boxShadow: active ? '0 4px 12px rgba(13,148,136,0.30)' : 'none',
                   transition: 'all 0.18s',
                 }}
               >

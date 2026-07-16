@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+﻿import { NavLink, useNavigate } from 'react-router-dom';
 import { ClipboardList, UtensilsCrossed, TrendingUp, LogOut, Store } from 'lucide-react';
 import { supabase } from '../lib/supabase.js';
 import { useRestaurant } from '../contexts/RestaurantContext.js';
@@ -41,7 +41,7 @@ export default function RestaurantLayout({ children }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-[rgba(227,27,35,0.18)] text-white shadow-[inset_3px_0_0_0_#e31b23]'
+                    ? 'bg-[rgba(15,23,42,0.18)] text-white shadow-[inset_3px_0_0_0_#006a61]'
                     : 'text-[rgba(255,255,255,0.5)] hover:bg-white/5 hover:text-[rgba(255,255,255,0.8)]'
                 }`
               }
@@ -85,7 +85,7 @@ export default function RestaurantLayout({ children }) {
             to={to}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors ${
-                isActive ? 'bg-[rgba(227,27,35,0.18)] text-white shadow-[inset_0_2px_0_0_#e31b23]' : 'text-[rgba(255,255,255,0.5)]'
+                isActive ? 'bg-[rgba(15,23,42,0.18)] text-white shadow-[inset_0_2px_0_0_#006a61]' : 'text-[rgba(255,255,255,0.5)]'
               }`
             }
           >

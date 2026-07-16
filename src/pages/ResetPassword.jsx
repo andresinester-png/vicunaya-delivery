@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
@@ -79,10 +79,10 @@ export default function ResetPassword() {
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <span style={{ color: '#fff', fontWeight: 900, fontSize: 36, letterSpacing: '-0.04em' }}>Vicuña</span>
           <span style={{
-            background: '#D32F2F', color: '#fff',
+            background: '#0D9488', color: '#fff',
             borderRadius: 10, padding: '2px 10px',
             fontWeight: 900, fontSize: 36, letterSpacing: '-0.04em', marginLeft: 6,
-            boxShadow: '0 4px 18px rgba(211,47,47,0.55)',
+            boxShadow: '0 4px 18px rgba(15,23,42,0.55)',
           }}>Ya</span>
         </div>
 
@@ -91,7 +91,7 @@ export default function ResetPassword() {
             <div style={{
               width: 32, height: 32, borderRadius: '50%',
               border: '3px solid rgba(255,255,255,0.25)',
-              borderTopColor: '#D32F2F',
+              borderTopColor: '#0D9488',
               animation: 'spin 0.8s linear infinite',
               margin: '0 auto 14px',
             }} />
@@ -108,10 +108,10 @@ export default function ResetPassword() {
             <button
               onClick={() => navigate('/welcome')}
               style={{
-                background: '#D32F2F', color: '#fff', border: 'none',
+                background: '#0D9488', color: '#fff', border: 'none',
                 borderRadius: 14, padding: '13px 28px',
                 fontSize: 15, fontWeight: 800, cursor: 'pointer',
-                fontFamily: 'inherit', boxShadow: '0 4px 18px rgba(211,47,47,0.45)',
+                fontFamily: 'inherit', boxShadow: '0 4px 18px rgba(13,148,136,0.45)',
               }}
             >
               Volver al inicio
@@ -156,13 +156,13 @@ export default function ResetPassword() {
                 type="submit"
                 disabled={submitting}
                 style={{
-                  background: '#D32F2F', color: '#fff', border: 'none',
+                  background: '#0D9488', color: '#fff', border: 'none',
                   borderRadius: 16, padding: '16px 20px',
                   fontSize: 15, fontWeight: 800,
                   cursor: submitting ? 'default' : 'pointer',
                   opacity: submitting ? 0.7 : 1,
                   marginTop: 4,
-                  boxShadow: '0 6px 24px rgba(211,47,47,0.45)',
+                  boxShadow: '0 6px 24px rgba(13,148,136,0.45)',
                   fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}

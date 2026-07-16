@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Minus, Plus } from 'lucide-react';
 import useCartStore from '../store/cartStore.js';
@@ -31,7 +31,7 @@ function QtyControl({ value, onChange, min = 0 }) {
           width: 44, height: 44,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'transparent', border: 'none', cursor: 'pointer',
-          color: '#D32F2F',
+          color: '#0F172A',
         }}
       >
         <Plus size={17} strokeWidth={2.5} />
@@ -196,12 +196,12 @@ export default function ProductModal({ item, restaurant, onClose }) {
             style={{
               width: '100%',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: canAdd ? '#D32F2F' : '#E5E7EB',
+              background: canAdd ? '#0D9488' : '#E5E7EB',
               color: canAdd ? '#fff' : '#9CA3AF',
               fontWeight: 700, fontSize: 15,
               padding: '15px 20px', borderRadius: 16, border: 'none',
               cursor: canAdd ? 'pointer' : 'not-allowed',
-              boxShadow: canAdd ? '0 4px 14px rgba(211,47,47,0.35)' : 'none',
+              boxShadow: canAdd ? '0 4px 14px rgba(13,148,136,0.35)' : 'none',
               fontFamily: "'Plus Jakarta Sans', sans-serif",
               transition: 'all 0.18s',
             }}

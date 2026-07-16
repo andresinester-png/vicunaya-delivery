@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+﻿import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus } from 'lucide-react';
 import useCartStore from '../store/cartStore.js';
 
@@ -150,7 +150,7 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  <Minus size={14} color="#D32F2F" strokeWidth={3} />
+                  <Minus size={14} color="#0F172A" strokeWidth={3} />
                 </button>
 
                 <span style={{
@@ -169,7 +169,7 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  <Plus size={14} color="#D32F2F" strokeWidth={3} />
+                  <Plus size={14} color="#0F172A" strokeWidth={3} />
                 </button>
               </motion.div>
             ) : (
@@ -193,7 +193,7 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
                   boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
                 }}
               >
-                <Plus size={20} color="#D32F2F" strokeWidth={2.5} />
+                <Plus size={20} color="#0F172A" strokeWidth={2.5} />
               </motion.button>
             )}
           </AnimatePresence>

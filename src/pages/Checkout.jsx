@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo } from 'react';
+﻿import { useState, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Copy, CheckCircle, Plus, MapPin, X, Camera } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -400,7 +400,7 @@ export default function Checkout() {
     <div className="min-h-screen" style={{ background: '#F9FAFB', paddingBottom: 110 }}>
       {/* ── Header rojo redondeado con total ── */}
       <header style={{
-        background: '#E53935', color: 'white',
+        background: '#0D9488', color: 'white',
         paddingTop: 44, paddingBottom: 28, paddingLeft: 16, paddingRight: 16,
         borderRadius: '0 0 2rem 2rem',
         boxShadow: '0 4px 20px rgba(229,57,53,0.3)',
@@ -413,7 +413,7 @@ export default function Checkout() {
           >
             <ChevronLeft size={24} color="white" />
           </button>
-          <span style={{ fontWeight: 700, fontSize: 18, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>VicuñaYa - Pago</span>
+          <span style={{ fontWeight: 700, fontSize: 18, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Kyvra - Pago</span>
           <div style={{ width: 40 }} />
         </div>
         <div style={{ textAlign: 'center' }}>
@@ -484,7 +484,7 @@ export default function Checkout() {
             onClick={() => setPaymentMethod('transfer')}
             className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
             style={{
-              borderColor: paymentMethod === 'transfer' ? '#D32F2F' : '#E9D5D8',
+              borderColor: paymentMethod === 'transfer' ? '#0F172A' : '#E9D5D8',
               background: paymentMethod === 'transfer' ? '#FFF8F8' : '#fff',
             }}
           >
@@ -498,7 +498,7 @@ export default function Checkout() {
             onClick={() => setPaymentMethod('cash')}
             className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
             style={{
-              borderColor: paymentMethod === 'cash' ? '#D32F2F' : '#E9D5D8',
+              borderColor: paymentMethod === 'cash' ? '#0F172A' : '#E9D5D8',
               background: paymentMethod === 'cash' ? '#FFF8F8' : '#fff',
             }}
           >
@@ -545,7 +545,7 @@ export default function Checkout() {
                     onClick={copyAlias}
                     className="flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-xl text-sm font-bold transition-colors"
                     style={{
-                      background: aliasCopied ? '#DCFCE7' : '#D32F2F',
+                      background: aliasCopied ? '#DCFCE7' : '#0D9488',
                       color: aliasCopied ? '#2E7D32' : '#fff',
                       border: 'none',
                       cursor: 'pointer',
@@ -733,7 +733,7 @@ export default function Checkout() {
                 onClick={() => { setLocalFulfillment('delivery'); setFulfillmentSheetOpen(false); }}
                 className="flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left transition-colors"
                 style={{
-                  borderColor: localFulfillment === 'delivery' ? '#D32F2F' : '#E5E7EB',
+                  borderColor: localFulfillment === 'delivery' ? '#0F172A' : '#E5E7EB',
                   background: localFulfillment === 'delivery' ? '#FFF8F8' : '#fff',
                 }}
               >
@@ -750,7 +750,7 @@ export default function Checkout() {
                 onClick={() => { setLocalFulfillment('pickup'); setFulfillmentSheetOpen(false); }}
                 className="flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left transition-colors"
                 style={{
-                  borderColor: localFulfillment === 'pickup' ? '#D32F2F' : '#E5E7EB',
+                  borderColor: localFulfillment === 'pickup' ? '#0F172A' : '#E5E7EB',
                   background: localFulfillment === 'pickup' ? '#FFF8F8' : '#fff',
                 }}
               >

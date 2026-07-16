@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -34,7 +34,7 @@ export default function DriverLogin() {
           <div className="text-center mb-6">
             <div className="text-5xl mb-2">🚗</div>
             <h1 className="font-extrabold text-2xl">Ingresá como conductor</h1>
-            <p className="text-gray-500 text-sm mt-1">VicuñaYa Remises</p>
+            <p className="text-gray-500 text-sm mt-1">Kyvra Remises</p>
           </div>
           <div className="card p-6">
             <form onSubmit={handleSubmit} className="space-y-4">

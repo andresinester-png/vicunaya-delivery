@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -27,7 +27,7 @@ function Section({ title, children }) {
 function Bullet({ children }) {
   return (
     <div style={{ display: 'flex', gap: 8, marginBottom: 5 }}>
-      <span style={{ color: '#e31b23', fontWeight: 900, flexShrink: 0, marginTop: 1 }}>·</span>
+      <span style={{ color: '#006a61', fontWeight: 900, flexShrink: 0, marginTop: 1 }}>·</span>
       <span>{children}</span>
     </div>
   );
@@ -41,7 +41,7 @@ function PrivacyContent() {
       </p>
 
       <Section title="1. Datos que recopilamos">
-        <p style={{ marginBottom: 8 }}>Al usar VicuñaYa podemos recopilar la siguiente información:</p>
+        <p style={{ marginBottom: 8 }}>Al usar Kyvra podemos recopilar la siguiente información:</p>
         <Bullet>Nombre y apellido</Bullet>
         <Bullet>Número de teléfono</Bullet>
         <Bullet>Dirección de entrega</Bullet>
@@ -109,7 +109,7 @@ function TermsContent() {
 
       <Section title="1. El servicio">
         <p>
-          VicuñaYa es una plataforma que conecta a usuarios con restaurantes y comercios locales
+          Kyvra es una plataforma que conecta a usuarios con restaurantes y comercios locales
           de Vicuña Mackenna, Córdoba. Actuamos como intermediarios: facilitamos el pedido, pero
           la preparación y entrega depende de cada establecimiento.
         </p>
@@ -117,7 +117,7 @@ function TermsContent() {
 
       <Section title="2. Responsabilidad sobre los alimentos">
         <p>
-          VicuñaYa <strong>no se responsabiliza</strong> por la calidad, inocuidad o estado de
+          Kyvra <strong>no se responsabiliza</strong> por la calidad, inocuidad o estado de
           los alimentos preparados por los restaurantes. Cada establecimiento es responsable del
           cumplimiento de las normativas alimentarias vigentes. Ante cualquier problema con un
           producto, te recomendamos contactar directamente al restaurante.
@@ -127,7 +127,7 @@ function TermsContent() {
       <Section title="3. Precios">
         <p>
           Los precios de los productos son fijados exclusivamente por cada restaurante y pueden
-          cambiar sin previo aviso. VicuñaYa no interviene en la fijación de precios ni garantiza
+          cambiar sin previo aviso. Kyvra no interviene en la fijación de precios ni garantiza
           que los precios mostrados estén siempre actualizados en tiempo real.
         </p>
       </Section>
@@ -135,7 +135,7 @@ function TermsContent() {
       <Section title="4. Confirmación de pedidos">
         <p>
           Un pedido se considera <strong>confirmado</strong> únicamente cuando el restaurante lo
-          acepta. Hasta ese momento, el pedido está pendiente de aceptación. VicuñaYa no puede
+          acepta. Hasta ese momento, el pedido está pendiente de aceptación. Kyvra no puede
           garantizar la disponibilidad de los productos en el momento de realizar el pedido.
         </p>
       </Section>
@@ -147,7 +147,7 @@ function TermsContent() {
       </Section>
 
       <Section title="6. Uso aceptable">
-        <p style={{ marginBottom: 8 }}>Al usar VicuñaYa, te comprometés a:</p>
+        <p style={{ marginBottom: 8 }}>Al usar Kyvra, te comprometés a:</p>
         <Bullet>No realizar pedidos falsos o fraudulentos</Bullet>
         <Bullet>No usar la plataforma para actividades ilegales</Bullet>
         <Bullet>Proporcionar información de contacto y dirección verídica</Bullet>
@@ -160,7 +160,7 @@ function TermsContent() {
 
       <Section title="7. Edad mínima">
         <p>
-          VicuñaYa está disponible para usuarios <strong>mayores de 13 años</strong>. Al usar la
+          Kyvra está disponible para usuarios <strong>mayores de 13 años</strong>. Al usar la
           aplicación, confirmás que tenés al menos 13 años de edad o que contás con el
           consentimiento de un tutor legal.
         </p>
@@ -200,7 +200,7 @@ export default function Legal() {
               Legal
             </h1>
             <p style={{ fontSize: 12, color: '#9CA3AF', fontWeight: 500, margin: '2px 0 0' }}>
-              VicuñaYa · Vicuña Mackenna, Córdoba
+              Kyvra · Vicuña Mackenna, Córdoba
             </p>
           </div>
         </div>
@@ -219,10 +219,10 @@ export default function Legal() {
                 fontSize: 12.5, fontWeight: 700,
                 border: 'none', cursor: 'pointer',
                 transition: 'background 0.18s, color 0.18s, box-shadow 0.18s',
-                background: tab === t.id ? '#e31b23' : '#fff',
+                background: tab === t.id ? '#006a61' : '#fff',
                 color:      tab === t.id ? '#fff'     : '#374151',
                 boxShadow:  tab === t.id
-                  ? '0 4px 12px rgba(227,27,35,0.30)'
+                  ? '0 4px 12px rgba(13,148,136,0.30)'
                   : '0 1px 6px rgba(0,0,0,0.08)',
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
               }}

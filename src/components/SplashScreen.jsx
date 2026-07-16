@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import bgImage from '../screen.png';
 
-const SPLASH_KEY = 'vicunaya_splash_shown';
+const SPLASH_KEY = 'kyvra_splash_shown';
 const DURATION   = 5000; // ms antes del fade-out
 
 // Keyframes para la sombra dinámica que acompaña el giro del logo
@@ -95,14 +95,7 @@ export default function SplashScreen() {
                   color: '#fff', fontWeight: 900, fontSize: 46,
                   letterSpacing: '-0.04em', lineHeight: 1,
                 }}>
-                  Vicuña
-                </span>
-                <span style={{
-                  background: '#D32F2F', color: '#fff',
-                  borderRadius: 12, padding: '3px 14px',
-                  fontWeight: 900, fontSize: 46, letterSpacing: '-0.04em',
-                }}>
-                  Ya
+                  Kyvra
                 </span>
               </motion.div>
             </motion.div>
@@ -143,9 +136,9 @@ export default function SplashScreen() {
                 }}
                 style={{
                   height: '100%',
-                  background: 'linear-gradient(90deg, #D32F2F 0%, #FF6B6B 100%)',
+                  background: 'linear-gradient(90deg, #0D9488 0%, #5EEAD4 100%)',
                   borderRadius: 999,
-                  boxShadow: '0 0 8px rgba(211,47,47,0.7)',
+                  boxShadow: '0 0 8px rgba(13,148,136,0.7)',
                 }}
               />
             </motion.div>

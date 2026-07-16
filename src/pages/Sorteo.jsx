@@ -1,9 +1,9 @@
-import { useNavigate } from 'react-router-dom';
+﻿import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 
 const PASOS = [
-  { num:'1️⃣', text:'Descargá VicuñaYa' },
+  { num:'1️⃣', text:'Descargá Kyvra' },
   { num:'2️⃣', text:'Realizá cualquier pedido por la app' },
   { num:'3️⃣', text:'Cada compra es una entrada al sorteo' },
   { num:'4️⃣', text:'¡A más pedidos, más chances de ganar!' },
@@ -12,9 +12,9 @@ const PASOS = [
 const BASES = [
   'El sorteo se realizará al finalizar el Mundial 2026',
   'Premio: $100.000 en efectivo',
-  'Participan todos los usuarios que hayan realizado al menos un pedido a través de la app VicuñaYa durante el período del Mundial 2026',
+  'Participan todos los usuarios que hayan realizado al menos un pedido a través de la app Kyvra durante el período del Mundial 2026',
   'El ganador será contactado por WhatsApp al número registrado en la app',
-  'El sorteo se realizará en vivo y será transmitido por las redes sociales de VicuñaYa',
+  'El sorteo se realizará en vivo y será transmitido por las redes sociales de Kyvra',
 ];
 
 const CONFETTI_COLORS = ['#FFD700', '#fff', '#FFB800', '#ff8a8d'];
@@ -50,7 +50,7 @@ export default function Sorteo() {
       `}</style>
 
       {/* ── Header rojo ── */}
-      <div style={{ background:'#D32F2F', padding:'14px 16px', display:'flex', alignItems:'center', gap:12 }}>
+      <div style={{ background:'#0D9488', padding:'14px 16px', display:'flex', alignItems:'center', gap:12 }}>
         <motion.button
           whileTap={{ scale:0.88 }}
           onClick={() => navigate(-1)}
@@ -64,14 +64,14 @@ export default function Sorteo() {
           <ChevronLeft size={20} color="#fff" strokeWidth={2.5} />
         </motion.button>
         <h1 style={{ color:'#fff', fontSize:19, fontWeight:900, letterSpacing:'-0.02em', margin:0 }}>
-          Gran Sorteo VicuñaYa
+          Gran Sorteo Kyvra
         </h1>
       </div>
 
       {/* ── Banner con confeti ── */}
       <div style={{
         position:'relative', overflow:'hidden', height:180,
-        background:'linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%)',
+        background:'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)',
         display:'flex', alignItems:'center', justifyContent:'center',
       }}>
         {CONFETTI.map((c, i) => (

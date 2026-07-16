@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -11,7 +11,7 @@ import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const EMPRESA_ID = '5c5ce5e7-25b8-4e53-be85-05af7a85a224';
-const COLOR      = '#D32F2F';
+const COLOR      = '#0F172A';
 
 const ALL_DAYS = [
   { val: 'lunes',      label: 'Lunes'      },
@@ -1138,7 +1138,7 @@ export default function Encomiendas() {
           style={{
             background: COLOR, color: '#fff', border: 'none', borderRadius: 20, padding: '16px',
             fontSize: 16, fontWeight: 900, letterSpacing: '-0.01em', cursor: 'pointer',
-            width: '100%', boxShadow: '0 6px 24px rgba(211,47,47,0.35)',
+            width: '100%', boxShadow: '0 6px 24px rgba(13,148,136,0.35)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             fontFamily: "'Plus Jakarta Sans', sans-serif",
           }}

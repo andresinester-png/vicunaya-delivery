@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clock, Star, Bike } from 'lucide-react';
 import { isRestaurantOpen } from '../lib/restaurantUtils.js';
@@ -11,13 +11,13 @@ const CAT_GRADIENT = {
   'Sushi':     ['#4F46E5','#2E1065'],
   'Vegano':    ['#15803D','#052E16'],
   'Bebidas':   ['#0284C7','#0C4A6E'],
-  default:     ['#D32F2F','#7F0028'],
+  default:     ['#0F172A','#7F0028'],
 };
 
 const CAT_LOGO_BG = {
   'Rotisería': '#FF8C00', 'Parrilla': '#DC2626', 'Pizza': '#D97706',
   'Empanadas': '#16A34A', 'Sushi':    '#4F46E5', 'Vegano': '#15803D',
-  'Bebidas':   '#0284C7', default:    '#D32F2F',
+  'Bebidas':   '#0284C7', default:    '#0F172A',
 };
 
 const CAT_CHIP = {
@@ -28,7 +28,7 @@ const CAT_CHIP = {
   'Sushi':     { bg:'#EEF2FF', color:'#4F46E5' },
   'Vegano':    { bg:'#F0FDF4', color:'#15803D' },
   'Bebidas':   { bg:'#EFF6FF', color:'#2563EB' },
-  default:     { bg:'#FFF8F8', color:'#D32F2F' },
+  default:     { bg:'#FFF8F8', color:'#0F172A' },
 };
 
 export default function RestaurantCard({ restaurant }) {

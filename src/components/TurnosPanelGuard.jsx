@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
 import { TurnosNegocioContext } from '../contexts/TurnosNegocioContext.js';
@@ -6,7 +6,7 @@ import TurnosPanelLayout from './TurnosPanelLayout.jsx';
 
 const Spinner = () => (
   <div className="min-h-screen flex items-center justify-center">
-    <div className="w-8 h-8 border-[3px] border-[#e31b23] border-t-transparent rounded-full animate-spin" />
+    <div className="w-8 h-8 border-[3px] border-[#006a61] border-t-transparent rounded-full animate-spin" />
   </div>
 );
 
@@ -46,7 +46,7 @@ export default function TurnosPanelGuard() {
         <p className="text-sm text-gray-400">Tu cuenta no tiene ningún negocio de turnos vinculado. Contactá al administrador.</p>
         <button
           onClick={() => supabase.auth.signOut()}
-          className="text-sm text-[#e31b23] hover:underline mt-2 block mx-auto"
+          className="text-sm text-[#006a61] hover:underline mt-2 block mx-auto"
         >
           Cerrar sesión
         </button>

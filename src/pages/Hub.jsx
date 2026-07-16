@@ -1,11 +1,145 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { ChevronRight, Lock, MapPin, Navigation } from 'lucide-react';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { ChevronRight, Lock, MapPin, Navigation, Store, Smartphone, Package } from 'lucide-react';
 import bgImage from '../screen.png';
 import BottomNav from '../components/BottomNav.jsx';
 import { useGeo } from '../context/GeoContext.jsx';
 
+// ── Banners promocionales ────────────────────────────────────────────────────
+const HUB_BANNERS = [
+  {
+    id: 'sumate',
+    title: 'Sumate a Kyvra',
+    subtitle: 'Registrá tu negocio y llegá a toda Vicuña Mackenna',
+    Icon: Store,
+    gradient: 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)',
+    subtitleColor: 'rgba(255,255,255,0.80)',
+  },
+  {
+    id: 'pedi',
+    title: 'Pedí desde donde estés',
+    subtitle: 'Comida, turnos y encomiendas en un solo lugar',
+    Icon: Smartphone,
+    gradient: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+    subtitleColor: '#5EEAD4',
+  },
+  {
+    id: 'envios',
+    title: 'Envíos a toda la ciudad',
+    subtitle: 'Mandá y recibí encomiendas fácil y rápido',
+    Icon: Package,
+    gradient: 'linear-gradient(135deg, #0D9488 0%, #065F54 100%)',
+    subtitleColor: 'rgba(255,255,255,0.80)',
+  },
+];
+
+const DIAGONAL_TEXTURE = 'repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 12px)';
+
+// ── Carrusel de banners ──────────────────────────────────────────────────────
+function HubBannerCarousel() {
+  const [active, setActive] = useState(0);
+  const timerRef = useRef(null);
+
+  const startTimer = useCallback(() => {
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setActive(a => (a + 1) % HUB_BANNERS.length);
+    }, 4500);
+  }, []);
+
+  useEffect(() => {
+    startTimer();
+    return () => clearInterval(timerRef.current);
+  }, [startTimer]);
+
+  const handleDotClick = (i) => {
+    setActive(i);
+    startTimer();
+  };
+
+  const { Icon, gradient, title, subtitle, subtitleColor } = HUB_BANNERS[active];
+
+  return (
+    <div style={{ marginBottom: 22 }}>
+      {/* Banner */}
+      <div style={{ position: 'relative', height: 150, borderRadius: 20, overflow: 'hidden' }}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={active}
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -24 }}
+            transition={{ duration: 0.32, ease: 'easeOut' }}
+            style={{
+              position: 'absolute', inset: 0,
+              background: gradient,
+              display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+              padding: '0 20px 20px',
+            }}
+          >
+            {/* Textura diagonal */}
+            <div aria-hidden style={{
+              position: 'absolute', inset: 0,
+              background: DIAGONAL_TEXTURE,
+              pointerEvents: 'none',
+            }} />
+
+            {/* Ícono arriba a la derecha */}
+            <Icon
+              size={32}
+              color="rgba(255,255,255,0.30)"
+              strokeWidth={1.8}
+              style={{ position: 'absolute', top: 18, right: 18 }}
+            />
+
+            {/* Texto */}
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <h3 style={{
+                color: '#fff', fontWeight: 800, fontSize: 17,
+                letterSpacing: '-0.02em', lineHeight: 1.2,
+                margin: '0 0 5px',
+              }}>
+                {title}
+              </h3>
+              <p style={{
+                color: subtitleColor,
+                fontSize: 12, fontWeight: 600,
+                margin: 0, lineHeight: 1.5,
+              }}>
+                {subtitle}
+              </p>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Dots indicadores */}
+      <div style={{
+        display: 'flex', justifyContent: 'center',
+        alignItems: 'center', gap: 6, marginTop: 10,
+      }}>
+        {HUB_BANNERS.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => handleDotClick(i)}
+            aria-label={`Banner ${i + 1}`}
+            style={{
+              width: i === active ? 18 : 6,
+              height: 6,
+              borderRadius: 999,
+              background: i === active ? 'rgba(255,255,255,0.90)' : 'rgba(255,255,255,0.35)',
+              border: 'none', cursor: 'pointer', padding: 0,
+              transition: 'width 0.3s ease, background 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Service cards ────────────────────────────────────────────────────────────
 const CARDS = [
   {
     id: 'delivery',
@@ -31,6 +165,14 @@ const CARDS = [
     to: '/encomiendas',
     geoRestricted: false,
   },
+  {
+    id: 'remises',
+    title: 'Remises',
+    subtitle: 'Viajes en la ciudad y zona',
+    image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80',
+    to: '/remises',
+    geoRestricted: true,
+  },
 ];
 
 const containerVariants = {
@@ -43,6 +185,7 @@ const cardVariants = {
   show:   { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } },
 };
 
+// ── Fondo parallax ───────────────────────────────────────────────────────────
 function HubBackground({ bgY }) {
   return (
     <>
@@ -70,6 +213,7 @@ function HubBackground({ bgY }) {
   );
 }
 
+// ── Componente principal ─────────────────────────────────────────────────────
 export default function Hub() {
   const navigate = useNavigate();
   const { geoState } = useGeo();
@@ -87,7 +231,7 @@ export default function Hub() {
 
   const outZone = geoState === 'outZone';
 
-  // ── GPS denegado ─────────────────────────────────────────────────────────────
+  // ── GPS denegado ───────────────────────────────────────────────────────────
   if (geoState === 'denied') {
     return (
       <div
@@ -101,14 +245,9 @@ export default function Hub() {
         <div style={{ position: 'relative', zIndex: 2, padding: '56px 20px 104px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           {/* Logo */}
           <div style={{ textAlign: 'center', marginBottom: 44 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ color: '#fff', fontWeight: 900, fontSize: 34, letterSpacing: '-0.04em', lineHeight: 1, textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}>
-                Vicuña
-              </span>
-              <span style={{ background: '#D32F2F', color: '#fff', borderRadius: 10, padding: '2px 11px', fontWeight: 900, fontSize: 34, letterSpacing: '-0.04em' }}>
-                Ya
-              </span>
-            </div>
+            <span style={{ color: '#fff', fontWeight: 900, fontSize: 34, letterSpacing: '-0.04em', lineHeight: 1, textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}>
+              Kyvra
+            </span>
           </div>
 
           {/* Card GPS requerido */}
@@ -149,7 +288,7 @@ export default function Hub() {
               marginBottom: 20,
             }}>
               <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600, margin: 0 }}>
-                💡 También podés usar Encomiendas desde cualquier lugar sin necesidad de ubicación
+                También podés usar Encomiendas desde cualquier lugar sin necesidad de ubicación
               </p>
             </div>
 
@@ -157,11 +296,11 @@ export default function Hub() {
               whileTap={{ scale: 0.97 }}
               onClick={() => navigate('/encomiendas')}
               style={{
-                width: '100%', background: '#D32F2F', color: '#fff',
+                width: '100%', background: '#0D9488', color: '#fff',
                 border: 'none', borderRadius: 16, padding: '14px 20px',
                 fontSize: 15, fontWeight: 800, cursor: 'pointer',
                 fontFamily: 'inherit',
-                boxShadow: '0 4px 18px rgba(211,47,47,0.45)',
+                boxShadow: '0 4px 18px rgba(13,148,136,0.45)',
               }}
             >
               Ir a Encomiendas
@@ -174,7 +313,7 @@ export default function Hub() {
     );
   }
 
-  // ── Hub normal (inZone, loading, outZone) ─────────────────────────────────
+  // ── Hub normal (inZone, loading, outZone) ──────────────────────────────────
   return (
     <div
       id="hub-scroll"
@@ -189,15 +328,10 @@ export default function Hub() {
       <div style={{ position: 'relative', zIndex: 2, padding: '56px 20px 104px' }}>
 
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ color: '#fff', fontWeight: 900, fontSize: 34, letterSpacing: '-0.04em', lineHeight: 1, textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}>
-              Vicuña
-            </span>
-            <span style={{ background: '#D32F2F', color: '#fff', borderRadius: 10, padding: '2px 11px', fontWeight: 900, fontSize: 34, letterSpacing: '-0.04em' }}>
-              Ya
-            </span>
-          </div>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <span style={{ color: '#fff', fontWeight: 900, fontSize: 34, letterSpacing: '-0.04em', lineHeight: 1, textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}>
+            Kyvra
+          </span>
           <p style={{ color: 'rgba(255,255,255,0.62)', fontSize: 13, fontWeight: 600, margin: '8px 0 0' }}>
             Vicuña Mackenna, Córdoba
           </p>
@@ -208,10 +342,13 @@ export default function Hub() {
           fontSize: 28, fontWeight: 900, color: '#fff',
           letterSpacing: '-0.03em', lineHeight: 1.1,
           textShadow: '0 2px 12px rgba(0,0,0,0.5)',
-          margin: '0 0 22px',
+          margin: '0 0 18px',
         }}>
           ¿Qué necesitás hoy?
         </h1>
+
+        {/* Carrusel de banners promocionales */}
+        <HubBannerCarousel />
 
         {/* Banner de restricción geográfica */}
         {outZone && (
@@ -231,7 +368,7 @@ export default function Hub() {
           >
             <MapPin size={18} color="rgba(255,255,255,0.8)" strokeWidth={2} style={{ flexShrink: 0, marginTop: 2 }} />
             <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 600, lineHeight: 1.55, margin: 0 }}>
-              VicuñaYa Delivery y Turnos están disponibles solo en Vicuña Mackenna y alrededores. Podés usar el módulo de Encomiendas desde cualquier lugar.
+              Kyvra Delivery y Turnos están disponibles solo en Vicuña Mackenna y alrededores. Podés usar el módulo de Encomiendas desde cualquier lugar.
             </p>
           </motion.div>
         )}

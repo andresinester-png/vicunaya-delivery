@@ -1,4 +1,4 @@
-import { Swiper, SwiperSlide } from 'swiper/react';
+﻿import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -6,7 +6,7 @@ import 'swiper/css/pagination';
 const SLIDES = [
   {
     id: 1,
-    from: '#D32F2F',
+    from: '#0F172A',
     mid: '#E8003C',
     to:  '#FF6B35',
     tag: '🎉 OFERTA ESPECIAL',

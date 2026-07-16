@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
@@ -25,7 +25,7 @@ export default function BannerDetail() {
     <div style={{ minHeight:'100vh', background:'#fff' }}>
 
       {/* ── Header rojo ── */}
-      <div style={{ background:'#D32F2F', padding:'14px 16px', display:'flex', alignItems:'center', gap:12 }}>
+      <div style={{ background:'#0D9488', padding:'14px 16px', display:'flex', alignItems:'center', gap:12 }}>
         <motion.button
           whileTap={{ scale:0.88 }}
           onClick={() => navigate(-1)}

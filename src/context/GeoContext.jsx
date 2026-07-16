@@ -15,6 +15,9 @@ function haversine(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// Cambiar a true para reactivar la restricción geográfica
+const GEO_RESTRICTION_ENABLED = false;
+
 const GeoContext = createContext(null);
 
 export function GeoProvider({ children }) {
@@ -24,6 +27,11 @@ export function GeoProvider({ children }) {
 
   // Geo detection — runs once on mount
   useEffect(() => {
+    if (!GEO_RESTRICTION_ENABLED) {
+      setGeoState('inZone');
+      return;
+    }
+
     if (!navigator.geolocation) {
       setGeoState('inZone'); // no podemos verificar → permitir
       return;

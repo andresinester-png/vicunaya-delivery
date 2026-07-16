@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   User, Settings, Building2, LogOut,
@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const RED  = '#D32F2F';
+const RED  = '#0F172A';
 const FONT = "'Plus Jakarta Sans', sans-serif";
 const BG   = '#F5F5F5';
 
@@ -80,7 +80,7 @@ function BtnPrimary({ onClick, disabled, children }) {
       width: '100%', background: disabled ? '#e57373' : RED, color: '#fff',
       border: 'none', borderRadius: 14, padding: '15px 20px',
       fontSize: 15, fontWeight: 800, cursor: disabled ? 'default' : 'pointer',
-      boxShadow: disabled ? 'none' : '0 6px 20px rgba(211,47,47,0.25)',
+      boxShadow: disabled ? 'none' : '0 6px 20px rgba(13,148,136,0.25)',
       fontFamily: FONT, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
     }}>
       {children}
@@ -320,7 +320,7 @@ function MainScreen({ profile, session, onNav, onLogout }) {
       key: 'negocio',
       Icon: Building2,
       label: 'Registrar mi negocio',
-      desc:  'Sumá tu local a VicuñaYa',
+      desc:  'Sumá tu local a Kyvra',
       iconBg: '#EFF6FF', iconColor: '#3B82F6',
     },
   ];
@@ -335,7 +335,7 @@ function MainScreen({ profile, session, onNav, onLogout }) {
           background: RED, color: '#fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 28, fontWeight: 900, fontFamily: FONT,
-          margin: '0 auto 12px', boxShadow: '0 6px 20px rgba(211,47,47,0.25)',
+          margin: '0 auto 12px', boxShadow: '0 6px 20px rgba(13,148,136,0.25)',
         }}>
           {init}
         </div>
@@ -397,7 +397,7 @@ function MainScreen({ profile, session, onNav, onLogout }) {
         </button>
 
         <p style={{ textAlign: 'center', fontSize: 11.5, color: '#C4C4C4', marginTop: 8, fontFamily: FONT, fontWeight: 500 }}>
-          VicuñaYa · Vicuña Mackenna, Córdoba
+          Kyvra · Vicuña Mackenna, Córdoba
         </p>
       </div>
     </div>

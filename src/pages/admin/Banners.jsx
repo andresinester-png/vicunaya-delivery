@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { Plus, Pencil, Trash2, X, Image, GripVertical, Upload, Loader2, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase.js';
@@ -198,7 +198,7 @@ export default function Banners() {
       {/* ── Consultas recibidas ── */}
       <div className="mt-8">
         <h2 className="font-extrabold text-xl mb-1">Consultas recibidas</h2>
-        <p className="text-sm text-gray-400 mb-4">Negocios interesados en publicitar en VicuñaYa</p>
+        <p className="text-sm text-gray-400 mb-4">Negocios interesados en publicitar en Kyvra</p>
 
         {leadsLoading ? (
           <div className="space-y-3">

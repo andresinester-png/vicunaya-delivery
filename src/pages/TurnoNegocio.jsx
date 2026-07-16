@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, MapPin, CheckCircle, UserCircle, Bell } from 'lucide-react';
@@ -219,10 +219,10 @@ export default function TurnoNegocio() {
   // Dynamic status bar color while viewing this business
   useEffect(() => {
     if (!business) return;
-    const color = business.status_bar_color || business.background_color || '#D32F2F';
+    const color = business.status_bar_color || business.background_color || '#0D9488';
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', color);
-    return () => { if (meta) meta.setAttribute('content', '#D32F2F'); };
+    return () => { if (meta) meta.setAttribute('content', '#0F172A'); };
   }, [business]);
 
   // ── Calendar computation ──────────────────────────────────────────────────
@@ -359,7 +359,7 @@ export default function TurnoNegocio() {
   );
 
   const RedHeader = ({ title, onBack }) => (
-    <header className="sticky top-0 z-40" style={{ background: '#D32F2F', borderRadius: '0 0 24px 24px', padding: '0 18px 18px', boxShadow: '0 4px 20px rgba(211,47,47,0.25)' }}>
+    <header className="sticky top-0 z-40" style={{ background: '#0D9488', borderRadius: '0 0 24px 24px', padding: '0 18px 18px', boxShadow: '0 4px 20px rgba(13,148,136,0.25)' }}>
       <div style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={onBack} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', cursor: 'pointer' }}>
@@ -452,7 +452,7 @@ export default function TurnoNegocio() {
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0,
           height: 'env(safe-area-inset-top, 0px)',
-          background: business.status_bar_color || business.background_color || '#D32F2F',
+          background: business.status_bar_color || business.background_color || '#0D9488',
           zIndex: 3,
         }} />
 
@@ -517,12 +517,12 @@ export default function TurnoNegocio() {
               <Fragment key={idx}>
                 <div
                   className="w-2.5 h-2.5 rounded-full shrink-0 transition-colors duration-300"
-                  style={{ background: idx <= indicatorStep - 1 ? '#D32F2F' : dimColor }}
+                  style={{ background: idx <= indicatorStep - 1 ? '#0D9488' : dimColor }}
                 />
                 {idx < visibleLabels.length - 1 && (
                   <div
                     className="flex-1 h-1 rounded-full mx-1 transition-colors duration-300"
-                    style={{ background: idx < indicatorStep - 1 ? '#D32F2F' : dimColor }}
+                    style={{ background: idx < indicatorStep - 1 ? '#0D9488' : dimColor }}
                   />
                 )}
               </Fragment>
@@ -560,7 +560,7 @@ export default function TurnoNegocio() {
                     <button
                       key={s.id} type="button" onClick={() => setSelectedService(s)}
                       className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
-                      style={{ borderColor: active ? '#D32F2F' : '#E9D5D8', background: active ? '#FFF8F8' : '#fff' }}
+                      style={{ borderColor: active ? '#0D9488' : '#E9D5D8', background: active ? '#FFF8F8' : '#fff' }}
                     >
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-sm">{s.name}</p>
@@ -588,7 +588,7 @@ export default function TurnoNegocio() {
                     <button
                       key={prof.id} type="button" onClick={() => setSelectedProfessional(prof)}
                       className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
-                      style={{ borderColor: active ? '#D32F2F' : '#E9D5D8', background: active ? '#FFF8F8' : '#fff' }}
+                      style={{ borderColor: active ? '#0D9488' : '#E9D5D8', background: active ? '#FFF8F8' : '#fff' }}
                     >
                       {prof.avatar_url
                         ? <img src={prof.avatar_url} alt={prof.name} loading="lazy" className="w-10 h-10 rounded-full object-cover shrink-0" />
@@ -667,7 +667,7 @@ export default function TurnoNegocio() {
 
                       {loadingBooked ? (
                         <div className="flex items-center justify-center py-8">
-                          <div className="w-5 h-5 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+                          <div className="w-5 h-5 border-2 border-[#0F172A] border-t-transparent rounded-full animate-spin" />
                         </div>
                       ) : calendarSlots.length === 0 ? (
                         <p className="text-sm py-4 text-center" style={{ color: mutedColor }}>

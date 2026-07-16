@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Mail } from 'lucide-react';
@@ -43,7 +43,7 @@ export default function Welcome() {
         <div style={{
           width: 32, height: 32, borderRadius: '50%',
           border: '3px solid rgba(255,255,255,0.25)',
-          borderTopColor: '#D32F2F',
+          borderTopColor: '#0D9488',
           animation: 'spin 0.8s linear infinite',
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -108,7 +108,7 @@ export default function Welcome() {
             } catch (_) {}
 
             if (errBody?.error === 'email_already_confirmed') {
-              toast.error(errBody.message ?? 'Ya tenés cuenta en VicuñaYa. Iniciá sesión con tu email y contraseña.');
+              toast.error(errBody.message ?? 'Ya tenés cuenta en Kyvra. Iniciá sesión con tu email y contraseña.');
               setMode('login');
               return;
             }
@@ -195,11 +195,11 @@ export default function Welcome() {
               Vicuña
             </span>
             <span style={{
-              background: '#D32F2F', color: '#fff',
+              background: '#0D9488', color: '#fff',
               borderRadius: 12, padding: '3px 13px',
               fontWeight: 900, fontSize: 44,
               letterSpacing: '-0.04em',
-              boxShadow: '0 4px 18px rgba(211,47,47,0.55)',
+              boxShadow: '0 4px 18px rgba(15,23,42,0.55)',
             }}>
               Ya
             </span>
@@ -233,10 +233,10 @@ export default function Welcome() {
                 whileTap={{ scale: 0.97 }}
                 onClick={handleGoogle}
                 style={{
-                  background: '#D32F2F', color: '#fff', border: 'none', borderRadius: 16,
+                  background: '#0D9488', color: '#fff', border: 'none', borderRadius: 16,
                   padding: '16px 20px', fontSize: 15, fontWeight: 800, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                  boxShadow: '0 6px 24px rgba(211,47,47,0.45)',
+                  boxShadow: '0 6px 24px rgba(13,148,136,0.45)',
                   fontFamily: 'inherit',
                 }}
               >
@@ -352,12 +352,12 @@ export default function Welcome() {
                       type="submit"
                       disabled={submitting}
                       style={{
-                        background: '#D32F2F', color: '#fff', border: 'none', borderRadius: 16,
+                        background: '#0D9488', color: '#fff', border: 'none', borderRadius: 16,
                         padding: '16px 20px', fontSize: 15, fontWeight: 800,
                         cursor: submitting ? 'default' : 'pointer',
                         opacity: submitting ? 0.7 : 1,
                         marginTop: 4,
-                        boxShadow: '0 6px 24px rgba(211,47,47,0.45)',
+                        boxShadow: '0 6px 24px rgba(13,148,136,0.45)',
                         fontFamily: 'inherit',
                       }}
                     >
@@ -422,12 +422,12 @@ export default function Welcome() {
                   type="submit"
                   disabled={submitting}
                   style={{
-                    background: '#D32F2F', color: '#fff', border: 'none', borderRadius: 16,
+                    background: '#0D9488', color: '#fff', border: 'none', borderRadius: 16,
                     padding: '16px 20px', fontSize: 15, fontWeight: 800,
                     cursor: submitting ? 'default' : 'pointer',
                     opacity: submitting ? 0.7 : 1,
                     marginTop: 4,
-                    boxShadow: '0 6px 24px rgba(211,47,47,0.45)',
+                    boxShadow: '0 6px 24px rgba(13,148,136,0.45)',
                     fontFamily: 'inherit',
                   }}
                 >
