@@ -1,19 +1,9 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import bgImage from '../screen.png';
 
+const FF = "'Plus Jakarta Sans', sans-serif";
 const SPLASH_KEY = 'kyvra_splash_shown';
-const DURATION   = 5000; // ms antes del fade-out
-
-// Keyframes para la sombra dinámica que acompaña el giro del logo
-const SPIN_TIMES   = [0, 0.25, 0.5, 0.75, 1];
-const SPIN_FILTER  = [
-  'drop-shadow(0px 6px 18px rgba(0,0,0,0.50))',
-  'drop-shadow(-16px 3px 6px rgba(0,0,0,0.70))',
-  'drop-shadow(0px 6px 18px rgba(0,0,0,0.50))',
-  'drop-shadow(16px 3px 6px rgba(0,0,0,0.70))',
-  'drop-shadow(0px 6px 18px rgba(0,0,0,0.50))',
-];
+const DURATION   = 5000;
 
 export default function SplashScreen() {
   const [visible, setVisible] = useState(() => !sessionStorage.getItem(SPLASH_KEY));
@@ -31,140 +21,177 @@ export default function SplashScreen() {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+          transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
           style={{
             position: 'fixed', inset: 0, zIndex: 9999,
-            background: '#111',
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            background: 'linear-gradient(170deg, #061118 0%, #0A1E2A 28%, #0D3A35 56%, #0F172A 100%)',
+            fontFamily: FF,
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden',
           }}
         >
-          {/* Foto de fondo */}
-          <img
-            src={bgImage}
-            alt=""
-            aria-hidden
-            style={{
-              position: 'absolute', inset: 0,
-              width: '100%', height: '100%',
-              objectFit: 'cover', objectPosition: 'center top',
-            }}
-          />
+          {/* Teal atmosphere — radiates from mid-screen behind icon */}
+          <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+            <div style={{
+              position: 'absolute',
+              top: '10%', left: '50%', transform: 'translateX(-50%)',
+              width: 700, height: 600,
+              background: 'radial-gradient(ellipse, rgba(13,148,136,0.30) 0%, rgba(13,148,136,0.10) 38%, transparent 65%)',
+              filter: 'blur(4px)',
+            }} />
+            <div style={{
+              position: 'absolute',
+              bottom: '-5%', left: '50%', transform: 'translateX(-50%)',
+              width: 900, height: 350,
+              background: 'radial-gradient(ellipse, rgba(13,148,136,0.09) 0%, transparent 60%)',
+            }} />
+          </div>
 
-          {/* Overlay oscuro */}
-          <div
-            aria-hidden
-            style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.68) 100%)',
-            }}
-          />
-
-          {/* Contenido central */}
+          {/* Central content */}
           <div style={{
             position: 'relative', zIndex: 1,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', gap: 30,
           }}>
 
-            {/* Logo con spin 3D volumétrico */}
+            {/* Icon mark with halo + pulse rings */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.80 }}
+              initial={{ opacity: 0, scale: 0.58 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-              style={{
-                perspective: '280px',           // valor bajo = efecto 3D más pronunciado
-                perspectiveOrigin: 'center center',
-              }}
+              transition={{ duration: 0.70, ease: [0.16, 1, 0.3, 1] }}
+              style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              {/* Sombra dinámica que sigue el giro */}
+              {/* Soft halo behind icon */}
+              <div style={{
+                position: 'absolute',
+                width: 260, height: 260, borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(13,148,136,0.45) 0%, rgba(13,148,136,0.14) 45%, transparent 68%)',
+                filter: 'blur(12px)',
+              }} />
+
+              {/* Pulse ring 1 */}
               <motion.div
-                animate={{
-                  rotateY: [0, 90, 180, 270, 360],
-                  filter: SPIN_FILTER,
+                animate={{ scale: [1, 1.85], opacity: [0.65, 0] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeOut' }}
+                style={{
+                  position: 'absolute',
+                  width: 124, height: 124, borderRadius: 36,
+                  border: '1.5px solid rgba(13,148,136,0.62)',
                 }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: 'linear',
-                  times: SPIN_TIMES,
+              />
+              {/* Pulse ring 2 */}
+              <motion.div
+                animate={{ scale: [1, 2.3], opacity: [0.38, 0] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeOut', delay: 0.70 }}
+                style={{
+                  position: 'absolute',
+                  width: 124, height: 124, borderRadius: 36,
+                  border: '1px solid rgba(13,148,136,0.32)',
                 }}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              />
+
+              {/* Icon mark — official KYVRA app icon */}
+              <motion.img
+                src="/kyvra-app-icon.png"
+                alt="Kyvra"
+                animate={{ scale: [1, 1.038, 1] }}
+                transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
+                style={{
+                  position: 'relative', zIndex: 1,
+                  width: 124, height: 124,
+                  borderRadius: 32,
+                  boxShadow: '0 0 55px rgba(13,148,136,0.65), 0 0 110px rgba(13,148,136,0.22), 0 24px 64px rgba(0,0,0,0.65)',
+                  display: 'block',
+                }}
+              />
+            </motion.div>
+
+            {/* Wordmark + tagline */}
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.42, duration: 0.60, ease: 'easeOut' }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}
+            >
+              <span style={{
+                color: '#fff', fontWeight: 900, fontSize: 52,
+                letterSpacing: '-0.05em', lineHeight: 1,
+                fontFamily: FF,
+              }}>
+                Kyvra
+              </span>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.65, duration: 0.45 }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
               >
                 <span style={{
-                  color: '#fff', fontWeight: 900, fontSize: 46,
-                  letterSpacing: '-0.04em', lineHeight: 1,
+                  color: 'rgba(255,255,255,0.52)',
+                  fontSize: 11, fontWeight: 700,
+                  letterSpacing: '0.24em', textTransform: 'uppercase',
+                  fontFamily: FF,
                 }}>
-                  Kyvra
+                  Mackenna
+                </span>
+                <span style={{
+                  color: 'rgba(255,255,255,0.28)',
+                  fontSize: 9, fontWeight: 600,
+                  letterSpacing: '0.20em', textTransform: 'uppercase',
+                  fontFamily: FF,
+                }}>
+                  Todo en un solo lugar
                 </span>
               </motion.div>
             </motion.div>
 
-            {/* Localización */}
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25, duration: 0.4 }}
-              style={{
-                color: 'rgba(255,255,255,0.58)', fontSize: 13, fontWeight: 600,
-                margin: 0, letterSpacing: '0.01em',
-              }}
-            >
-              Vicuña Mackenna, Córdoba
-            </motion.p>
-
-            {/* Barra de progreso de carga */}
+            {/* Progress bar */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.45, duration: 0.35 }}
+              transition={{ delay: 0.68, duration: 0.35 }}
               style={{
-                marginTop: 10,
-                width: 210, height: 3,
-                background: 'rgba(255,255,255,0.14)',
-                borderRadius: 999,
-                overflow: 'hidden',
+                marginTop: 6,
+                width: 240, height: 3,
+                background: 'rgba(255,255,255,0.07)',
+                borderRadius: 999, overflow: 'hidden',
               }}
             >
               <motion.div
                 initial={{ width: '0%' }}
                 animate={{ width: '100%' }}
                 transition={{
-                  duration: (DURATION / 1000) - 0.6,
+                  duration: (DURATION / 1000) - 0.9,
                   ease: 'linear',
-                  delay: 0.5,
+                  delay: 0.75,
                 }}
                 style={{
                   height: '100%',
                   background: 'linear-gradient(90deg, #0D9488 0%, #5EEAD4 100%)',
                   borderRadius: 999,
-                  boxShadow: '0 0 8px rgba(13,148,136,0.7)',
+                  boxShadow: '0 0 14px rgba(13,148,136,0.90)',
                 }}
               />
             </motion.div>
           </div>
 
-          {/* Crédito — Playfair Display italic, efecto 3D en texto */}
+          {/* Attribution */}
           <motion.p
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.55, duration: 0.55 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.0, duration: 0.70 }}
             style={{
-              position: 'absolute', bottom: 44,
+              position: 'absolute',
+              bottom: 'calc(36px + env(safe-area-inset-bottom, 0px))',
               fontFamily: "'Playfair Display', Georgia, serif",
               fontStyle: 'italic',
-              fontWeight: 700,
-              fontSize: 15,
-              color: 'rgba(255,255,255,0.93)',
+              fontWeight: 400,
+              fontSize: 12,
+              color: 'rgba(255,255,255,0.18)',
               margin: 0,
-              letterSpacing: '0.02em',
-              textShadow: [
-                '0 1px 0 rgba(255,255,255,0.12)',
-                '0 2px 0 rgba(0,0,0,0.32)',
-                '0 3px 0 rgba(0,0,0,0.22)',
-                '0 4px 0 rgba(0,0,0,0.12)',
-                '0 8px 22px rgba(0,0,0,0.55)',
-              ].join(', '),
+              letterSpacing: '0.03em',
             }}
           >
             Idea: Joaquín Pellegrini

@@ -1,4 +1,4 @@
-﻿import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, MapPin, CheckCircle, UserCircle, Bell } from 'lucide-react';
@@ -7,7 +7,10 @@ import { supabase } from '../lib/supabase.js';
 import useProfileStore from '../store/profileStore.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { subscribeToPush } from '../lib/pushNotifications.js';
+import { KYVRA } from '../lib/theme.js';
 import { CATEGORY_INFO } from './Turnos.jsx';
+
+const FF = "'Plus Jakarta Sans', sans-serif";
 
 function GoogleIcon() {
   return (
@@ -39,14 +42,6 @@ function getContrastColor(hex) {
   return l > 0.5 ? '#1A1A1A' : '#FFFFFF';
 }
 
-function getMondayOf(date) {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  const dow = d.getDay(); // 0=Sun
-  d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow));
-  return d;
-}
-
 function getNextDays() {
   const now = new Date();
   const y = now.getFullYear();
@@ -54,7 +49,6 @@ function getNextDays() {
   const d = now.getDate();
   const days = [];
   for (let i = 0; i < DAYS_AHEAD; i++) {
-    // new Date(year, month, day) auto-advances month when day > month length
     const date = new Date(y, m, d + i);
     days.push({ date, iso: toISODate(date), dow: date.getDay() });
   }
@@ -64,8 +58,11 @@ function getNextDays() {
 function SuccessScreen({ business, service, professional, day, time }) {
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-      style={{ background: '#2E7D32' }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 50,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        background: 'linear-gradient(145deg, #0D9488 0%, #0F766E 100%)',
+      }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
@@ -87,20 +84,19 @@ function SuccessScreen({ business, service, professional, day, time }) {
         <svg viewBox="0 0 52 52" width={78} height={78} fill="none">
           <path
             d="M14 27 L22 35 L38 17"
-            stroke="#2E7D32" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none"
+            stroke="#0D9488" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none"
             style={{ strokeDasharray: 40, strokeDashoffset: 40, animation: 'checkmarkDraw 0.5s 0.4s ease-out forwards' }}
           />
         </svg>
       </div>
       <motion.p
-        className="text-3xl font-extrabold text-white mt-7 text-center px-8"
+        style={{ fontSize: 30, fontWeight: 900, color: '#fff', marginTop: 28, textAlign: 'center', padding: '0 32px', fontFamily: FF }}
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55, duration: 0.4, ease: 'easeOut' }}
       >
         ¡Turno confirmado!
       </motion.p>
       <motion.p
-        className="text-base font-semibold mt-2 text-center px-8"
-        style={{ color: 'rgba(255,255,255,0.9)' }}
+        style={{ fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.9)', marginTop: 8, textAlign: 'center', padding: '0 32px', fontFamily: FF, lineHeight: 1.5 }}
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7, duration: 0.4, ease: 'easeOut' }}
       >
         {business?.name} · {service?.name}
@@ -132,9 +128,9 @@ export default function TurnoNegocio() {
   const [booked, setBooked]                           = useState([]);
   const [loadingBooked, setLoadingBooked]             = useState(false);
 
-  const [form, setForm]           = useState({ name: '', phone: '', notes: '' });
+  const [form, setForm]             = useState({ name: '', phone: '', notes: '' });
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess]     = useState(false);
+  const [success, setSuccess]       = useState(false);
 
   const [loginMode, setLoginMode]           = useState(null);
   const [loginForm, setLoginForm]           = useState({ email: '', password: '' });
@@ -172,7 +168,6 @@ export default function TurnoNegocio() {
     setForm(f => ({ ...f, name: f.name || profileName || '', phone: f.phone || profilePhone || '' }));
   }, [profileName, profilePhone]);
 
-  // Load all data upfront
   useEffect(() => {
     Promise.all([
       supabase.from('appointment_businesses').select('*').eq('id', id).single(),
@@ -191,13 +186,11 @@ export default function TurnoNegocio() {
     });
   }, [id]);
 
-  // Reset calendar when professional changes
   useEffect(() => {
     setSelectedDay(null);
     setSelectedTime(null);
   }, [selectedProfessional]);
 
-  // Load booked appointments for selected day + professional
   useEffect(() => {
     if (!selectedDay || !selectedProfessional) { setBooked([]); return; }
     setLoadingBooked(true);
@@ -216,7 +209,6 @@ export default function TurnoNegocio() {
     return () => clearTimeout(t);
   }, [success, navigate]);
 
-  // Dynamic status bar color while viewing this business
   useEffect(() => {
     if (!business) return;
     const color = business.status_bar_color || business.background_color || '#0D9488';
@@ -225,14 +217,10 @@ export default function TurnoNegocio() {
     return () => { if (meta) meta.setAttribute('content', '#0F172A'); };
   }, [business]);
 
-  // ── Calendar computation ──────────────────────────────────────────────────
   const todayIso = toISODate(new Date());
   const nowMin   = new Date().getHours() * 60 + new Date().getMinutes();
+  const allDays  = useMemo(() => getNextDays(), []);
 
-  // All bookable days (28 days from today)
-  const allDays = useMemo(() => getNextDays(), []);
-
-  // Which days have at least one bookable slot
   const dayAvailability = useMemo(() => {
     if (!selectedProfessional) return {};
     const result = {};
@@ -248,14 +236,12 @@ export default function TurnoNegocio() {
 
   const dayPickerRef = useRef(null);
 
-  // Auto-scroll day strip to keep selected day centered
   useEffect(() => {
     if (!selectedDay || !dayPickerRef.current) return;
     const el = dayPickerRef.current.querySelector(`[data-date="${selectedDay.iso}"]`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }, [selectedDay]);
 
-  // Auto-select first available day when entering step 3
   useEffect(() => {
     if (step !== 3 || !selectedProfessional || selectedDay) return;
     const first = allDays.find(day =>
@@ -268,12 +254,10 @@ export default function TurnoNegocio() {
     if (first) setSelectedDay(first);
   }, [step, selectedProfessional, selectedDay, slots, todayIso, nowMin, allDays]);
 
-  // ── Slot states for the selected day ──────────────────────────────────────
   const calendarSlots = useMemo(() => {
     if (!selectedDay || !selectedProfessional) return [];
     const dur = selectedService?.duration_minutes || 30;
     const isToday = selectedDay.iso === todayIso;
-
     return slots
       .filter(s => s.specific_date === selectedDay.iso && s.professional_id === selectedProfessional.id)
       .map(slot => {
@@ -293,7 +277,6 @@ export default function TurnoNegocio() {
       .sort((a, b) => a.timeStr.localeCompare(b.timeStr));
   }, [slots, selectedDay, selectedProfessional, booked, selectedService, todayIso, nowMin]);
 
-  // ── Navigation ────────────────────────────────────────────────────────────
   const handleBack = () => {
     if (step === 1) {
       navigate(-1);
@@ -325,16 +308,16 @@ export default function TurnoNegocio() {
     try {
       const endTime = minToTime(timeToMin(selectedTime) + selectedService.duration_minutes);
       const { error } = await supabase.from('appointments').insert({
-        business_id: business.id,
+        business_id:     business.id,
         professional_id: selectedProfessional.id,
-        service_id: selectedService.id,
-        customer_name: form.name.trim(),
-        customer_phone: form.phone.trim(),
-        date: selectedDay.iso,
-        start_time: selectedTime,
-        end_time: endTime,
-        status: 'pending',
-        notes: form.notes.trim() || null,
+        service_id:      selectedService.id,
+        customer_name:   form.name.trim(),
+        customer_phone:  form.phone.trim(),
+        date:            selectedDay.iso,
+        start_time:      selectedTime,
+        end_time:        endTime,
+        status:          'pending',
+        notes:           form.notes.trim() || null,
         customer_user_id: session?.user?.id ?? null,
       });
       if (error) throw error;
@@ -347,7 +330,6 @@ export default function TurnoNegocio() {
     }
   };
 
-  // ── Render guards ─────────────────────────────────────────────────────────
   if (success) return (
     <SuccessScreen
       business={business}
@@ -358,14 +340,14 @@ export default function TurnoNegocio() {
     />
   );
 
-  const RedHeader = ({ title, onBack }) => (
-    <header className="sticky top-0 z-40" style={{ background: '#0D9488', borderRadius: '0 0 24px 24px', padding: '0 18px 18px', boxShadow: '0 4px 20px rgba(13,148,136,0.25)' }}>
+  const TealHeader = ({ title, onBack }) => (
+    <header style={{ position: 'sticky', top: 0, zIndex: 40, background: KYVRA.teal, borderRadius: '0 0 24px 24px', padding: '0 18px 18px', boxShadow: '0 4px 20px rgba(13,148,136,0.25)' }}>
       <div style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={onBack} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', cursor: 'pointer' }}>
             <ChevronLeft size={22} color="white" />
           </button>
-          <span style={{ color: 'white', fontWeight: 700, fontSize: 18, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{title}</span>
+          <span style={{ color: 'white', fontWeight: 700, fontSize: 18, fontFamily: FF }}>{title}</span>
         </div>
         <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}>
           <Bell size={20} color="white" />
@@ -376,10 +358,17 @@ export default function TurnoNegocio() {
 
   if (loading) {
     return (
-      <div className="min-h-screen" style={{ background: '#F9FAFB' }}>
-        <RedHeader title="Reserva de Turno" onBack={() => navigate(-1)} />
-        <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-          {[...Array(3)].map((_, i) => <div key={i} className="card h-24 animate-pulse bg-gray-200" />)}
+      <div style={{ minHeight: '100dvh', background: '#F9FAFB' }}>
+        <style>{`@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <TealHeader title="Reserva de Turno" onBack={() => navigate(-1)} />
+        <div style={{ maxWidth: 672, margin: '0 auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {[...Array(3)].map((_, i) => (
+            <div key={i} style={{
+              height: 96, borderRadius: 16,
+              background: 'linear-gradient(90deg,#f0f4f8 25%,#e2e8f0 50%,#f0f4f8 75%)',
+              backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite',
+            }} />
+          ))}
         </div>
       </div>
     );
@@ -387,10 +376,10 @@ export default function TurnoNegocio() {
 
   if (!business) {
     return (
-      <div className="min-h-screen" style={{ background: '#F9FAFB' }}>
-        <RedHeader title="Reserva de Turno" onBack={() => navigate(-1)} />
-        <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-          <p className="font-semibold text-gray-600">Negocio no encontrado</p>
+      <div style={{ minHeight: '100dvh', background: '#F9FAFB' }}>
+        <TealHeader title="Reserva de Turno" onBack={() => navigate(-1)} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '96px 24px', textAlign: 'center' }}>
+          <p style={{ fontWeight: 600, color: KYVRA.textSec, fontFamily: FF }}>Negocio no encontrado</p>
         </div>
       </div>
     );
@@ -410,27 +399,47 @@ export default function TurnoNegocio() {
   const textColor  = getContrastColor(business.background_color || '#FFFFFF');
   const isLight    = textColor === '#1A1A1A';
   const mutedColor = isLight ? '#6B7280' : 'rgba(255,255,255,0.55)';
-  const dimColor   = isLight ? '#E9D5D8' : 'rgba(255,255,255,0.2)';
+  const dimColor   = isLight ? '#E2E8F0' : 'rgba(255,255,255,0.2)';
 
   const visibleLabels  = professionals.length === 1
     ? STEP_LABELS.filter(l => l !== 'Profesional')
     : STEP_LABELS;
   const indicatorStep = (professionals.length === 1 && step >= 3) ? step - 1 : step;
 
-  // ── Main render ───────────────────────────────────────────────────────────
-  return (
-    <div style={{ minHeight: '100dvh', background: business.background_color || '#FFFFFF', paddingBottom: 100 }}>
+  // Input styles that adapt to the business background
+  const glassInput = {
+    width: '100%', boxSizing: 'border-box',
+    padding: '12px 14px', borderRadius: 12,
+    border: isLight ? `1.5px solid ${KYVRA.border}` : '1.5px solid rgba(255,255,255,0.35)',
+    background: isLight ? KYVRA.bg : 'rgba(255,255,255,0.18)',
+    fontSize: 15, fontWeight: 600,
+    color: textColor, outline: 'none', fontFamily: FF,
+  };
 
-      {/* Cover image header — extends behind iOS status bar (black-translucent) */}
+  // Service/professional selected card style
+  const selectionBtn = (active) => ({
+    display: 'flex', alignItems: 'center', gap: 12, borderRadius: 14,
+    border: `2px solid ${active ? KYVRA.teal : dimColor}`,
+    background: active
+      ? (isLight ? KYVRA.tealBg : 'rgba(13,148,136,0.25)')
+      : (isLight ? KYVRA.white : 'rgba(255,255,255,0.10)'),
+    padding: '12px', width: '100%', textAlign: 'left', cursor: 'pointer',
+    transition: 'all 0.18s', fontFamily: FF,
+  });
+
+  const canConfirm = !!session && !!form.name.trim() && !!form.phone.trim() && !submitting;
+
+  return (
+    <div style={{ minHeight: '100dvh', background: business.background_color || '#FFFFFF', paddingBottom: 100, fontFamily: FF }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      {/* Cover image header */}
       <div style={{ position: 'relative', height: 'calc(220px + env(safe-area-inset-top, 0px))', overflow: 'hidden' }}>
         {business.logo_url ? (
           <img
             src={business.logo_url}
             alt={business.name}
-            style={{
-              width: '100%', height: '100%', objectFit: 'cover',
-              objectPosition: business.cover_position || '50% 50%',
-            }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: business.cover_position || '50% 50%' }}
           />
         ) : (
           <div style={{
@@ -442,21 +451,10 @@ export default function TurnoNegocio() {
           </div>
         )}
 
-        {/* Gradient overlay */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.18) 55%, rgba(0,0,0,0.32) 100%)',
-        }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.18) 55%, rgba(0,0,0,0.32) 100%)' }} />
 
-        {/* Status bar color strip — fills the safe area at the top so the bar shows this color */}
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0,
-          height: 'env(safe-area-inset-top, 0px)',
-          background: business.status_bar_color || business.background_color || '#0D9488',
-          zIndex: 3,
-        }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'env(safe-area-inset-top, 0px)', background: business.status_bar_color || business.background_color || KYVRA.teal, zIndex: 3 }} />
 
-        {/* Back button — pushed below the status bar */}
         <button
           onClick={handleBack}
           style={{
@@ -471,7 +469,6 @@ export default function TurnoNegocio() {
           <ChevronLeft size={20} color="#fff" />
         </button>
 
-        {/* Business info at bottom of header */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 16px 16px' }}>
           <p style={{ margin: '0 0 4px' }}>
             <span style={{
@@ -485,17 +482,11 @@ export default function TurnoNegocio() {
               {catInfo.emoji} {catInfo.label}
             </span>
           </p>
-          <h1 style={{
-            color: '#fff', fontWeight: 800, fontSize: 22, margin: 0,
-            lineHeight: 1.2, textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-          }}>
+          <h1 style={{ color: '#fff', fontWeight: 800, fontSize: 22, margin: 0, lineHeight: 1.2, textShadow: '0 2px 8px rgba(0,0,0,0.5)', fontFamily: FF }}>
             {business.name}
           </h1>
           {business.address && (
-            <p style={{
-              color: 'rgba(255,255,255,0.8)', fontSize: 12, margin: '4px 0 0',
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 4, fontFamily: FF }}>
               <MapPin size={11} /> {business.address}
             </p>
           )}
@@ -503,34 +494,37 @@ export default function TurnoNegocio() {
       </div>
 
       {/* Content */}
-      <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+      <div style={{ maxWidth: 672, margin: '0 auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {business.description && (
-          <p style={{ color: mutedColor, fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+          <p style={{ color: mutedColor, fontSize: 13, lineHeight: 1.5, margin: 0, fontFamily: FF }}>
             {business.description}
           </p>
         )}
 
         {/* Step indicator */}
-        <div className="card p-4" style={GLASS}>
-          <div className="flex items-center">
+        <div style={{ ...GLASS, padding: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
             {visibleLabels.map((_, idx) => (
               <Fragment key={idx}>
-                <div
-                  className="w-2.5 h-2.5 rounded-full shrink-0 transition-colors duration-300"
-                  style={{ background: idx <= indicatorStep - 1 ? '#0D9488' : dimColor }}
-                />
+                <div style={{
+                  width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+                  background: idx <= indicatorStep - 1 ? KYVRA.teal : dimColor,
+                  boxShadow: idx === indicatorStep - 1 ? `0 0 0 3px rgba(13,148,136,0.28)` : 'none',
+                  transition: 'all 0.3s',
+                }} />
                 {idx < visibleLabels.length - 1 && (
-                  <div
-                    className="flex-1 h-1 rounded-full mx-1 transition-colors duration-300"
-                    style={{ background: idx < indicatorStep - 1 ? '#0D9488' : dimColor }}
-                  />
+                  <div style={{
+                    flex: 1, height: 2, borderRadius: 2, margin: '0 4px',
+                    background: idx < indicatorStep - 1 ? KYVRA.teal : dimColor,
+                    transition: 'background 0.3s',
+                  }} />
                 )}
               </Fragment>
             ))}
           </div>
-          <div className="flex justify-between mt-1.5">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
             {visibleLabels.map((label, idx) => (
-              <span key={label} className="text-[9px] font-bold" style={{ color: idx <= indicatorStep - 1 ? textColor : mutedColor }}>
+              <span key={label} style={{ fontSize: 9, fontWeight: 700, color: idx <= indicatorStep - 1 ? textColor : mutedColor, fontFamily: FF }}>
                 {label}
               </span>
             ))}
@@ -545,31 +539,27 @@ export default function TurnoNegocio() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -16 }}
             transition={{ duration: 0.2 }}
-            className="space-y-4"
+            style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
           >
 
             {/* Step 1: Servicio */}
             {step === 1 && (
-              <div className="card p-5 space-y-3" style={GLASS}>
-                <h2 className="font-bold text-base" style={{ color: textColor }}>Elegí el servicio</h2>
+              <div style={{ ...GLASS, padding: '20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <h2 style={{ fontWeight: 700, fontSize: 16, color: textColor, margin: 0, fontFamily: FF }}>Elegí el servicio</h2>
                 {services.length === 0 ? (
-                  <p className="text-sm" style={{ color: mutedColor }}>Este negocio no tiene servicios configurados todavía.</p>
+                  <p style={{ fontSize: 14, color: mutedColor, margin: 0, fontFamily: FF }}>Este negocio no tiene servicios configurados todavía.</p>
                 ) : services.map(s => {
                   const active = selectedService?.id === s.id;
                   return (
-                    <button
-                      key={s.id} type="button" onClick={() => setSelectedService(s)}
-                      className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
-                      style={{ borderColor: active ? '#0D9488' : '#E9D5D8', background: active ? '#FFF8F8' : '#fff' }}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm">{s.name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{s.duration_minutes} min</p>
+                    <button key={s.id} type="button" onClick={() => setSelectedService(s)} style={selectionBtn(active)}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontWeight: 700, fontSize: 14, color: active ? KYVRA.tealDark : textColor, margin: '0 0 2px', fontFamily: FF }}>{s.name}</p>
+                        <p style={{ fontSize: 12, color: mutedColor, margin: 0, fontFamily: FF }}>{s.duration_minutes} min</p>
                       </div>
                       {s.price != null && (
-                        <p className="font-bold text-sm text-primary shrink-0">${Number(s.price).toLocaleString('es-AR')}</p>
+                        <p style={{ fontWeight: 700, fontSize: 14, color: KYVRA.teal, flexShrink: 0, margin: 0, fontFamily: FF }}>${Number(s.price).toLocaleString('es-AR')}</p>
                       )}
-                      {active && <CheckCircle size={18} className="text-primary shrink-0" />}
+                      {active && <CheckCircle size={18} color={KYVRA.teal} style={{ flexShrink: 0 }} />}
                     </button>
                   );
                 })}
@@ -578,48 +568,39 @@ export default function TurnoNegocio() {
 
             {/* Step 2: Profesional */}
             {step === 2 && (
-              <div className="card p-5 space-y-3" style={GLASS}>
-                <h2 className="font-bold text-base" style={{ color: textColor }}>Elegí el profesional</h2>
+              <div style={{ ...GLASS, padding: '20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <h2 style={{ fontWeight: 700, fontSize: 16, color: textColor, margin: 0, fontFamily: FF }}>Elegí el profesional</h2>
                 {professionals.length === 0 ? (
-                  <p className="text-sm" style={{ color: mutedColor }}>No hay profesionales disponibles.</p>
+                  <p style={{ fontSize: 14, color: mutedColor, margin: 0, fontFamily: FF }}>No hay profesionales disponibles.</p>
                 ) : professionals.map(prof => {
                   const active = selectedProfessional?.id === prof.id;
                   return (
-                    <button
-                      key={prof.id} type="button" onClick={() => setSelectedProfessional(prof)}
-                      className="flex items-center gap-3 rounded-xl border-2 p-3 w-full text-left transition-colors"
-                      style={{ borderColor: active ? '#0D9488' : '#E9D5D8', background: active ? '#FFF8F8' : '#fff' }}
-                    >
+                    <button key={prof.id} type="button" onClick={() => setSelectedProfessional(prof)} style={selectionBtn(active)}>
                       {prof.avatar_url
-                        ? <img src={prof.avatar_url} alt={prof.name} loading="lazy" className="w-10 h-10 rounded-full object-cover shrink-0" />
-                        : <UserCircle size={40} className="text-gray-300 shrink-0" />}
-                      <span className="font-semibold text-sm flex-1">{prof.name}</span>
-                      {active && <CheckCircle size={18} className="text-primary shrink-0" />}
+                        ? <img src={prof.avatar_url} alt={prof.name} loading="lazy" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                        : <UserCircle size={40} color={dimColor} style={{ flexShrink: 0 }} />}
+                      <span style={{ fontWeight: 600, fontSize: 14, flex: 1, color: active ? KYVRA.tealDark : textColor, fontFamily: FF }}>{prof.name}</span>
+                      {active && <CheckCircle size={18} color={KYVRA.teal} style={{ flexShrink: 0 }} />}
                     </button>
                   );
                 })}
               </div>
             )}
 
-            {/* Step 3: Día y Horario (combined calendar view) */}
+            {/* Step 3: Día y Horario */}
             {step === 3 && (
-              <div className="space-y-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-                {/* Week calendar card */}
-                <div className="card p-4 space-y-3" style={GLASS}>
-
-                  {/* Month label - tracks selected day */}
+                {/* Day picker */}
+                <div style={{ ...GLASS, padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {selectedDay && (
-                    <p className="text-sm font-bold capitalize" style={{ color: textColor }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: textColor, textTransform: 'capitalize', margin: 0, fontFamily: FF }}>
                       {selectedDay.date.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}
                     </p>
                   )}
-
-                  {/* Horizontally scrollable day strip */}
                   <div
                     ref={dayPickerRef}
-                    className="flex gap-1 overflow-x-auto pb-1"
-                    style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none' }}
+                    style={{ display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none' }}
                   >
                     {allDays.map(day => {
                       const isPast      = day.iso < todayIso;
@@ -634,99 +615,97 @@ export default function TurnoNegocio() {
                           data-date={day.iso}
                           disabled={isDisabled}
                           onClick={() => { setSelectedDay(day); setSelectedTime(null); }}
-                          className="flex flex-col items-center py-2.5 rounded-xl transition-all shrink-0"
                           style={{
-                            minWidth: 44,
+                            display: 'flex', flexDirection: 'column', alignItems: 'center',
+                            padding: '10px 0', borderRadius: 12, flexShrink: 0, minWidth: 44,
                             background: isSelected ? '#111' : 'transparent',
                             color: isSelected ? '#fff' : isDisabled ? dimColor : textColor,
                             cursor: isDisabled ? 'not-allowed' : 'pointer',
+                            border: 'none', transition: 'all 0.2s', fontFamily: FF,
                           }}
                         >
-                          <span className="text-[10px] font-bold leading-none">{dayAbbr}</span>
-                          <span className="text-base font-extrabold leading-none mt-1">{day.date.getDate()}</span>
-                          <span
-                            className="w-1 h-1 rounded-full mt-1"
-                            style={{ background: isSelected ? '#fff' : isAvailable ? '#2E7D32' : 'transparent' }}
-                          />
+                          <span style={{ fontSize: 10, fontWeight: 700, lineHeight: 1 }}>{dayAbbr}</span>
+                          <span style={{ fontSize: 18, fontWeight: 900, lineHeight: 1, marginTop: 4 }}>{day.date.getDate()}</span>
+                          <span style={{
+                            width: 4, height: 4, borderRadius: '50%', marginTop: 4,
+                            background: isSelected ? '#fff' : isAvailable ? KYVRA.teal : 'transparent',
+                          }} />
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Slot grid card */}
-                <div className="card p-5 space-y-4" style={GLASS}>
+                {/* Slot grid */}
+                <div style={{ ...GLASS, padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {selectedDay ? (
                     <>
-                      <p className="text-sm font-semibold capitalize" style={{ color: textColor }}>
+                      <p style={{ fontSize: 14, fontWeight: 600, textTransform: 'capitalize', color: textColor, margin: 0, fontFamily: FF }}>
                         {selectedDay.date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
                         {selectedProfessional && professionals.length > 1 && (
-                          <span className="font-normal" style={{ color: mutedColor }}> · {selectedProfessional.name}</span>
+                          <span style={{ fontWeight: 400, color: mutedColor }}> · {selectedProfessional.name}</span>
                         )}
                       </p>
 
                       {loadingBooked ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="w-5 h-5 border-2 border-[#0F172A] border-t-transparent rounded-full animate-spin" />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 0' }}>
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(0,0,0,0.12)', borderTopColor: KYVRA.teal, animation: 'spin 0.8s linear infinite' }} />
                         </div>
                       ) : calendarSlots.length === 0 ? (
-                        <p className="text-sm py-4 text-center" style={{ color: mutedColor }}>
+                        <p style={{ fontSize: 14, padding: '16px 0', textAlign: 'center', color: mutedColor, fontFamily: FF }}>
                           No hay horarios para este día. Elegí otro día.
                         </p>
                       ) : (
-                        <div className="grid grid-cols-2 gap-2">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                           {calendarSlots.map(slot => {
                             const isAvail  = slot.state === 'available';
                             const isBooked = slot.state === 'booked';
-
                             return (
                               <button
                                 key={slot.id}
                                 disabled={!isAvail}
-                                onClick={() => {
-                                  setSelectedTime(slot.timeStr + ':00');
-                                  setStep(4);
-                                }}
-                                className="rounded-xl border py-3.5 text-sm font-bold transition-all flex flex-col items-center gap-0.5"
-                                style={
-                                  isAvail ? {
-                                    background: '#f0fdf4',
-                                    borderColor: '#86efac',
-                                    color: '#166534',
+                                onClick={() => { setSelectedTime(slot.timeStr + ':00'); setStep(4); }}
+                                style={{
+                                  borderRadius: 12, padding: '14px', fontSize: 14, fontWeight: 700,
+                                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                                  transition: 'all 0.15s', fontFamily: FF,
+                                  ...(isAvail ? {
+                                    background: KYVRA.tealBg,
+                                    border: `1px solid rgba(13,148,136,0.35)`,
+                                    color: KYVRA.tealDark,
                                     cursor: 'pointer',
                                   } : {
                                     background: '#fff1f2',
-                                    borderColor: '#fecaca',
+                                    border: '1px solid #fecaca',
                                     color: '#f87171',
                                     cursor: 'not-allowed',
                                     opacity: 0.8,
-                                  }
-                                }
+                                  }),
+                                }}
                               >
                                 <span>{slot.timeStr}</span>
-                                {isBooked && <span className="text-[10px] font-normal opacity-70">Reservado</span>}
+                                {isBooked && <span style={{ fontSize: 10, fontWeight: 400, opacity: 0.7 }}>Reservado</span>}
                               </button>
                             );
                           })}
                         </div>
                       )}
 
-                      {/* Legend */}
                       {calendarSlots.length > 0 && (
-                        <div className="flex items-center gap-4 pt-1 flex-wrap" style={{ borderTop: `1px solid ${dimColor}` }}>
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded" style={{ background: '#bbf7d0', border: '1px solid #86efac' }} />
-                            <span className="text-xs" style={{ color: mutedColor }}>Disponible</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, paddingTop: 4, flexWrap: 'wrap', borderTop: `1px solid ${dimColor}` }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{ width: 12, height: 12, borderRadius: 4, background: KYVRA.tealBg, border: `1px solid rgba(13,148,136,0.35)` }} />
+                            <span style={{ fontSize: 12, color: mutedColor, fontFamily: FF }}>Disponible</span>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded" style={{ background: '#fee2e2', border: '1px solid #fecaca' }} />
-                            <span className="text-xs" style={{ color: mutedColor }}>Reservado</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{ width: 12, height: 12, borderRadius: 4, background: '#fee2e2', border: '1px solid #fecaca' }} />
+                            <span style={{ fontSize: 12, color: mutedColor, fontFamily: FF }}>Reservado</span>
                           </div>
                         </div>
                       )}
                     </>
                   ) : (
-                    <p className="text-sm text-center py-6" style={{ color: mutedColor }}>
+                    <p style={{ fontSize: 14, textAlign: 'center', padding: '24px 0', color: mutedColor, fontFamily: FF }}>
                       Seleccioná un día para ver los horarios disponibles
                     </p>
                   )}
@@ -738,36 +717,53 @@ export default function TurnoNegocio() {
             {step === 4 && (
               <>
                 {!session ? (
-                  <div className="card p-5 space-y-4" style={GLASS}>
+                  <div style={{ ...GLASS, padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                     <div>
-                      <h2 className="font-bold text-base" style={{ color: textColor }}>Iniciá sesión para confirmar</h2>
-                      <p className="text-sm mt-1" style={{ color: mutedColor }}>Guardamos tu turno en tu cuenta y te avisamos 2hs antes.</p>
+                      <h2 style={{ fontWeight: 700, fontSize: 16, color: textColor, margin: '0 0 6px', fontFamily: FF }}>Iniciá sesión para confirmar</h2>
+                      <p style={{ fontSize: 14, color: mutedColor, margin: 0, fontFamily: FF }}>Guardamos tu turno en tu cuenta y te avisamos 2hs antes.</p>
                     </div>
                     {loginMode !== 'email' ? (
-                      <div className="space-y-3">
-                        <button type="button" onClick={handleGoogleLogin} className="btn-primary w-full flex items-center justify-center gap-2">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <button type="button" onClick={handleGoogleLogin} style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                          width: '100%', background: KYVRA.teal, color: '#fff', border: 'none', borderRadius: 14,
+                          padding: '14px 20px', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', fontFamily: FF,
+                          boxShadow: '0 4px 16px rgba(13,148,136,0.30)',
+                        }}>
                           <GoogleIcon /> Continuar con Google
                         </button>
-                        <button type="button" onClick={() => setLoginMode('email')} className="w-full py-2 text-sm font-bold text-primary text-center">
+                        <button type="button" onClick={() => setLoginMode('email')} style={{
+                          background: 'none', border: 'none', color: KYVRA.teal,
+                          fontSize: 13.5, fontWeight: 700, cursor: 'pointer', padding: '8px 0',
+                          width: '100%', textAlign: 'center', fontFamily: FF,
+                        }}>
                           Usar email y contraseña
                         </button>
                       </div>
                     ) : (
-                      <form onSubmit={handleEmailLogin} className="space-y-3">
+                      <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         <input
                           type="email" required value={loginForm.email} autoCapitalize="none"
                           onChange={e => setLoginForm(f => ({ ...f, email: e.target.value }))}
-                          placeholder="Email" className="input"
+                          placeholder="Email" style={glassInput}
                         />
                         <input
                           type="password" required value={loginForm.password}
                           onChange={e => setLoginForm(f => ({ ...f, password: e.target.value }))}
-                          placeholder="Contraseña" className="input"
+                          placeholder="Contraseña" style={glassInput}
                         />
-                        <button type="submit" disabled={loginSubmitting} className="btn-primary w-full">
+                        <button type="submit" disabled={loginSubmitting} style={{
+                          width: '100%', background: loginSubmitting ? KYVRA.textMuted : KYVRA.teal, color: '#fff',
+                          border: 'none', borderRadius: 14, padding: '14px',
+                          fontSize: 14.5, fontWeight: 700, cursor: loginSubmitting ? 'default' : 'pointer', fontFamily: FF,
+                        }}>
                           {loginSubmitting ? 'Un momento...' : 'Iniciar sesión'}
                         </button>
-                        <button type="button" onClick={() => setLoginMode(null)} className="w-full py-1 text-sm font-bold text-center" style={{ color: mutedColor }}>
+                        <button type="button" onClick={() => setLoginMode(null)} style={{
+                          background: 'none', border: 'none', color: mutedColor,
+                          fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: '4px 0',
+                          width: '100%', textAlign: 'center', fontFamily: FF,
+                        }}>
                           Volver
                         </button>
                       </form>
@@ -775,62 +771,58 @@ export default function TurnoNegocio() {
                   </div>
                 ) : (
                   <>
-                    <div className="card p-5 space-y-3" style={GLASS}>
-                      <h2 className="font-bold text-base" style={{ color: textColor }}>Tus datos</h2>
+                    {/* Form: your data */}
+                    <div style={{ ...GLASS, padding: '20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <h2 style={{ fontWeight: 700, fontSize: 16, color: textColor, margin: 0, fontFamily: FF }}>Tus datos</h2>
                       <div>
-                        <label className="text-xs font-medium mb-1 block" style={{ color: mutedColor }}>Tu nombre</label>
-                        <input
-                          value={form.name} placeholder="Juan García" className="input"
-                          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                        />
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: mutedColor, marginBottom: 6, fontFamily: FF }}>Tu nombre</label>
+                        <input value={form.name} placeholder="Juan García" style={glassInput}
+                          onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
                       </div>
                       <div>
-                        <label className="text-xs font-medium mb-1 block" style={{ color: mutedColor }}>Teléfono</label>
-                        <input
-                          value={form.phone} placeholder="3571-123456" className="input"
-                          onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                        />
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: mutedColor, marginBottom: 6, fontFamily: FF }}>Teléfono</label>
+                        <input value={form.phone} placeholder="3571-123456" style={glassInput}
+                          onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
                       </div>
                       <div>
-                        <label className="text-xs font-medium mb-1 block" style={{ color: mutedColor }}>Notas (opcional)</label>
-                        <input
-                          value={form.notes} placeholder="Algo que quieras avisar..." className="input"
-                          onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                        />
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: mutedColor, marginBottom: 6, fontFamily: FF }}>Notas (opcional)</label>
+                        <input value={form.notes} placeholder="Algo que quieras avisar..." style={glassInput}
+                          onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
                       </div>
                     </div>
 
-                    <div className="card p-5" style={GLASS}>
-                      <h2 className="font-bold text-base mb-3" style={{ color: textColor }}>Resumen</h2>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span style={{ color: mutedColor }}>Negocio</span>
-                          <span className="font-semibold text-right" style={{ color: textColor }}>{business.name}</span>
+                    {/* Summary */}
+                    <div style={{ ...GLASS, padding: '20px' }}>
+                      <h2 style={{ fontWeight: 700, fontSize: 16, color: textColor, margin: '0 0 14px', fontFamily: FF }}>Resumen</h2>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: mutedColor, fontFamily: FF }}>Negocio</span>
+                          <span style={{ fontWeight: 600, textAlign: 'right', color: textColor, fontFamily: FF }}>{business.name}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span style={{ color: mutedColor }}>Servicio</span>
-                          <span className="font-semibold text-right" style={{ color: textColor }}>{selectedService?.name}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: mutedColor, fontFamily: FF }}>Servicio</span>
+                          <span style={{ fontWeight: 600, textAlign: 'right', color: textColor, fontFamily: FF }}>{selectedService?.name}</span>
                         </div>
                         {selectedProfessional && (
-                          <div className="flex justify-between">
-                            <span style={{ color: mutedColor }}>Profesional</span>
-                            <span className="font-semibold text-right" style={{ color: textColor }}>{selectedProfessional.name}</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: mutedColor, fontFamily: FF }}>Profesional</span>
+                            <span style={{ fontWeight: 600, textAlign: 'right', color: textColor, fontFamily: FF }}>{selectedProfessional.name}</span>
                           </div>
                         )}
-                        <div className="flex justify-between">
-                          <span style={{ color: mutedColor }}>Día</span>
-                          <span className="font-semibold text-right capitalize" style={{ color: textColor }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: mutedColor, fontFamily: FF }}>Día</span>
+                          <span style={{ fontWeight: 600, textAlign: 'right', textTransform: 'capitalize', color: textColor, fontFamily: FF }}>
                             {selectedDay?.date.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span style={{ color: mutedColor }}>Horario</span>
-                          <span className="font-semibold text-right" style={{ color: textColor }}>{fmtTime(selectedTime)}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: mutedColor, fontFamily: FF }}>Horario</span>
+                          <span style={{ fontWeight: 600, textAlign: 'right', color: textColor, fontFamily: FF }}>{fmtTime(selectedTime)}</span>
                         </div>
                         {selectedService?.price != null && (
-                          <div className="mt-2 pt-2 flex justify-between font-bold text-base" style={{ borderTop: `1px solid ${dimColor}` }}>
-                            <span style={{ color: textColor }}>Precio</span>
-                            <span className="text-primary">${Number(selectedService.price).toLocaleString('es-AR')}</span>
+                          <div style={{ marginTop: 8, paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16, borderTop: `1px solid ${dimColor}` }}>
+                            <span style={{ color: textColor, fontFamily: FF }}>Precio</span>
+                            <span style={{ color: KYVRA.teal, fontFamily: FF }}>${Number(selectedService.price).toLocaleString('es-AR')}</span>
                           </div>
                         )}
                       </div>
@@ -845,28 +837,40 @@ export default function TurnoNegocio() {
       </div>
 
       {/* Fixed bottom bar */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white"
-        style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.10)', padding: '12px 16px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
-      >
-        <div className="max-w-2xl mx-auto">
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+        background: '#fff',
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.10)',
+        padding: '12px 16px',
+        paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
+      }}>
+        <div style={{ maxWidth: 672, margin: '0 auto' }}>
           {step === 3 ? (
-            <p className="text-center text-sm text-gray-400 py-1">
-              {selectedDay
-                ? 'Seleccioná un horario verde para continuar'
-                : 'Elegí un día en el calendario'}
+            <p style={{ textAlign: 'center', fontSize: 14, color: KYVRA.textMuted, padding: '4px 0', fontFamily: FF }}>
+              {selectedDay ? 'Seleccioná un horario para continuar' : 'Elegí un día en el calendario'}
             </p>
           ) : step < 4 ? (
-            <button type="button" onClick={handleContinue} disabled={!canContinue} className="btn-primary w-full">
+            <button type="button" onClick={handleContinue} disabled={!canContinue} style={{
+              width: '100%', background: !canContinue ? KYVRA.border : KYVRA.teal,
+              color: !canContinue ? KYVRA.textMuted : '#fff',
+              border: 'none', borderRadius: 14, padding: '15px 20px',
+              fontSize: 15, fontWeight: 800, cursor: !canContinue ? 'default' : 'pointer',
+              fontFamily: FF,
+              boxShadow: !canContinue ? 'none' : '0 4px 16px rgba(13,148,136,0.25)',
+              transition: 'all 0.15s',
+            }}>
               Continuar
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={submitting || !session || !form.name.trim() || !form.phone.trim()}
-              className="btn-primary w-full"
-            >
+            <button type="button" onClick={handleConfirm} disabled={!canConfirm} style={{
+              width: '100%', background: !canConfirm ? KYVRA.border : KYVRA.teal,
+              color: !canConfirm ? KYVRA.textMuted : '#fff',
+              border: 'none', borderRadius: 14, padding: '15px 20px',
+              fontSize: 15, fontWeight: 800, cursor: !canConfirm ? 'default' : 'pointer',
+              fontFamily: FF,
+              boxShadow: !canConfirm ? 'none' : '0 4px 16px rgba(13,148,136,0.25)',
+              transition: 'all 0.15s',
+            }}>
               {submitting ? 'Reservando...' : 'Confirmar turno'}
             </button>
           )}

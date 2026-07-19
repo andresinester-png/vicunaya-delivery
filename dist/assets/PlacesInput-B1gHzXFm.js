@@ -1,1 +1,0 @@
-import{j as e}from"./index-Bduek1Z_.js";function u({value:t,onChange:a,placeholder:n,className:r,autoFocus:s}){return e.jsx("div",{className:"relative",children:e.jsx("input",{value:t,onChange:i=>a(i.target.value),placeholder:n,className:r,autoFocus:s})})}export{u as P};
