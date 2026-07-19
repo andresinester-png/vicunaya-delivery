@@ -229,7 +229,7 @@ function RestaurantCard({ r }) {
         }}
       >
         {/* Cover image */}
-        <div style={{ position: 'relative', height: 156, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', height: 180, overflow: 'hidden' }}>
           {r.image_url ? (
             <img
               src={r.image_url} alt={r.name} loading="lazy"
@@ -317,7 +317,7 @@ function RestaurantCard({ r }) {
         }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{
-              fontWeight: 800, fontSize: 15.5, color: KYVRA.navy,
+              fontWeight: 800, fontSize: 17, color: KYVRA.navy,
               marginBottom: 6, overflow: 'hidden',
               textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               letterSpacing: '-0.01em',
@@ -376,7 +376,7 @@ function SkeletonCard() {
       border: `1px solid ${KYVRA.border}`,
       boxShadow: SHADOW.card, overflow: 'hidden',
     }}>
-      <div style={{ height: 156, background: '#EEF2F7' }} />
+      <div style={{ height: 180, background: '#EEF2F7' }} />
       <div style={{ padding: '14px 16px' }}>
         <div style={{ height: 15, width: '52%', borderRadius: 7, background: '#EEF2F7', marginBottom: 8 }} />
         <div style={{ height: 11, width: '72%', borderRadius: 7, background: '#EEF2F7' }} />
@@ -460,44 +460,51 @@ export default function Home() {
       onClick={() => sortOpen && setSortOpen(false)}
     >
 
-      {/* ── Sticky sub-header ───────────────────────────────────────── */}
+      {/* ── Sticky gradient header ──────────────────────────────────── */}
       <div style={{
-        background: KYVRA.white,
-        padding: '22px 20px 18px',
-        borderBottom: `1px solid ${KYVRA.border}`,
+        background: 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)',
+        padding: `calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px`,
         position: 'sticky', top: 0, zIndex: 30,
-        boxShadow: headerElevated ? SHADOW.header : 'none',
+        boxShadow: headerElevated ? '0 4px 28px rgba(0,0,0,0.38)' : 'none',
         transition: 'box-shadow 0.3s ease',
       }}>
-        {/* Eyebrow */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
-          <MapPin size={12} color={KYVRA.teal} strokeWidth={2.5} />
-          <span style={{
-            fontSize: 11, fontWeight: 700, color: KYVRA.teal,
-            letterSpacing: '0.09em', textTransform: 'uppercase',
+        {/* Eyebrow location chip */}
+        <div style={{ marginBottom: 10 }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            background: 'rgba(13,148,136,0.18)', borderRadius: 99,
+            padding: '4px 12px', border: '1px solid rgba(13,148,136,0.32)',
           }}>
-            DELIVERY
-          </span>
+            <MapPin size={11} color="#5EEAD4" strokeWidth={2.5} />
+            <span style={{
+              fontSize: 11, fontWeight: 700, color: '#5EEAD4',
+              letterSpacing: '0.06em', textTransform: 'uppercase',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+            }}>
+              DELIVERY · Vicuña Mackenna
+            </span>
+          </div>
         </div>
 
         {/* Heading */}
         <h1 style={{
-          color: KYVRA.navy, fontSize: 24, fontWeight: 900,
-          margin: '0 0 5px', letterSpacing: '-0.025em', lineHeight: 1.15,
+          color: '#fff', fontSize: 26, fontWeight: 900,
+          margin: '0 0 4px', letterSpacing: '-0.03em', lineHeight: 1.15,
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
         }}>
           ¿Qué se te antoja hoy?
         </h1>
         <p style={{
-          color: KYVRA.textSec, fontSize: 14, margin: '0 0 18px',
-          lineHeight: 1.55, fontWeight: 450,
+          color: 'rgba(255,255,255,0.48)', fontSize: 13, margin: '0 0 16px',
+          lineHeight: 1.55, fontWeight: 500,
         }}>
           Pedí comida de los mejores locales de la ciudad.
         </p>
 
-        {/* Search */}
+        {/* Search — white input on dark header */}
         <div style={{ position: 'relative' }}>
           <Search
-            size={16} color={searchFocused ? KYVRA.teal : KYVRA.textMuted}
+            size={16} color={searchFocused ? KYVRA.teal : '#94A3B8'}
             style={{
               position: 'absolute', left: 14, top: '50%',
               transform: 'translateY(-50%)', pointerEvents: 'none',
@@ -511,15 +518,18 @@ export default function Home() {
             onBlur={() => setSearchFocused(false)}
             placeholder="Buscar comidas, restaurantes..."
             style={{
-              width: '100%', height: 48,
-              background: KYVRA.bg,
-              border: `1.5px solid ${searchFocused || search ? KYVRA.teal : KYVRA.border}`,
+              width: '100%', height: 50,
+              background: '#fff',
+              border: `1.5px solid ${searchFocused || search ? KYVRA.teal : 'transparent'}`,
               borderRadius: 16, padding: '0 44px 0 42px',
               fontSize: 14, color: KYVRA.navy, outline: 'none',
               boxSizing: 'border-box',
-              boxShadow: searchFocused ? '0 0 0 3px rgba(13,148,136,0.12)' : 'none',
+              boxShadow: searchFocused
+                ? '0 0 0 3px rgba(13,148,136,0.18), 0 4px 20px rgba(0,0,0,0.22)'
+                : '0 4px 20px rgba(0,0,0,0.16)',
               transition: 'border-color 0.2s, box-shadow 0.2s',
               fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 500,
             }}
           />
           {search && (

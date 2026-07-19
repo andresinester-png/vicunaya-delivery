@@ -116,7 +116,7 @@ export default function Restaurant() {
     <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}>
       <div style={{ background: KYVRA.bg, minHeight: '100%' }}>
         <div style={{ maxWidth: 640, margin: '0 auto' }}>
-          <div style={{ height: 290, background: '#D1D5DB' }} className="animate-pulse" />
+          <div style={{ height: 320, background: '#D1D5DB' }} className="animate-pulse" />
           <div style={{ background: KYVRA.white, padding: '14px 20px', borderBottom: `1px solid ${KYVRA.border}` }}>
             <div style={{ height: 22, width: '60%', borderRadius: 8, background: '#EEF2F7', marginBottom: 8 }} className="animate-pulse" />
             <div style={{ height: 13, width: '40%', borderRadius: 6, background: '#EEF2F7' }} className="animate-pulse" />
@@ -173,7 +173,7 @@ export default function Restaurant() {
         <div style={{ maxWidth: 640, margin: '0 auto', minHeight: '100%' }}>
 
           {/* ── Hero ─────────────────────────────────────────────────── */}
-          <div style={{ position: 'relative', height: 290, overflow: 'hidden' }}>
+          <div style={{ position: 'relative', height: 320, overflow: 'hidden' }}>
 
             {restaurant.image_url ? (
               <img
@@ -199,10 +199,10 @@ export default function Restaurant() {
               </div>
             )}
 
-            {/* Gradient scrim */}
+            {/* KYVRA-branded scrim with teal atmosphere */}
             <div style={{
               position: 'absolute', inset: 0,
-              background: 'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.28) 40%, rgba(0,0,0,0.86) 100%)',
+              background: 'linear-gradient(180deg, rgba(6,17,24,0.18) 0%, rgba(13,148,136,0.17) 32%, rgba(13,148,136,0.05) 54%, rgba(15,23,42,0.93) 100%)',
             }} />
 
             {/* Back button */}
@@ -508,6 +508,7 @@ export default function Restaurant() {
                       display: 'flex', alignItems: 'center', gap: 8,
                       marginBottom: 12, paddingLeft: 4,
                     }}>
+                      <div style={{ width: 3, height: 22, borderRadius: 2, background: KYVRA.teal, flexShrink: 0 }} />
                       <h2 style={{
                         fontSize: 19, fontWeight: 900, color: KYVRA.navy,
                         letterSpacing: '-0.025em', margin: 0, lineHeight: 1,
@@ -586,10 +587,10 @@ export default function Restaurant() {
               zIndex: 45,
               left: '50%', transform: 'translateX(-50%)',
               width: 'calc(100% - 32px)', maxWidth: 608,
-              background: KYVRA.white,
-              boxShadow: '0 4px 24px rgba(0,0,0,0.13)',
+              background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+              boxShadow: '0 -4px 32px rgba(0,0,0,0.30), 0 8px 40px rgba(0,0,0,0.24), 0 0 0 1px rgba(255,255,255,0.06)',
               borderRadius: 20,
-              border: `1px solid ${KYVRA.border}`,
+              border: 'none',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14,
               padding: '10px 10px 10px 20px',
             }}
@@ -600,13 +601,15 @@ export default function Restaurant() {
               style={{
                 flex: 1,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                background: isOpen ? KYVRA.teal : KYVRA.border,
-                color: isOpen ? '#fff' : KYVRA.textMuted,
+                background: isOpen
+                  ? 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)'
+                  : 'rgba(255,255,255,0.10)',
+                color: isOpen ? '#fff' : 'rgba(255,255,255,0.35)',
                 fontWeight: 800, fontSize: 15,
                 padding: '14px 22px',
                 borderRadius: 999, border: 'none',
                 cursor: isOpen ? 'pointer' : 'not-allowed',
-                boxShadow: isOpen ? '0 4px 16px rgba(13,148,136,0.32)' : 'none',
+                boxShadow: isOpen ? '0 4px 20px rgba(13,148,136,0.45)' : 'none',
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                 transition: 'background 0.18s, box-shadow 0.18s',
               }}
@@ -617,12 +620,12 @@ export default function Restaurant() {
 
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
               <p style={{
-                fontSize: 19, fontWeight: 900, color: KYVRA.teal,
+                fontSize: 19, fontWeight: 900, color: '#5EEAD4',
                 margin: 0, lineHeight: 1.15, letterSpacing: '-0.025em',
               }}>
                 ${total.toLocaleString('es-AR')}
               </p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: KYVRA.textMuted, margin: 0 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
                 {count} {count === 1 ? 'producto' : 'productos'}
               </p>
             </div>
