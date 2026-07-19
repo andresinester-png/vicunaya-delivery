@@ -8,6 +8,13 @@ import { KYVRA } from '../lib/theme.js';
 const FF = "'Plus Jakarta Sans', sans-serif";
 
 const STATUS_CONFIG = {
+  pending:   { label: 'Pendiente',  bg: 'rgba(245,158,11,0.18)',  color: '#92400E' },
+  confirmed: { label: 'Confirmado', bg: 'rgba(13,148,136,0.22)',  color: '#5EEAD4' },
+  cancelled: { label: 'Cancelado',  bg: 'rgba(239,68,68,0.18)',   color: '#FCA5A5' },
+  completed: { label: 'Completado', bg: 'rgba(22,163,74,0.18)',   color: '#86EFAC' },
+};
+
+const STATUS_CONFIG_LIGHT = {
   pending:   { label: 'Pendiente',  bg: 'rgba(245,158,11,0.13)',  color: '#B45309' },
   confirmed: { label: 'Confirmado', bg: KYVRA.tealBg,              color: KYVRA.tealDark },
   cancelled: { label: 'Cancelado',  bg: 'rgba(239,68,68,0.13)',   color: '#DC2626' },
@@ -24,15 +31,9 @@ function isFuture(appt) {
   return new Date(`${appt.date}T${appt.start_time}-03:00`) > new Date();
 }
 
-const CARD = {
-  background: KYVRA.white,
-  border: `1px solid ${KYVRA.border}`,
-  borderRadius: 20,
-  boxShadow: '0 2px 12px rgba(15,23,42,0.06)',
-};
-
-function StatusBadge({ status }) {
-  const cfg = STATUS_CONFIG[status] || { label: status, bg: KYVRA.bg, color: KYVRA.textSec };
+function StatusBadge({ status, dark }) {
+  const cfg = (dark ? STATUS_CONFIG : STATUS_CONFIG_LIGHT)[status]
+    || { label: status, bg: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' };
   return (
     <span style={{
       fontSize: 10.5, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
@@ -55,48 +56,55 @@ function AppointmentCard({ appt, updating, onUpdateStatus }) {
   const monthAbbr = dateObj.toLocaleDateString('es-AR', { month: 'short' }).replace('.', '').toUpperCase();
 
   return (
-    <div style={{ ...CARD, overflow: 'hidden', display: 'flex' }}>
+    <div style={{
+      background: 'linear-gradient(145deg, #0F172A 0%, #1E293B 55%, #0F2A28 100%)',
+      border: '1px solid rgba(13,148,136,0.22)',
+      borderRadius: 20, overflow: 'hidden', display: 'flex',
+      boxShadow: '0 6px 24px rgba(0,0,0,0.28), 0 0 0 1px rgba(13,148,136,0.06)',
+    }}>
       {/* Date block */}
       <div style={{
-        width: 64, flexShrink: 0,
-        background: 'linear-gradient(145deg, #0D9488, #14B8A6)',
+        width: 72, flexShrink: 0,
+        background: 'linear-gradient(160deg, #0D9488 0%, #0F766E 100%)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 8px',
+        position: 'relative',
       }}>
-        <span style={{ fontSize: 26, fontWeight: 900, color: '#fff', lineHeight: 1, fontFamily: FF }}>{dayNum}</span>
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.75)', fontFamily: FF, marginTop: 2 }}>{monthAbbr}</span>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 30%, rgba(94,234,212,0.15) 0%, transparent 70%)' }} />
+        <span style={{ fontSize: 28, fontWeight: 900, color: '#fff', lineHeight: 1, fontFamily: FF, position: 'relative' }}>{dayNum}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.75)', fontFamily: FF, marginTop: 3, position: 'relative' }}>{monthAbbr}</span>
       </div>
 
       {/* Content */}
       <div style={{ flex: 1, padding: '14px 16px', minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-          <p style={{ fontSize: 14.5, fontWeight: 800, color: KYVRA.navy, margin: 0, letterSpacing: '-0.01em', lineHeight: 1.2, fontFamily: FF }}>
+          <p style={{ fontSize: 15, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.01em', lineHeight: 1.2, fontFamily: FF }}>
             {business?.name ?? '—'}
           </p>
-          <StatusBadge status={appt.status} />
+          <StatusBadge status={appt.status} dark />
         </div>
 
         {service?.name && (
-          <p style={{ fontSize: 12.5, color: KYVRA.textSec, margin: '0 0 8px', fontFamily: FF }}>{service.name}</p>
+          <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', margin: '0 0 8px', fontFamily: FF }}>{service.name}</p>
         )}
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: KYVRA.textMuted, fontFamily: FF }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'rgba(255,255,255,0.50)', fontFamily: FF }}>
             <Clock size={11} /> {fmtTime(appt.start_time)}
           </span>
           {prof?.name && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: KYVRA.textMuted, fontFamily: FF }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'rgba(255,255,255,0.50)', fontFamily: FF }}>
               <UserIcon size={11} /> {prof.name}
             </span>
           )}
           {business?.address && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: KYVRA.textMuted, fontFamily: FF }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'rgba(255,255,255,0.50)', fontFamily: FF }}>
               <MapPin size={11} /> {business.address}
             </span>
           )}
         </div>
 
         {service?.price != null && (
-          <p style={{ fontSize: 13, fontWeight: 800, color: KYVRA.teal, margin: '6px 0 0', fontFamily: FF }}>
+          <p style={{ fontSize: 14, fontWeight: 800, color: '#5EEAD4', margin: '6px 0 0', fontFamily: FF }}>
             ${Number(service.price).toLocaleString('es-AR')}
           </p>
         )}
@@ -110,9 +118,10 @@ function AppointmentCard({ appt, updating, onUpdateStatus }) {
                 style={{
                   flex: 1, padding: '9px', borderRadius: 12, border: 'none', fontFamily: FF, fontWeight: 700, fontSize: 12.5,
                   cursor: !!updating ? 'default' : 'pointer',
-                  background: isUpdating('confirmed') ? KYVRA.tealBg : KYVRA.teal,
-                  color: isUpdating('confirmed') ? KYVRA.teal : '#fff',
+                  background: isUpdating('confirmed') ? 'rgba(13,148,136,0.25)' : 'linear-gradient(135deg, #0D9488, #14B8A6)',
+                  color: isUpdating('confirmed') ? '#5EEAD4' : '#fff',
                   opacity: !!updating ? 0.7 : 1,
+                  boxShadow: isUpdating('confirmed') ? 'none' : '0 2px 8px rgba(13,148,136,0.35)',
                 }}
               >
                 {isUpdating('confirmed') ? 'Confirmando...' : 'Confirmar'}
@@ -123,8 +132,8 @@ function AppointmentCard({ appt, updating, onUpdateStatus }) {
               disabled={!!updating}
               style={{
                 flex: 1, padding: '9px', borderRadius: 12, fontFamily: FF, fontWeight: 700, fontSize: 12.5,
-                cursor: !!updating ? 'default' : 'pointer', color: '#DC2626',
-                background: KYVRA.white, border: '1.5px solid rgba(239,68,68,0.25)',
+                cursor: !!updating ? 'default' : 'pointer', color: '#FCA5A5',
+                background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.20)',
                 opacity: !!updating ? 0.7 : 1,
               }}
             >
@@ -141,7 +150,7 @@ function HistoryCard({ appt }) {
   const business = appt.appointment_businesses;
   const service  = appt.appointment_services;
   return (
-    <div style={{ ...CARD, display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px' }}>
+    <div style={{ background: KYVRA.white, border: `1px solid ${KYVRA.border}`, borderRadius: 18, boxShadow: '0 2px 10px rgba(15,23,42,0.05)', display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px' }}>
       <div style={{ width: 40, height: 40, borderRadius: 12, background: KYVRA.bg, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Calendar size={17} color={KYVRA.textMuted} strokeWidth={1.8} />
       </div>
@@ -152,7 +161,7 @@ function HistoryCard({ appt }) {
         <p style={{ fontSize: 11.5, color: KYVRA.textMuted, margin: '0 0 4px', fontFamily: FF }}>
           {fmtDateShort(appt.date)} · {fmtTime(appt.start_time)}{service?.name ? ` · ${service.name}` : ''}
         </p>
-        <StatusBadge status={appt.status} />
+        <StatusBadge status={appt.status} dark={false} />
       </div>
     </div>
   );
@@ -300,84 +309,111 @@ export default function MisTurnos() {
   return (
     <>
       <style>{`@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }`}</style>
-      <div style={{ background: KYVRA.bg, minHeight: '100%', fontFamily: FF, padding: '20px 16px 8px' }}>
+      <div style={{ background: KYVRA.bg, minHeight: '100%', fontFamily: FF }}>
 
-        {!authLoading && !session && <LoginPrompt />}
-
-        {(authLoading || loading) && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[...Array(3)].map((_, i) => (
-              <div key={i} style={{
-                height: 100, borderRadius: 20,
-                background: 'linear-gradient(90deg,#f0f4f8 25%,#e2e8f0 50%,#f0f4f8 75%)',
-                backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite',
-              }} />
-            ))}
+        {/* Premium dark branded header */}
+        <div style={{
+          background: 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)',
+          padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 16px 24px',
+          position: 'relative', overflow: 'hidden',
+        }}>
+          <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,148,136,0.22) 0%, transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10, position: 'relative' }}>
+            <div style={{ width: 22, height: 22, borderRadius: 7, background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <CalendarCheck size={12} color="#fff" />
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#5EEAD4', letterSpacing: '0.12em', fontFamily: FF }}>MIS TURNOS · KYVRA</span>
           </div>
-        )}
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: '#fff', margin: '0 0 3px', letterSpacing: '-0.02em', fontFamily: FF, position: 'relative' }}>
+            Mis turnos
+          </h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.52)', margin: 0, fontFamily: FF, position: 'relative' }}>
+            Próximos y anteriores
+          </p>
+        </div>
 
-        {isReady && (
-          <>
-            {/* ── Próximos turnos ── */}
-            <section style={{ marginBottom: 28 }}>
-              <span style={{
-                display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
-                textTransform: 'uppercase', color: KYVRA.textMuted, marginBottom: 10,
-              }}>
-                Próximos turnos
-              </span>
+        {/* Content area */}
+        <div style={{ padding: '20px 16px 8px' }}>
 
-              {activeAppts.length === 0 ? (
-                <div style={{ ...CARD, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '36px 24px', textAlign: 'center' }}>
-                  <div style={{ width: 56, height: 56, borderRadius: 18, background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-                    <CalendarCheck size={26} color={KYVRA.teal} strokeWidth={1.5} />
+          {!authLoading && !session && <LoginPrompt />}
+
+          {(authLoading || loading) && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[...Array(3)].map((_, i) => (
+                <div key={i} style={{
+                  height: 100, borderRadius: 20,
+                  background: 'linear-gradient(90deg,#f0f4f8 25%,#e2e8f0 50%,#f0f4f8 75%)',
+                  backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite',
+                }} />
+              ))}
+            </div>
+          )}
+
+          {isReady && (
+            <>
+              {/* ── Próximos turnos ── */}
+              <section style={{ marginBottom: 28 }}>
+                <span style={{
+                  display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+                  textTransform: 'uppercase', color: KYVRA.textMuted, marginBottom: 10, fontFamily: FF,
+                }}>
+                  Próximos turnos
+                </span>
+
+                {activeAppts.length === 0 ? (
+                  <div style={{ background: KYVRA.white, border: `1px solid ${KYVRA.border}`, borderRadius: 20, boxShadow: '0 2px 12px rgba(15,23,42,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '36px 24px', textAlign: 'center' }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 18, background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                      <CalendarCheck size={26} color={KYVRA.teal} strokeWidth={1.5} />
+                    </div>
+                    <p style={{ fontWeight: 700, fontSize: 15, color: KYVRA.navy, margin: '0 0 6px', fontFamily: FF }}>No tenés turnos próximos</p>
+                    <p style={{ fontSize: 13, color: KYVRA.textSec, margin: 0, lineHeight: 1.55, fontFamily: FF }}>Buscá un negocio en Turnos y reservá</p>
                   </div>
-                  <p style={{ fontWeight: 700, fontSize: 15, color: KYVRA.navy, margin: '0 0 6px', fontFamily: FF }}>No tenés turnos próximos</p>
-                  <p style={{ fontSize: 13, color: KYVRA.textSec, margin: 0, lineHeight: 1.55, fontFamily: FF }}>Buscá un negocio en Turnos y reservá</p>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {activeAppts.map(appt => (
-                    <AppointmentCard key={appt.id} appt={appt} updating={updating} onUpdateStatus={updateStatus} />
-                  ))}
-                </div>
-              )}
-            </section>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {activeAppts.map(appt => (
+                      <AppointmentCard key={appt.id} appt={appt} updating={updating} onUpdateStatus={updateStatus} />
+                    ))}
+                  </div>
+                )}
+              </section>
 
-            {/* ── Historial de turnos ── */}
-            <section>
-              <div style={{
-                background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)',
-                borderRadius: 18, padding: '14px 18px', marginBottom: 14,
-                boxShadow: '0 4px 18px rgba(13,148,136,0.24)',
-                display: 'flex', alignItems: 'center', gap: 12,
-              }}>
-                <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Clock size={17} color="#fff" strokeWidth={2.2} />
+              {/* ── Historial de turnos ── */}
+              <section>
+                <div style={{
+                  background: 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)',
+                  borderRadius: 18, padding: '16px 18px', marginBottom: 14,
+                  boxShadow: '0 6px 24px rgba(0,0,0,0.22)',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{ position: 'absolute', right: -20, top: -20, width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,148,136,0.28) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                  <div style={{ width: 36, height: 36, borderRadius: 11, background: 'rgba(13,148,136,0.22)', border: '1px solid rgba(13,148,136,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}>
+                    <Clock size={17} color="#5EEAD4" strokeWidth={2.2} />
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <p style={{ fontSize: 15, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.01em', fontFamily: FF }}>Historial de turnos</p>
+                    {historyAppts.length > 0 && (
+                      <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.55)', margin: '2px 0 0', fontFamily: FF }}>
+                        {historyAppts.length} {historyAppts.length === 1 ? 'turno anterior' : 'turnos anteriores'}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <p style={{ fontSize: 15, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.01em', fontFamily: FF }}>Historial de turnos</p>
-                  {historyAppts.length > 0 && (
-                    <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.72)', margin: '2px 0 0', fontFamily: FF }}>
-                      {historyAppts.length} {historyAppts.length === 1 ? 'turno anterior' : 'turnos anteriores'}
-                    </p>
-                  )}
-                </div>
-              </div>
 
-              {historyAppts.length === 0 ? (
-                <div style={{ ...CARD, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '28px 24px', textAlign: 'center' }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: KYVRA.navy, margin: '0 0 6px', fontFamily: FF }}>Sin turnos anteriores</p>
-                  <p style={{ fontSize: 12.5, color: KYVRA.textMuted, margin: 0, fontFamily: FF }}>Tus turnos completados aparecerán acá</p>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {historyAppts.map(appt => <HistoryCard key={appt.id} appt={appt} />)}
-                </div>
-              )}
-            </section>
-          </>
-        )}
+                {historyAppts.length === 0 ? (
+                  <div style={{ background: KYVRA.white, border: `1px solid ${KYVRA.border}`, borderRadius: 18, boxShadow: '0 2px 10px rgba(15,23,42,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '28px 24px', textAlign: 'center' }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: KYVRA.navy, margin: '0 0 6px', fontFamily: FF }}>Sin turnos anteriores</p>
+                    <p style={{ fontSize: 12.5, color: KYVRA.textMuted, margin: 0, fontFamily: FF }}>Tus turnos completados aparecerán acá</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {historyAppts.map(appt => <HistoryCard key={appt.id} appt={appt} />)}
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+        </div>
       </div>
     </>
   );

@@ -61,7 +61,7 @@ function SuccessScreen({ business, service, professional, day, time }) {
       style={{
         position: 'fixed', inset: 0, zIndex: 50,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        background: 'linear-gradient(145deg, #0D9488 0%, #0F766E 100%)',
+        background: 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)',
       }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -74,12 +74,18 @@ function SuccessScreen({ business, service, professional, day, time }) {
           60%  { transform: scale(1.08); opacity: 1; }
           100% { transform: scale(1); opacity: 1; }
         }
+        @keyframes successGlow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(13,148,136,0), 0 12px 40px rgba(0,0,0,0.3); }
+          50%       { box-shadow: 0 0 0 18px rgba(13,148,136,0.12), 0 12px 40px rgba(0,0,0,0.3); }
+        }
       `}</style>
+      {/* Ambient glow */}
+      <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%,-50%)', width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,148,136,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
       <div style={{
         width: 140, height: 140, borderRadius: '50%', background: '#fff',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
-        animation: 'circlePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+        animation: 'circlePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both, successGlow 2s 0.9s ease-in-out infinite',
+        position: 'relative',
       }}>
         <svg viewBox="0 0 52 52" width={78} height={78} fill="none">
           <path
@@ -90,13 +96,13 @@ function SuccessScreen({ business, service, professional, day, time }) {
         </svg>
       </div>
       <motion.p
-        style={{ fontSize: 30, fontWeight: 900, color: '#fff', marginTop: 28, textAlign: 'center', padding: '0 32px', fontFamily: FF }}
+        style={{ fontSize: 30, fontWeight: 900, color: '#fff', marginTop: 28, textAlign: 'center', padding: '0 32px', fontFamily: FF, position: 'relative' }}
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55, duration: 0.4, ease: 'easeOut' }}
       >
         ¡Turno confirmado!
       </motion.p>
       <motion.p
-        style={{ fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.9)', marginTop: 8, textAlign: 'center', padding: '0 32px', fontFamily: FF, lineHeight: 1.5 }}
+        style={{ fontSize: 15, fontWeight: 500, color: 'rgba(255,255,255,0.65)', marginTop: 10, textAlign: 'center', padding: '0 32px', fontFamily: FF, lineHeight: 1.6, position: 'relative' }}
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7, duration: 0.4, ease: 'easeOut' }}
       >
         {business?.name} · {service?.name}
@@ -836,39 +842,42 @@ export default function TurnoNegocio() {
         </AnimatePresence>
       </div>
 
-      {/* Fixed bottom bar */}
+      {/* Fixed bottom bar — dark premium */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-        background: '#fff',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.10)',
+        background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+        boxShadow: '0 -4px 24px rgba(0,0,0,0.30)',
         padding: '12px 16px',
         paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
+        borderTop: '1px solid rgba(255,255,255,0.06)',
       }}>
         <div style={{ maxWidth: 672, margin: '0 auto' }}>
           {step === 3 ? (
-            <p style={{ textAlign: 'center', fontSize: 14, color: KYVRA.textMuted, padding: '4px 0', fontFamily: FF }}>
+            <p style={{ textAlign: 'center', fontSize: 14, color: 'rgba(255,255,255,0.45)', padding: '4px 0', fontFamily: FF }}>
               {selectedDay ? 'Seleccioná un horario para continuar' : 'Elegí un día en el calendario'}
             </p>
           ) : step < 4 ? (
             <button type="button" onClick={handleContinue} disabled={!canContinue} style={{
-              width: '100%', background: !canContinue ? KYVRA.border : KYVRA.teal,
-              color: !canContinue ? KYVRA.textMuted : '#fff',
+              width: '100%',
+              background: !canContinue ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)',
+              color: !canContinue ? 'rgba(255,255,255,0.30)' : '#fff',
               border: 'none', borderRadius: 14, padding: '15px 20px',
               fontSize: 15, fontWeight: 800, cursor: !canContinue ? 'default' : 'pointer',
               fontFamily: FF,
-              boxShadow: !canContinue ? 'none' : '0 4px 16px rgba(13,148,136,0.25)',
+              boxShadow: !canContinue ? 'none' : '0 4px 18px rgba(13,148,136,0.35)',
               transition: 'all 0.15s',
             }}>
               Continuar
             </button>
           ) : (
             <button type="button" onClick={handleConfirm} disabled={!canConfirm} style={{
-              width: '100%', background: !canConfirm ? KYVRA.border : KYVRA.teal,
-              color: !canConfirm ? KYVRA.textMuted : '#fff',
+              width: '100%',
+              background: !canConfirm ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)',
+              color: !canConfirm ? 'rgba(255,255,255,0.30)' : '#fff',
               border: 'none', borderRadius: 14, padding: '15px 20px',
               fontSize: 15, fontWeight: 800, cursor: !canConfirm ? 'default' : 'pointer',
               fontFamily: FF,
-              boxShadow: !canConfirm ? 'none' : '0 4px 16px rgba(13,148,136,0.25)',
+              boxShadow: !canConfirm ? 'none' : '0 4px 18px rgba(13,148,136,0.35)',
               transition: 'all 0.15s',
             }}>
               {submitting ? 'Reservando...' : 'Confirmar turno'}

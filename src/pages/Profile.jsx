@@ -305,28 +305,43 @@ function MainScreen({ profile, session, onNav, onLogout }) {
   return (
     <div style={{ minHeight: '100%', background: KYVRA.bg, fontFamily: FF, paddingBottom: 32 }}>
 
-      {/* Gradient header */}
+      {/* Premium dark gradient header */}
       <div style={{
-        background: 'linear-gradient(145deg, #0D9488 0%, #14B8A6 100%)',
+        background: 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)',
         padding: 'calc(40px + env(safe-area-inset-top, 0px)) 24px 32px',
         textAlign: 'center',
+        position: 'relative', overflow: 'hidden',
       }}>
+        {/* Ambient glows */}
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,148,136,0.22) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -50, left: -50, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(20,184,166,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+        {/* KYVRA eyebrow */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginBottom: 18, position: 'relative' }}>
+          <div style={{ width: 22, height: 22, borderRadius: 7, background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <User size={12} color="#fff" />
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 800, color: '#5EEAD4', letterSpacing: '0.12em', fontFamily: FF }}>MI PERFIL · KYVRA</span>
+        </div>
+
+        {/* Avatar */}
         <div style={{
-          width: 80, height: 80, borderRadius: '50%',
-          background: 'rgba(255,255,255,0.22)',
-          border: '3px solid rgba(255,255,255,0.50)',
+          width: 90, height: 90, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.14)',
+          border: '2.5px solid rgba(255,255,255,0.30)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 30, fontWeight: 900, color: '#fff', fontFamily: FF,
+          fontSize: 32, fontWeight: 900, color: '#fff', fontFamily: FF,
           margin: '0 auto 14px', letterSpacing: '-0.02em',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+          boxShadow: '0 0 0 4px rgba(13,148,136,0.25), 0 8px 24px rgba(0,0,0,0.30)',
+          position: 'relative',
         }}>
           {init}
         </div>
-        <h2 style={{ fontSize: 22, fontWeight: 900, color: '#fff', margin: '0 0 4px', letterSpacing: '-0.02em', fontFamily: FF }}>
+        <h2 style={{ fontSize: 22, fontWeight: 900, color: '#fff', margin: '0 0 4px', letterSpacing: '-0.02em', fontFamily: FF, position: 'relative' }}>
           {name}
         </h2>
         {email && (
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.72)', margin: '0 0 16px', fontFamily: FF }}>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.60)', margin: '0 0 18px', fontFamily: FF, position: 'relative' }}>
             {email}
           </p>
         )}
@@ -334,9 +349,10 @@ function MainScreen({ profile, session, onNav, onLogout }) {
           onClick={() => onNav('personal')}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.35)',
-            borderRadius: 99, padding: '7px 16px', color: '#fff',
+            background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)',
+            borderRadius: 99, padding: '8px 18px', color: '#fff',
             fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FF,
+            position: 'relative',
           }}
         >
           <User size={13} /> Editar perfil

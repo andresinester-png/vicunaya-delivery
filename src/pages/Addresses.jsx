@@ -13,11 +13,19 @@ function AddressCard({ address, isDefault, onMenu }) {
   return (
     <div style={{
       background: KYVRA.white, borderRadius: 20,
-      padding: '14px 12px 14px 16px',
-      display: 'flex', alignItems: 'flex-start', gap: 12,
-      border: isDefault ? `1.5px solid rgba(13,148,136,0.30)` : `1px solid ${KYVRA.border}`,
-      boxShadow: isDefault ? '0 4px 16px rgba(13,148,136,0.12)' : '0 2px 12px rgba(15,23,42,0.05)',
+      padding: '14px 12px 14px 0',
+      display: 'flex', alignItems: 'flex-start',
+      border: isDefault ? `1.5px solid rgba(13,148,136,0.28)` : `1px solid ${KYVRA.border}`,
+      boxShadow: isDefault ? '0 4px 20px rgba(13,148,136,0.13)' : '0 2px 12px rgba(15,23,42,0.05)',
+      overflow: 'hidden',
     }}>
+      {/* Teal accent bar for default */}
+      <div style={{
+        width: isDefault ? 4 : 0, flexShrink: 0, alignSelf: 'stretch',
+        background: 'linear-gradient(180deg, #0D9488 0%, #14B8A6 100%)',
+        transition: 'width 0.2s',
+      }} />
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flex: 1, paddingLeft: isDefault ? 12 : 16 }}>
       <div style={{
         width: 44, height: 44, borderRadius: 13, flexShrink: 0,
         background: isDefault ? KYVRA.tealBg : KYVRA.bg,
@@ -61,6 +69,7 @@ function AddressCard({ address, isDefault, onMenu }) {
       >
         <MoreVertical size={17} color={KYVRA.textSec} />
       </motion.button>
+      </div>
     </div>
   );
 }
@@ -389,11 +398,34 @@ export default function Addresses() {
   return (
     <div style={{ background: KYVRA.bg, minHeight: '100%', paddingBottom: 120 }}>
 
-      {/* Page header */}
-      <div style={{ background: KYVRA.white, padding: '20px 20px 16px', borderBottom: `1px solid ${KYVRA.border}` }}>
-        <h1 style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-0.03em', margin: 0, color: KYVRA.navy, fontFamily: FF }}>
-          Mis direcciones
-        </h1>
+      {/* Premium dark branded header */}
+      <div style={{
+        background: 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 18px) 16px 22px',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', top: -35, right: -35, width: 150, height: 150, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,148,136,0.22) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 13, background: 'rgba(13,148,136,0.22)', border: '1px solid rgba(13,148,136,0.38)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <MapPin size={20} color="#5EEAD4" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em', fontFamily: FF }}>Mis direcciones</p>
+            <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.52)', margin: '1px 0 0', fontFamily: FF }}>Tus lugares frecuentes</p>
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.92 }}
+            onClick={() => setEditModal({})}
+            style={{
+              width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+              background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)',
+              border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', boxShadow: '0 4px 12px rgba(13,148,136,0.45)',
+            }}
+          >
+            <Plus size={18} color="#fff" strokeWidth={2.5} />
+          </motion.button>
+        </div>
       </div>
 
       <div style={{ padding: '20px 16px' }}>
@@ -436,16 +468,33 @@ export default function Addresses() {
 
         {/* Empty state */}
         {addresses.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '52px 0', fontFamily: FF }}>
-            <div style={{ width: 72, height: 72, borderRadius: 24, background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <MapPin size={32} color={KYVRA.teal} strokeWidth={1.5} />
+          <div style={{ textAlign: 'center', padding: '52px 0 24px', fontFamily: FF }}>
+            <div style={{ position: 'relative', width: 96, height: 96, margin: '0 auto 20px' }}>
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(13,148,136,0.07)' }} />
+              <div style={{ position: 'absolute', inset: 10, borderRadius: '50%', background: 'rgba(13,148,136,0.10)' }} />
+              <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <MapPin size={28} color={KYVRA.teal} strokeWidth={1.5} />
+              </div>
             </div>
-            <p style={{ fontWeight: 700, fontSize: 15, color: KYVRA.navy, margin: '0 0 8px', fontFamily: FF }}>
-              No tenés direcciones guardadas
+            <p style={{ fontWeight: 800, fontSize: 16, color: KYVRA.navy, margin: '0 0 8px', fontFamily: FF }}>
+              Sin direcciones guardadas
             </p>
-            <p style={{ fontSize: 13, color: KYVRA.textMuted, margin: 0, fontFamily: FF }}>
+            <p style={{ fontSize: 13, color: KYVRA.textMuted, margin: '0 0 24px', lineHeight: 1.55, fontFamily: FF }}>
               Agregá tus lugares frecuentes para pedir más rápido.
             </p>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setEditModal({})}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: KYVRA.teal, color: '#fff', borderRadius: 14,
+                padding: '12px 24px', fontSize: 14, fontWeight: 700,
+                border: 'none', cursor: 'pointer', fontFamily: FF,
+                boxShadow: '0 4px 14px rgba(13,148,136,0.30)',
+              }}
+            >
+              <Plus size={16} strokeWidth={2.5} /> Agregar dirección
+            </motion.button>
           </div>
         )}
       </div>
