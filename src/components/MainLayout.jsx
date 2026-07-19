@@ -163,7 +163,11 @@ export default function MainLayout() {
       </header>
 
       {/* ── Contenido ── */}
-      <div id="main-scroll" className={`flex-1 ${isRemises ? 'flex flex-col' : 'pb-24 overflow-y-auto'}`}>
+      <div
+        id="main-scroll"
+        className={`flex-1 ${isRemises ? 'flex flex-col' : 'overflow-y-auto'}`}
+        style={!isRemises ? { paddingBottom: 'calc(130px + env(safe-area-inset-bottom, 0px))' } : undefined}
+      >
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}

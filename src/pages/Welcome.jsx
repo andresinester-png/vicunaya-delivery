@@ -180,7 +180,7 @@ export default function Welcome() {
           transition={{ duration: 0.5, ease: 'easeOut' }}
           style={{ textAlign: 'center', marginBottom: 10 }}
         >
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center' }}>
             <span style={{
               color: '#fff', fontWeight: 900, fontSize: 44,
               letterSpacing: '-0.04em', lineHeight: 1,
@@ -192,16 +192,7 @@ export default function Welcome() {
                 '0 8px 22px rgba(0,0,0,0.55)',
               ].join(', '),
             }}>
-              Vicuña
-            </span>
-            <span style={{
-              background: '#0D9488', color: '#fff',
-              borderRadius: 12, padding: '3px 13px',
-              fontWeight: 900, fontSize: 44,
-              letterSpacing: '-0.04em',
-              boxShadow: '0 4px 18px rgba(15,23,42,0.55)',
-            }}>
-              Ya
+              Kyvra
             </span>
           </div>
         </motion.div>

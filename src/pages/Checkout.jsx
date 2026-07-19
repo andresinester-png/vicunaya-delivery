@@ -1,29 +1,42 @@
 import { useState, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ChevronLeft, Bell, Copy, CheckCircle, Plus, MapPin, X, Camera,
-  Bike, Building2, Banknote, ArrowRight,
+  ChevronLeft, Copy, CheckCircle, Plus, MapPin, X, Camera,
+  Bike, Building2, Banknote, ArrowRight, ShoppingBag, Utensils, Phone,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import PlacesInput from '../components/PlacesInput.jsx';
 import { supabase } from '../lib/supabase.js';
 import useCartStore from '../store/cartStore.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { KYVRA } from '../lib/theme.js';
 
-const TEAL     = '#0D9488';
-const TEAL_BG  = '#F0FDFA';
-const NAVY     = '#0F172A';
 const LABEL_PRESETS = ['Casa', 'Trabajo', 'Otro'];
 
-// ── Pantalla de éxito ────────────────────────────────────────────────────────
+const FF = "'Plus Jakarta Sans', sans-serif";
+
+const inputStyle = {
+  width: '100%', boxSizing: 'border-box',
+  padding: '14px 16px',
+  borderRadius: 14,
+  border: `1.5px solid ${KYVRA.border}`,
+  fontSize: 14, fontWeight: 500,
+  color: KYVRA.navy, background: KYVRA.white,
+  outline: 'none', fontFamily: FF,
+};
+
+// ── Success screen ───────────────────────────────────────────────────────────
 function OrderSuccessScreen() {
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-      style={{ background: '#2E7D32' }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 50,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        background: `linear-gradient(145deg, ${KYVRA.teal} 0%, ${KYVRA.tealDark} 100%)`,
+      }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
     >
       <style>{`
@@ -35,136 +48,109 @@ function OrderSuccessScreen() {
         }
       `}</style>
       <div style={{
-        width: 140, height: 140, borderRadius: '50%', background: '#fff',
+        width: 140, height: 140, borderRadius: '50%', background: KYVRA.white,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
-        animation: 'circlePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+        animation: 'circlePop 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
       }}>
         <svg viewBox="0 0 52 52" width={78} height={78} fill="none">
-          <path
-            d="M14 27 L22 35 L38 17"
-            stroke="#2E7D32" strokeWidth="5"
+          <path d="M14 27 L22 35 L38 17" stroke={KYVRA.teal} strokeWidth="5"
             strokeLinecap="round" strokeLinejoin="round" fill="none"
-            style={{ strokeDasharray: 40, strokeDashoffset: 40, animation: 'checkmarkDraw 0.5s 0.4s ease-out forwards' }}
-          />
+            style={{ strokeDasharray: 40, strokeDashoffset: 40, animation: 'checkmarkDraw 0.5s 0.4s ease-out forwards' }} />
         </svg>
       </div>
-      <motion.p
-        className="text-3xl font-extrabold text-white mt-7 text-center px-8"
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.55, duration: 0.4 }}
-      >
+      <motion.p style={{ fontSize: 30, fontWeight: 900, color: KYVRA.white, margin: '32px 0 0', textAlign: 'center', padding: '0 32px', fontFamily: FF, letterSpacing: '-0.02em' }}
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55, duration: 0.4 }}>
         ¡Pedido confirmado!
       </motion.p>
-      <motion.p
-        className="text-base font-semibold mt-2 text-center px-8"
-        style={{ color: 'rgba(255,255,255,0.9)' }}
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7, duration: 0.4 }}
-      >
+      <motion.p style={{ fontSize: 15, fontWeight: 500, color: 'rgba(255,255,255,0.82)', margin: '10px 0 0', textAlign: 'center', padding: '0 32px', fontFamily: FF }}
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7, duration: 0.4 }}>
         Tu pedido está siendo procesado
       </motion.p>
     </motion.div>
   );
 }
 
-// ── Address bottom sheet ─────────────────────────────────────────────────────
+// ── Address sheet ────────────────────────────────────────────────────────────
 const AddressSheet = memo(function AddressSheet({
-  savedAddresses, selectedAddrId, showNewAddrForm,
-  newAddrForm, savingAddr,
+  savedAddresses, selectedAddrId, showNewAddrForm, newAddrForm, savingAddr,
   onClose, onSelectAddress, onShowNewForm, onChangeNewAddrForm, onSaveNewAddress,
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-t-2xl bg-white" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-        <div className="flex items-center justify-between border-b border-gray-100 p-4">
-          <h3 className="font-bold text-base">Tus direcciones</h3>
-          <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100 transition-colors">
-            <X size={20} />
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)' }} onClick={onClose} />
+      <div style={{ position: 'relative', width: '100%', maxWidth: 480, borderRadius: '24px 24px 0 0', background: KYVRA.white, maxHeight: '82vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${KYVRA.border}`, padding: '18px 20px', position: 'sticky', top: 0, background: KYVRA.white, zIndex: 1 }}>
+          <h3 style={{ fontWeight: 800, fontSize: 16, color: KYVRA.navy, margin: 0, fontFamily: FF }}>Tus direcciones</h3>
+          <button type="button" onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', background: KYVRA.bg, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} color={KYVRA.navy} />
           </button>
         </div>
         {savedAddresses.length > 0 && (
-          <div className="divide-y divide-gray-100">
+          <div>
             {savedAddresses.map(addr => (
-              <button
-                key={addr.id} type="button"
-                onClick={() => onSelectAddress(addr)}
-                className={`flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-gray-50 ${selectedAddrId === addr.id ? 'bg-teal-50' : ''}`}
-              >
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: TEAL_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <MapPin size={17} color={TEAL} />
+              <button key={addr.id} type="button" onClick={() => onSelectAddress(addr)}
+                style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 14, padding: '16px 20px', textAlign: 'left', border: 'none', cursor: 'pointer', background: selectedAddrId === addr.id ? KYVRA.tealBg : KYVRA.white, borderBottom: `1px solid ${KYVRA.border}` }}>
+                <div style={{ width: 44, height: 44, borderRadius: 14, background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <MapPin size={20} color={KYVRA.teal} strokeWidth={2} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm">{addr.label}</p>
-                  <p className="truncate text-xs text-gray-500">{addr.address}</p>
-                  {addr.notes && <p className="truncate text-xs text-gray-400">{addr.notes}</p>}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontWeight: 700, fontSize: 14, color: KYVRA.navy, margin: 0, fontFamily: FF }}>{addr.label}</p>
+                  <p style={{ fontSize: 12, color: KYVRA.textSec, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{addr.address}</p>
+                  {addr.notes && <p style={{ fontSize: 12, color: KYVRA.textMuted, margin: '1px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{addr.notes}</p>}
                 </div>
-                {selectedAddrId === addr.id && <CheckCircle size={18} style={{ color: TEAL, flexShrink: 0 }} />}
+                {selectedAddrId === addr.id && <CheckCircle size={20} color={KYVRA.teal} style={{ flexShrink: 0 }} />}
               </button>
             ))}
           </div>
         )}
         {!showNewAddrForm ? (
-          <button
-            type="button" onClick={() => onShowNewForm(true)}
-            className="flex w-full items-center gap-2 p-4 text-sm font-medium transition-colors hover:bg-gray-50"
-            style={{ color: TEAL }}
-          >
-            <Plus size={16} /> Agregar nueva dirección
+          <button type="button" onClick={() => onShowNewForm(true)}
+            style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 10, padding: '18px 20px', color: KYVRA.teal, fontSize: 14, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', fontFamily: FF }}>
+            <Plus size={18} /> Agregar nueva dirección
           </button>
         ) : (
-          <div className="space-y-3 border-t border-gray-100 p-4">
-            <p className="font-semibold text-sm">Nueva dirección</p>
-            <div className="flex gap-2">
+          <div style={{ padding: '18px 20px', borderTop: `1px solid ${KYVRA.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <p style={{ fontWeight: 700, fontSize: 14, color: KYVRA.navy, margin: 0, fontFamily: FF }}>Nueva dirección</p>
+            <div style={{ display: 'flex', gap: 8 }}>
               {LABEL_PRESETS.map(lbl => (
-                <button
-                  key={lbl} type="button"
-                  onClick={() => onChangeNewAddrForm(f => ({ ...f, label: lbl }))}
-                  className="rounded-full border px-3 py-1 text-xs font-medium transition-colors"
-                  style={{
-                    borderColor: newAddrForm.label === lbl ? TEAL : '#E5E7EB',
-                    background:  newAddrForm.label === lbl ? TEAL_BG : '#fff',
-                    color:       newAddrForm.label === lbl ? TEAL : '#6B7280',
-                  }}
-                >
+                <button key={lbl} type="button" onClick={() => onChangeNewAddrForm(f => ({ ...f, label: lbl }))}
+                  style={{ borderRadius: 999, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: FF, border: `1.5px solid ${newAddrForm.label === lbl ? KYVRA.teal : KYVRA.border}`, background: newAddrForm.label === lbl ? KYVRA.tealBg : KYVRA.white, color: newAddrForm.label === lbl ? KYVRA.teal : KYVRA.textSec }}>
                   {lbl}
                 </button>
               ))}
             </div>
-            <PlacesInput
-              value={newAddrForm.address}
-              onChange={v => onChangeNewAddrForm(f => ({ ...f, address: v }))}
-              placeholder="Calle y número"
-              className="input"
-            />
-            <input
-              value={newAddrForm.notes}
-              onChange={e => onChangeNewAddrForm(f => ({ ...f, notes: e.target.value }))}
-              placeholder="Piso, depto, referencia... (opcional)"
-              className="input"
-            />
-            <div className="flex gap-2">
+            <PlacesInput value={newAddrForm.address} onChange={v => onChangeNewAddrForm(f => ({ ...f, address: v }))} placeholder="Calle y número" style={inputStyle} />
+            <input value={newAddrForm.notes} onChange={e => onChangeNewAddrForm(f => ({ ...f, notes: e.target.value }))} placeholder="Piso, depto, referencia... (opcional)" style={inputStyle} />
+            <div style={{ display: 'flex', gap: 10 }}>
               {savedAddresses.length > 0 && (
-                <button type="button" onClick={() => onShowNewForm(false)}
-                  className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium hover:bg-gray-50">
+                <button type="button" onClick={() => onShowNewForm(false)} style={{ flex: 1, padding: '13px 0', borderRadius: 14, fontSize: 14, fontWeight: 700, border: `1.5px solid ${KYVRA.border}`, background: KYVRA.white, color: KYVRA.navy, cursor: 'pointer', fontFamily: FF }}>
                   Cancelar
                 </button>
               )}
               <button type="button" onClick={onSaveNewAddress} disabled={savingAddr}
-                className="btn-primary flex-1">
+                style={{ flex: 1, padding: '13px 0', borderRadius: 14, fontSize: 14, fontWeight: 700, border: 'none', background: savingAddr ? KYVRA.border : KYVRA.teal, color: KYVRA.white, cursor: savingAddr ? 'not-allowed' : 'pointer', fontFamily: FF, boxShadow: savingAddr ? 'none' : '0 4px 12px rgba(13,148,136,0.30)' }}>
                 {savingAddr ? 'Guardando...' : 'Guardar y usar'}
               </button>
             </div>
           </div>
         )}
-        <div className="h-4" />
+        <div style={{ height: 24 }} />
       </div>
     </div>
   );
 });
 
-// ── Checkout principal ───────────────────────────────────────────────────────
+// ── Section label ────────────────────────────────────────────────────────────
+function SectionLabel({ children }) {
+  return (
+    <p style={{ fontWeight: 800, fontSize: 11, color: KYVRA.textMuted, letterSpacing: '0.10em', textTransform: 'uppercase', margin: '4px 4px 8px', fontFamily: FF }}>
+      {children}
+    </p>
+  );
+}
+
+// ── Checkout ─────────────────────────────────────────────────────────────────
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, total, restaurantId, restaurantName, fulfillmentMethod, clear } = useCartStore();
@@ -184,16 +170,16 @@ export default function Checkout() {
   const [showSuccess,    setShowSuccess]    = useState(false);
   const [successOrderId, setSuccessOrderId] = useState(null);
 
-  const [localFulfillment,    setLocalFulfillment]    = useState(fulfillmentMethod);
+  const [localFulfillment,     setLocalFulfillment]     = useState(fulfillmentMethod);
   const [fulfillmentSheetOpen, setFulfillmentSheetOpen] = useState(false);
 
-  const [address,        setAddress]        = useState('');
-  const [savedAddresses, setSavedAddresses] = useState([]);
-  const [selectedAddr,   setSelectedAddr]   = useState(null);
-  const [sheetOpen,      setSheetOpen]      = useState(false);
+  const [address,         setAddress]         = useState('');
+  const [savedAddresses,  setSavedAddresses]  = useState([]);
+  const [selectedAddr,    setSelectedAddr]    = useState(null);
+  const [sheetOpen,       setSheetOpen]       = useState(false);
   const [showNewAddrForm, setShowNewAddrForm] = useState(false);
-  const [newAddrForm,    setNewAddrForm]    = useState({ label: 'Casa', address: '', notes: '' });
-  const [savingAddr,     setSavingAddr]     = useState(false);
+  const [newAddrForm,     setNewAddrForm]     = useState({ label: 'Casa', address: '', notes: '' });
+  const [savingAddr,      setSavingAddr]      = useState(false);
 
   useEffect(() => {
     if (!restaurantId) return;
@@ -225,10 +211,8 @@ export default function Checkout() {
   }, [showSuccess, successOrderId]);
 
   const selectAddress = useCallback((addr) => {
-    setSelectedAddr(addr);
-    setAddress(addr.address);
-    setSheetOpen(false);
-    setShowNewAddrForm(false);
+    setSelectedAddr(addr); setAddress(addr.address);
+    setSheetOpen(false); setShowNewAddrForm(false);
   }, []);
 
   const openSheet = useCallback((autoOpenForm = false) => {
@@ -241,10 +225,8 @@ export default function Checkout() {
     setSavingAddr(true);
     try {
       const { data, error } = await supabase.from('addresses').insert({
-        user_id:    session.user.id,
-        label:      newAddrForm.label || 'Casa',
-        address:    newAddrForm.address.trim(),
-        notes:      newAddrForm.notes.trim() || null,
+        user_id: session.user.id, label: newAddrForm.label || 'Casa',
+        address: newAddrForm.address.trim(), notes: newAddrForm.notes.trim() || null,
         is_default: savedAddresses.length === 0,
       }).select().single();
       if (error) throw error;
@@ -252,11 +234,8 @@ export default function Checkout() {
       setNewAddrForm({ label: 'Casa', address: '', notes: '' });
       selectAddress(data);
       toast.success('Dirección guardada');
-    } catch (err) {
-      toast.error('Error al guardar: ' + err.message);
-    } finally {
-      setSavingAddr(false);
-    }
+    } catch (err) { toast.error('Error al guardar: ' + err.message); }
+    finally { setSavingAddr(false); }
   }, [newAddrForm, session, savedAddresses.length, selectAddress]);
 
   const effectivePhone = localPhone || profile?.telefono || '';
@@ -269,13 +248,9 @@ export default function Checkout() {
     try {
       const { error } = await supabase.from('profiles').update({ telefono: cleaned }).eq('id', session.user.id);
       if (error) throw error;
-      setLocalPhone(cleaned);
-      toast.success('Teléfono guardado');
-    } catch (err) {
-      toast.error('Error al guardar: ' + err.message);
-    } finally {
-      setSavingPhone(false);
-    }
+      setLocalPhone(cleaned); toast.success('Teléfono guardado');
+    } catch (err) { toast.error('Error al guardar: ' + err.message); }
+    finally { setSavingPhone(false); }
   };
 
   if (showSuccess) return <OrderSuccessScreen />;
@@ -306,419 +281,441 @@ export default function Checkout() {
     }
     setSubmitting(true);
     try {
-      const receiptUrl   = paymentMethod === 'transfer' ? await uploadReceipt(receipt) : null;
-      const orderItems   = items.map(i => ({
-        id: i.id, name: i.name, price: i.price, qty: i.qty,
-        extras: i.extras || 0, extra_price: i.extra_price || 0,
-      }));
+      const receiptUrl = paymentMethod === 'transfer' ? await uploadReceipt(receipt) : null;
+      const orderItems = items.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty, extras: i.extras || 0, extra_price: i.extra_price || 0 }));
       const customerName = `${profile?.nombre || ''} ${profile?.apellido || ''}`.trim();
       const { data: order, error } = await supabase.from('orders').insert({
-        restaurant_id:    restaurantId,
-        user_id:          session?.user?.id || null,
-        customer_name:    customerName,
-        customer_phone:   effectivePhone,
+        restaurant_id: restaurantId, user_id: session?.user?.id || null,
+        customer_name: customerName, customer_phone: effectivePhone,
         customer_address: localFulfillment === 'delivery' ? address.trim() : 'Retira en el local',
-        delivery_method:  localFulfillment,
-        items:            orderItems,
-        subtotal:         totalVal,
-        total:            totalVal,
-        payment_method:   paymentMethod,
-        comprobante_url:  receiptUrl,
-        notes:            paymentMethod === 'cash' && cashAmount.trim()
-          ? `Paga en efectivo con $${cashAmount.trim()}` : null,
+        delivery_method: localFulfillment, items: orderItems,
+        subtotal: totalVal, total: totalVal,
+        payment_method: paymentMethod, comprobante_url: receiptUrl,
+        notes: paymentMethod === 'cash' && cashAmount.trim() ? `Paga en efectivo con $${cashAmount.trim()}` : null,
         order_status: 'pending',
       }).select().single();
       if (error) throw error;
-      setSuccessOrderId(order.id);
-      setShowSuccess(true);
-    } catch (err) {
-      toast.error('Error al enviar el pedido: ' + err.message);
-    } finally {
-      setSubmitting(false);
-    }
+      setSuccessOrderId(order.id); setShowSuccess(true);
+    } catch (err) { toast.error('Error al enviar el pedido: ' + err.message); }
+    finally { setSubmitting(false); }
   };
 
   const canPay = paymentMethod && !(paymentMethod === 'transfer' && !receipt) && !submitting;
 
-  // ── Estilos compartidos ──────────────────────────────────────────────────
-  const sectionCard = {
-    background: '#fff',
-    border: '1px solid #E2E8F0',
-    borderRadius: 16,
-    boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-  };
-  const iconBox = {
-    width: 40, height: 40, borderRadius: 12,
-    background: TEAL_BG,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    flexShrink: 0,
-  };
+  const PAYMENT_OPTIONS = [
+    {
+      key: 'transfer',
+      label: 'Transferencia',
+      sub: 'Alias / CBU bancario',
+      Icon: Banknote,
+    },
+    {
+      key: 'cash',
+      label: 'Efectivo',
+      sub: 'Pagás al repartidor',
+      Icon: ShoppingBag,
+    },
+  ];
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#F8F9FF', fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: 96 }}>
+    <div style={{ minHeight: '100dvh', background: KYVRA.bg, fontFamily: FF, paddingBottom: 110 }}>
 
-      {/* ── Header blanco ─────────────────────────────────────────────── */}
+      {/* ── Header ────────────────────────────────────────────────────── */}
       <header style={{
-        background: '#fff',
-        borderBottom: '1px solid #E2E8F0',
+        background: KYVRA.white,
+        borderBottom: `1px solid ${KYVRA.border}`,
         height: 56,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        display: 'flex', alignItems: 'center',
         padding: '0 16px',
         position: 'sticky', top: 0, zIndex: 40,
+        boxShadow: '0 2px 12px rgba(15,23,42,0.07)',
       }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{ width: 36, height: 36, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <ChevronLeft size={20} color={NAVY} strokeWidth={2.5} />
+        <button onClick={() => navigate(-1)} style={{ width: 36, height: 36, borderRadius: '50%', background: KYVRA.bg, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <ChevronLeft size={20} color={KYVRA.navy} strokeWidth={2.5} />
         </button>
-        <span style={{ fontWeight: 800, fontSize: 17, color: NAVY, letterSpacing: '-0.01em' }}>
-          Kyvra
+        <span style={{ flex: 1, textAlign: 'center', fontWeight: 800, fontSize: 16, color: KYVRA.navy, letterSpacing: '-0.02em' }}>
+          Confirmar pedido
         </span>
-        <button
-          style={{ width: 36, height: 36, borderRadius: '50%', background: TEAL_BG, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <Bell size={18} color={TEAL} strokeWidth={2} />
-        </button>
+        {/* balance spacer */}
+        <div style={{ width: 36 }} />
       </header>
 
-      {/* ── Hero card teal ────────────────────────────────────────────── */}
-      <div style={{ padding: '16px 16px 0' }}>
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '20px 16px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        {/* ── 1. HERO TOTAL ────────────────────────────────────────────── */}
         <div style={{
-          background: TEAL, borderRadius: 20,
-          padding: '24px 24px 22px',
+          borderRadius: 24,
+          background: `linear-gradient(135deg, #0F8A80 0%, ${KYVRA.teal} 45%, #14B8A6 100%)`,
+          padding: '28px 28px 24px',
           position: 'relative', overflow: 'hidden',
+          boxShadow: '0 8px 32px rgba(13,148,136,0.38)',
         }}>
-          {/* Blur circles decorativos */}
-          <div style={{ position: 'absolute', top: -50, right: -50, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.10)', filter: 'blur(32px)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', filter: 'blur(24px)', pointerEvents: 'none' }} />
+          {/* Decorative rings */}
+          <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.12)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: -30, right: -30, width: 140, height: 140, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.08)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: -50, left: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', filter: 'blur(30px)', pointerEvents: 'none' }} />
 
-          <p style={{ color: 'rgba(255,255,255,0.68)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', margin: '0 0 10px' }}>
-            Total a pagar
-          </p>
-          <p style={{ color: '#fff', fontSize: 46, fontWeight: 900, margin: 0, letterSpacing: '-0.03em', lineHeight: 1 }}>
-            ${totalVal.toLocaleString('es-AR')}
-          </p>
-          {restaurantName && (
-            <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 13, fontWeight: 600, margin: '8px 0 0' }}>
-              {restaurantName}
+          <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.60)' }} />
+              <p style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.72)', letterSpacing: '0.16em', textTransform: 'uppercase', margin: 0 }}>
+                Total del pedido
+              </p>
+            </div>
+
+            <p style={{ color: KYVRA.white, fontSize: 54, fontWeight: 900, margin: 0, letterSpacing: '-0.035em', lineHeight: 1, textShadow: '0 2px 16px rgba(0,0,0,0.15)' }}>
+              ${totalVal.toLocaleString('es-AR')}
             </p>
-          )}
-        </div>
-      </div>
 
-      {/* ── Cards de entrega ──────────────────────────────────────────── */}
-      <div style={{ padding: '14px 16px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-
-        {/* Dirección */}
-        {localFulfillment === 'delivery' ? (
-          <div style={{ ...sectionCard, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
-            <div style={iconBox}><MapPin size={18} color={TEAL} strokeWidth={2} /></div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontWeight: 700, fontSize: 13, color: NAVY, margin: 0 }}>Dirección de entrega</p>
-              <p style={{ fontSize: 12, color: '#64748B', margin: '3px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {address || 'Sin dirección'}
-              </p>
-            </div>
-            <button
-              type="button" onClick={() => openSheet(false)}
-              style={{ color: TEAL, fontSize: 13, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, padding: 0 }}
-            >
-              Cambiar
-            </button>
-          </div>
-        ) : (
-          <div style={{ ...sectionCard, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
-            <div style={iconBox}><Building2 size={18} color={TEAL} strokeWidth={2} /></div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontWeight: 700, fontSize: 13, color: NAVY, margin: 0 }}>Retirás en el local</p>
-              <p style={{ fontSize: 12, color: '#64748B', margin: '3px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {restaurantInfo.pickup_address || restaurantName}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Modo de entrega */}
-        <div style={{ ...sectionCard, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
-          <div style={iconBox}>
-            {localFulfillment === 'delivery'
-              ? <Bike size={18} color={TEAL} strokeWidth={2} />
-              : <Building2 size={18} color={TEAL} strokeWidth={2} />
-            }
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontWeight: 700, fontSize: 13, color: NAVY, margin: 0 }}>Modo de entrega</p>
-            <p style={{ fontSize: 12, color: '#64748B', margin: '3px 0 0' }}>
-              {localFulfillment === 'delivery' ? 'Delivery a domicilio' : 'Retirar en el local'}
-            </p>
-          </div>
-          <button
-            type="button" onClick={() => setFulfillmentSheetOpen(true)}
-            style={{ color: TEAL, fontSize: 13, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, padding: 0 }}
-          >
-            Cambiar
-          </button>
-        </div>
-      </div>
-
-      {/* ── Método de pago ───────────────────────────────────────────── */}
-      <div style={{ padding: '14px 16px 0' }}>
-        <div style={{ ...sectionCard, padding: '18px 16px' }}>
-          <p style={{ fontWeight: 800, fontSize: 15, color: NAVY, margin: '0 0 14px', letterSpacing: '-0.01em' }}>Método de pago</p>
-
-          {/* Transferencia */}
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setPaymentMethod('transfer')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              width: '100%', textAlign: 'left',
-              padding: '14px 14px',
-              borderRadius: 14,
-              border: `2px solid ${paymentMethod === 'transfer' ? TEAL : '#E2E8F0'}`,
-              background: paymentMethod === 'transfer' ? TEAL_BG : '#fff',
-              cursor: 'pointer', marginBottom: 10,
-              transition: 'border-color 0.15s ease, background 0.15s ease',
-            }}
-          >
-            <div style={{ ...iconBox, background: paymentMethod === 'transfer' ? 'rgba(13,148,136,0.12)' : '#F8FAFC' }}>
-              <Banknote size={18} color={TEAL} strokeWidth={2} />
-            </div>
-            <p style={{ fontWeight: 700, fontSize: 13, color: NAVY, flex: 1, margin: 0 }}>Transferencia bancaria</p>
-            {/* Radio button */}
-            <div style={{
-              width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-              border: `2px solid ${paymentMethod === 'transfer' ? TEAL : '#CBD5E1'}`,
-              background: paymentMethod === 'transfer' ? TEAL : '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              {paymentMethod === 'transfer' && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />}
-            </div>
-          </motion.button>
-
-          {/* Efectivo */}
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setPaymentMethod('cash')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              width: '100%', textAlign: 'left',
-              padding: '14px 14px',
-              borderRadius: 14,
-              border: `2px solid ${paymentMethod === 'cash' ? TEAL : '#E2E8F0'}`,
-              background: paymentMethod === 'cash' ? TEAL_BG : '#fff',
-              cursor: 'pointer',
-              transition: 'border-color 0.15s ease, background 0.15s ease',
-            }}
-          >
-            <div style={{ ...iconBox, background: paymentMethod === 'cash' ? 'rgba(13,148,136,0.12)' : '#F8FAFC' }}>
-              <Banknote size={18} color={TEAL} strokeWidth={2} />
-            </div>
-            <p style={{ fontWeight: 700, fontSize: 13, color: NAVY, flex: 1, margin: 0 }}>Efectivo</p>
-            <div style={{
-              width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-              border: `2px solid ${paymentMethod === 'cash' ? TEAL : '#CBD5E1'}`,
-              background: paymentMethod === 'cash' ? TEAL : '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              {paymentMethod === 'cash' && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />}
-            </div>
-          </motion.button>
-
-          {/* Efectivo — campo vuelto */}
-          {paymentMethod === 'cash' && (
-            <div style={{ marginTop: 12, borderRadius: 14, padding: '14px 16px', background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
-              <p style={{ fontSize: 13, color: '#166534', margin: '0 0 10px' }}>
-                Pagás en efectivo al repartidor al momento de la entrega
-              </p>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 8 }}>
-                ¿Con cuánto vas a pagar? <span style={{ fontWeight: 400, color: '#9CA3AF' }}>(para el cambio, opcional)</span>
-              </span>
-              <input
-                type="number" inputMode="numeric" min="0"
-                value={cashAmount} onChange={e => setCashAmount(e.target.value)}
-                placeholder="Ej: 5000" className="input"
-              />
-            </div>
-          )}
-
-          {/* Transferencia — alias y comprobante */}
-          {paymentMethod === 'transfer' && (
-            <div style={{ marginTop: 12, borderRadius: 14, padding: '14px 16px', background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#15803D', margin: '0 0 12px' }}>Datos para la transferencia</p>
-              {restaurantInfo.payment_alias ? (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: '#fff', borderRadius: 12, padding: '10px 14px', marginBottom: 10 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>Alias / CBU</p>
-                      <p style={{ fontWeight: 700, fontSize: 15, fontFamily: 'monospace', color: NAVY, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{restaurantInfo.payment_alias}</p>
-                    </div>
-                    <button
-                      type="button" onClick={copyAlias}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '7px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700,
-                        background: aliasCopied ? '#DCFCE7' : TEAL,
-                        color: aliasCopied ? '#15803D' : '#fff',
-                        border: 'none', cursor: 'pointer', flexShrink: 0,
-                      }}
-                    >
-                      {aliasCopied ? <CheckCircle size={14} /> : <Copy size={14} />}
-                      {aliasCopied ? 'Copiado' : 'Copiar'}
-                    </button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+              {restaurantName && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Utensils size={11} color="#fff" />
                   </div>
-                  <p style={{ fontSize: 13, color: '#166534', margin: '0 0 12px' }}>
-                    Transferí <strong>${totalVal.toLocaleString('es-AR')}</strong> y subí el comprobante para confirmar tu pedido.
+                  <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: 13, fontWeight: 600, margin: 0 }}>
+                    {restaurantName}
                   </p>
-                </>
-              ) : (
-                <p style={{ fontSize: 13, color: '#6B7280', margin: '0 0 12px' }}>El restaurante te indicará los datos de transferencia.</p>
+                </div>
               )}
-              {/* Upload comprobante */}
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 8 }}>
-                Subir comprobante <span style={{ color: '#EF4444' }}>*</span>
-              </span>
-              <input type="file" accept="image/jpeg,image/png,.pdf" className="hidden" id="receipt-upload"
-                onChange={e => setReceipt(e.target.files[0] || null)} />
-              <label htmlFor="receipt-upload" style={{ display: 'block', cursor: 'pointer' }}>
-                <div style={{
-                  border: `2px dashed ${receipt ? '#2E7D32' : '#BBF7D0'}`,
-                  borderRadius: 12,
-                  background: receipt ? '#F0FDF4' : '#fff',
-                }}>
-                  {receipt ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12 }}>
-                      {receipt.type.startsWith('image/') ? (
-                        <img src={URL.createObjectURL(receipt)} alt="Comprobante"
-                          style={{ width: 72, height: 72, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
-                      ) : (
-                        <div style={{ width: 72, height: 72, borderRadius: 10, background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <CheckCircle size={28} style={{ color: '#16A34A' }} />
-                        </div>
-                      )}
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: '#15803D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{receipt.name}</p>
-                        <p style={{ fontSize: 12, color: '#16A34A', margin: '3px 0 6px' }}>Listo para enviar</p>
-                        <button type="button" onClick={e => { e.preventDefault(); setReceipt(null); }}
-                          style={{ fontSize: 12, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                          Cambiar archivo
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '20px 16px' }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 12, background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Camera size={20} style={{ color: '#16A34A' }} />
-                      </div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', margin: 0 }}>Tocá para subir el comprobante</p>
-                      <p style={{ fontSize: 12, color: '#9CA3AF', margin: 0 }}>JPG, PNG o PDF</p>
-                    </div>
-                  )}
-                </div>
-              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.15)', borderRadius: 999, padding: '5px 12px' }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.90)', margin: 0 }}>
+                  {items.length} {items.length === 1 ? 'producto' : 'productos'}
+                </p>
+              </div>
             </div>
-          )}
+          </div>
         </div>
-      </div>
 
-      {/* ── Resumen del pedido ───────────────────────────────────────── */}
-      <div style={{ padding: '14px 16px 0' }}>
-        <div style={{ ...sectionCard, padding: '18px 16px' }}>
-          <p style={{ fontWeight: 800, fontSize: 15, color: NAVY, margin: '0 0 14px', letterSpacing: '-0.01em' }}>Tu pedido</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {items.map(i => {
-              const lineTotal = i.price * i.qty + (i.extras || 0) * (i.extra_price || 0);
-              const extraText = i.extras > 0 ? ` + ${i.extras} ${i.extra_label || 'extra'}` : '';
+        {/* ── 2. ENTREGA ───────────────────────────────────────────────── */}
+        <div>
+          <SectionLabel>Entrega</SectionLabel>
+          <div style={{ background: KYVRA.white, borderRadius: 22, border: `1px solid ${KYVRA.border}`, boxShadow: '0 4px 20px rgba(15,23,42,0.07)', overflow: 'hidden' }}>
+
+            {/* Row: dirección o retiro */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 16, background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {localFulfillment === 'delivery'
+                  ? <MapPin size={22} color={KYVRA.teal} strokeWidth={2} />
+                  : <Building2 size={22} color={KYVRA.teal} strokeWidth={2} />
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontWeight: 700, fontSize: 14, color: KYVRA.navy, margin: 0 }}>
+                  {localFulfillment === 'delivery' ? 'Dirección de entrega' : 'Retirás en el local'}
+                </p>
+                <p style={{ fontSize: 13, color: KYVRA.textSec, margin: '3px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {localFulfillment === 'delivery'
+                    ? (address || 'Sin dirección seleccionada')
+                    : (restaurantInfo.pickup_address || restaurantName)
+                  }
+                </p>
+              </div>
+              {localFulfillment === 'delivery' && (
+                <button type="button" onClick={() => openSheet(false)}
+                  style={{ padding: '7px 13px', borderRadius: 10, border: `1.5px solid ${KYVRA.teal}`, background: 'transparent', color: KYVRA.teal, fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0, fontFamily: FF }}>
+                  Cambiar
+                </button>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: KYVRA.border, margin: '0 20px' }} />
+
+            {/* Row: modo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 16, background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {localFulfillment === 'delivery'
+                  ? <Bike size={22} color={KYVRA.teal} strokeWidth={2} />
+                  : <ShoppingBag size={22} color={KYVRA.teal} strokeWidth={2} />
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontWeight: 700, fontSize: 14, color: KYVRA.navy, margin: 0 }}>Modo de entrega</p>
+                <p style={{ fontSize: 13, color: KYVRA.textSec, margin: '3px 0 0' }}>
+                  {localFulfillment === 'delivery' ? 'Delivery a domicilio' : 'Retirar en el local'}
+                </p>
+              </div>
+              <button type="button" onClick={() => setFulfillmentSheetOpen(true)}
+                style={{ padding: '7px 13px', borderRadius: 10, border: `1.5px solid ${KYVRA.teal}`, background: 'transparent', color: KYVRA.teal, fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0, fontFamily: FF }}>
+                Cambiar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── 3. MÉTODO DE PAGO ────────────────────────────────────────── */}
+        <div>
+          <SectionLabel>Método de pago</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {PAYMENT_OPTIONS.map(({ key, label, sub, Icon }) => {
+              const active = paymentMethod === key;
               return (
-                <div key={i.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  {i.image_url ? (
-                    <img src={i.image_url} alt={i.name} loading="lazy"
-                      style={{ width: 80, height: 80, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
-                  ) : (
-                    <div style={{ width: 80, height: 80, borderRadius: 12, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 28 }}>🍽️</div>
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: NAVY, margin: 0, lineHeight: 1.3 }}>{i.qty} × {i.name}</p>
-                    {extraText && <p style={{ fontSize: 12, color: '#64748B', margin: '2px 0 0' }}>{extraText}</p>}
-                    <p style={{ fontSize: 15, fontWeight: 800, color: TEAL, margin: '6px 0 0' }}>
-                      ${lineTotal.toLocaleString('es-AR')}
-                    </p>
+                <motion.button
+                  key={key} type="button" whileTap={{ scale: 0.985 }}
+                  onClick={() => setPaymentMethod(key)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 16,
+                    width: '100%', textAlign: 'left', minHeight: 68,
+                    padding: '0 18px',
+                    borderRadius: 18,
+                    border: `2px solid ${active ? KYVRA.teal : KYVRA.border}`,
+                    background: active ? KYVRA.tealBg : KYVRA.white,
+                    cursor: 'pointer',
+                    boxShadow: active ? '0 4px 20px rgba(13,148,136,0.18)' : '0 2px 8px rgba(15,23,42,0.05)',
+                    transition: 'border-color 0.18s, background 0.18s, box-shadow 0.18s',
+                  }}
+                >
+                  <div style={{ width: 48, height: 48, borderRadius: 15, background: active ? 'rgba(13,148,136,0.14)' : KYVRA.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon size={22} color={KYVRA.teal} strokeWidth={1.8} />
                   </div>
-                </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontWeight: 800, fontSize: 15, color: KYVRA.navy, margin: 0, letterSpacing: '-0.01em' }}>{label}</p>
+                    <p style={{ fontSize: 12, color: KYVRA.textSec, margin: '2px 0 0' }}>{sub}</p>
+                  </div>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                    border: `2px solid ${active ? KYVRA.teal : KYVRA.border}`,
+                    background: active ? KYVRA.teal : KYVRA.white,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.15s',
+                  }}>
+                    {active && (
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M2.5 6l2.5 2.5 4.5-4.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                </motion.button>
               );
             })}
           </div>
-          <div style={{ borderTop: '1px solid #E2E8F0', marginTop: 14, paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 700, fontSize: 14, color: '#64748B' }}>Valor total</span>
-            <span style={{ fontWeight: 900, fontSize: 17, color: TEAL }}>${totalVal.toLocaleString('es-AR')}</span>
+
+          {/* Cash expansion */}
+          <AnimatePresence>
+            {paymentMethod === 'cash' && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                style={{ marginTop: 10, borderRadius: 18, padding: '18px 20px', background: '#F0FDF9', border: `1.5px solid ${KYVRA.tealLight}` }}
+              >
+                <p style={{ fontSize: 13, color: KYVRA.tealDark, margin: '0 0 14px', lineHeight: 1.5 }}>
+                  Pagás en efectivo al repartidor al momento de la entrega.
+                </p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: KYVRA.navy, margin: '0 0 8px' }}>
+                  ¿Con cuánto vas a pagar?{' '}
+                  <span style={{ fontWeight: 400, color: KYVRA.textMuted }}>(para el cambio, opcional)</span>
+                </p>
+                <input type="number" inputMode="numeric" min="0"
+                  value={cashAmount} onChange={e => setCashAmount(e.target.value)}
+                  placeholder="Ej: 5000" style={inputStyle} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Transfer expansion */}
+          <AnimatePresence>
+            {paymentMethod === 'transfer' && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                style={{ marginTop: 10, borderRadius: 18, padding: '18px 20px', background: '#F0FDF9', border: `1.5px solid ${KYVRA.tealLight}` }}
+              >
+                <p style={{ fontSize: 13, fontWeight: 800, color: KYVRA.tealDark, margin: '0 0 14px' }}>
+                  Datos para la transferencia
+                </p>
+                {restaurantInfo.payment_alias ? (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: KYVRA.white, borderRadius: 14, padding: '12px 16px', marginBottom: 12, border: `1px solid ${KYVRA.border}` }}>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: 10, fontWeight: 800, color: KYVRA.textMuted, textTransform: 'uppercase', letterSpacing: '0.10em', margin: '0 0 3px' }}>Alias / CBU</p>
+                        <p style={{ fontWeight: 700, fontSize: 15, fontFamily: 'monospace', color: KYVRA.navy, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {restaurantInfo.payment_alias}
+                        </p>
+                      </div>
+                      <button type="button" onClick={copyAlias}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700, background: aliasCopied ? '#DCFCE7' : KYVRA.teal, color: aliasCopied ? '#15803D' : KYVRA.white, border: 'none', cursor: 'pointer', flexShrink: 0, transition: 'background 0.2s', fontFamily: FF }}>
+                        {aliasCopied ? <CheckCircle size={14} /> : <Copy size={14} />}
+                        {aliasCopied ? 'Copiado' : 'Copiar'}
+                      </button>
+                    </div>
+                    <p style={{ fontSize: 13, color: KYVRA.tealDark, margin: '0 0 14px' }}>
+                      Transferí <strong>${totalVal.toLocaleString('es-AR')}</strong> y subí el comprobante.
+                    </p>
+                  </>
+                ) : (
+                  <p style={{ fontSize: 13, color: KYVRA.textSec, margin: '0 0 14px' }}>
+                    El restaurante te indicará los datos de transferencia.
+                  </p>
+                )}
+
+                <p style={{ fontSize: 13, fontWeight: 700, color: KYVRA.navy, margin: '0 0 10px' }}>
+                  Comprobante <span style={{ color: '#EF4444' }}>*</span>
+                </p>
+                <input type="file" accept="image/jpeg,image/png,.pdf" id="receipt-upload"
+                  onChange={e => setReceipt(e.target.files[0] || null)} style={{ display: 'none' }} />
+                <label htmlFor="receipt-upload" style={{ display: 'block', cursor: 'pointer' }}>
+                  <div style={{ border: `2px dashed ${receipt ? KYVRA.teal : KYVRA.tealLight}`, borderRadius: 14, background: receipt ? '#F0FDF9' : KYVRA.white, transition: 'border-color 0.2s' }}>
+                    {receipt ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 14 }}>
+                        {receipt.type.startsWith('image/') ? (
+                          <img src={URL.createObjectURL(receipt)} alt="Comprobante" style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+                        ) : (
+                          <div style={{ width: 72, height: 72, borderRadius: 12, background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <CheckCircle size={28} color={KYVRA.teal} />
+                          </div>
+                        )}
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontSize: 13, fontWeight: 700, color: KYVRA.tealDark, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{receipt.name}</p>
+                          <p style={{ fontSize: 12, color: KYVRA.teal, margin: '3px 0 8px' }}>Listo para enviar</p>
+                          <button type="button" onClick={e => { e.preventDefault(); setReceipt(null); }}
+                            style={{ fontSize: 12, color: KYVRA.textMuted, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                            Cambiar archivo
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '24px 16px' }}>
+                        <div style={{ width: 52, height: 52, borderRadius: 16, background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Camera size={22} color={KYVRA.teal} />
+                        </div>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: KYVRA.navy, margin: 0 }}>Tocá para subir el comprobante</p>
+                        <p style={{ fontSize: 12, color: KYVRA.textMuted, margin: 0 }}>JPG, PNG o PDF</p>
+                      </div>
+                    )}
+                  </div>
+                </label>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* ── 4. RESUMEN DEL PEDIDO ─────────────────────────────────────── */}
+        <div>
+          <SectionLabel>Tu pedido</SectionLabel>
+          <div style={{ background: KYVRA.white, borderRadius: 22, border: `1px solid ${KYVRA.border}`, boxShadow: '0 4px 20px rgba(15,23,42,0.07)', overflow: 'hidden' }}>
+            {items.map((i, idx) => {
+              const lineTotal = i.price * i.qty + (i.extras || 0) * (i.extra_price || 0);
+              const extraText = i.extras > 0 ? ` + ${i.extras} ${i.extra_label || 'extra'}` : '';
+              const isLast = idx === items.length - 1;
+              return (
+                <div key={i.id}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px' }}>
+                    {/* Thumbnail */}
+                    {i.image_url ? (
+                      <img src={i.image_url} alt={i.name} loading="lazy"
+                        style={{ width: 64, height: 64, borderRadius: 14, objectFit: 'cover', flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 64, height: 64, borderRadius: 14, background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Utensils size={24} color={KYVRA.teal} strokeWidth={1.5} />
+                      </div>
+                    )}
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: KYVRA.navy, margin: 0, lineHeight: 1.35 }}>{i.name}</p>
+                      <p style={{ fontSize: 12, color: KYVRA.textMuted, margin: '3px 0 0' }}>
+                        Cantidad: {i.qty}{extraText}
+                      </p>
+                    </div>
+                    {/* Price right */}
+                    <p style={{ fontSize: 15, fontWeight: 800, color: KYVRA.teal, margin: 0, flexShrink: 0, letterSpacing: '-0.015em' }}>
+                      ${lineTotal.toLocaleString('es-AR')}
+                    </p>
+                  </div>
+                  {!isLast && <div style={{ height: 1, background: KYVRA.border, margin: '0 20px' }} />}
+                </div>
+              );
+            })}
+
+            {/* Total row */}
+            <div style={{ background: KYVRA.bg, borderTop: `1px solid ${KYVRA.border}`, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ fontSize: 11, fontWeight: 700, color: KYVRA.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 2px' }}>Total</p>
+                <p style={{ fontSize: 22, fontWeight: 900, color: KYVRA.navy, margin: 0, letterSpacing: '-0.025em' }}>
+                  ${totalVal.toLocaleString('es-AR')}
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: 12, color: KYVRA.textMuted, margin: '0 0 2px' }}>{items.length} {items.length === 1 ? 'producto' : 'productos'}</p>
+                <p style={{ fontSize: 12, fontWeight: 600, color: KYVRA.teal, margin: 0 }}>
+                  {localFulfillment === 'delivery' ? 'Con delivery' : 'Retiro en local'}
+                </p>
+              </div>
+            </div>
           </div>
+        </div>
+
+      </div>
+
+      {/* ── 5. FIXED CTA ─────────────────────────────────────────────── */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+        background: KYVRA.white,
+        borderTop: `1px solid ${KYVRA.border}`,
+        boxShadow: '0 -6px 24px rgba(15,23,42,0.10)',
+        padding: '14px 16px',
+        paddingBottom: 'calc(14px + env(safe-area-inset-bottom))',
+      }}>
+        <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 14 }}>
+          {/* Total left */}
+          <div style={{ flexShrink: 0 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: KYVRA.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 1px' }}>Total</p>
+            <p style={{ fontSize: 20, fontWeight: 900, color: KYVRA.navy, margin: 0, letterSpacing: '-0.025em' }}>
+              ${totalVal.toLocaleString('es-AR')}
+            </p>
+          </div>
+          {/* Button */}
+          <motion.button
+            type="button" onClick={handlePay} disabled={!canPay}
+            whileTap={canPay ? { scale: 0.97 } : {}}
+            style={{
+              flex: 1, height: 56, borderRadius: 16,
+              background: canPay ? KYVRA.teal : KYVRA.border,
+              color: canPay ? KYVRA.white : KYVRA.textMuted,
+              border: 'none', cursor: canPay ? 'pointer' : 'not-allowed',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              fontFamily: FF,
+              boxShadow: canPay ? '0 6px 20px rgba(13,148,136,0.38)' : 'none',
+              transition: 'background 0.2s, box-shadow 0.2s',
+            }}
+          >
+            <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.01em' }}>
+              {submitting ? 'Procesando...' : 'Confirmar pedido'}
+            </span>
+            {!submitting && <ArrowRight size={18} strokeWidth={2.5} />}
+          </motion.button>
         </div>
       </div>
 
-      {/* ── Botón pagar fixed ─────────────────────────────────────────── */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-        background: '#fff',
-        borderTop: '1px solid #E2E8F0',
-        padding: '12px 16px',
-        paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
-      }}>
-        <motion.button
-          type="button"
-          onClick={handlePay}
-          disabled={!canPay}
-          whileTap={canPay ? { y: 3, boxShadow: '0 2px 0 0 #0A7067' } : {}}
-          style={{
-            width: '100%', height: 64,
-            borderRadius: 16,
-            background: canPay ? TEAL : '#CBD5E1',
-            color: '#fff',
-            border: 'none',
-            cursor: canPay ? 'pointer' : 'not-allowed',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0 22px',
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            boxShadow: canPay ? '0 6px 0 0 #0A7067' : 'none',
-            transition: 'background 0.2s ease, box-shadow 0.15s ease',
-          }}
-        >
-          <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.01em' }}>
-            {submitting ? 'Procesando...' : 'Pagar ahora'}
-          </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 16, fontWeight: 900 }}>${totalVal.toLocaleString('es-AR')}</span>
-            <ArrowRight size={18} strokeWidth={2.5} />
-          </div>
-        </motion.button>
-      </div>
-
-      {/* ── Modal teléfono requerido ──────────────────────────────────── */}
+      {/* ── Modal: teléfono requerido ─────────────────────────────────── */}
       {needsPhone && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}>
-          <div style={{ width: '100%', maxWidth: 480, background: '#fff', borderRadius: '24px 24px 0 0', padding: '28px 20px', paddingBottom: 'calc(28px + env(safe-area-inset-bottom))' }}>
-            <div style={{ textAlign: 'center', marginBottom: 20 }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: TEAL_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-                <Bell size={24} color={TEAL} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(15,23,42,0.65)' }}>
+          <div style={{ width: '100%', maxWidth: 480, background: KYVRA.white, borderRadius: '24px 24px 0 0', padding: '32px 24px', paddingBottom: 'calc(32px + env(safe-area-inset-bottom))' }}>
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <div style={{ width: 60, height: 60, borderRadius: '50%', background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <Phone size={26} color={KYVRA.teal} />
               </div>
-              <h2 style={{ fontWeight: 900, fontSize: 18, color: NAVY, margin: '0 0 6px' }}>Teléfono requerido</h2>
-              <p style={{ fontSize: 14, color: '#64748B', margin: 0 }}>Necesitás cargar tu número para hacer pedidos</p>
+              <h2 style={{ fontWeight: 900, fontSize: 20, color: KYVRA.navy, margin: '0 0 8px', fontFamily: FF, letterSpacing: '-0.02em' }}>
+                Teléfono requerido
+              </h2>
+              <p style={{ fontSize: 14, color: KYVRA.textSec, margin: 0, lineHeight: 1.5 }}>
+                Necesitás cargar tu número para hacer pedidos
+              </p>
             </div>
             <input
               type="tel" inputMode="numeric"
               value={phoneInput} onChange={e => setPhoneInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && savePhone()}
               placeholder="Ej: 3816 123456"
-              className="input"
-              style={{ textAlign: 'center', fontSize: 18, fontWeight: 700, marginBottom: 12 }}
+              style={{ ...inputStyle, textAlign: 'center', fontSize: 20, fontWeight: 700, marginBottom: 14 }}
               autoFocus
             />
-            <button type="button" onClick={savePhone} disabled={savingPhone || !phoneInput.trim()} className="btn-primary w-full py-3" style={{ marginBottom: 8 }}>
+            <button type="button" onClick={savePhone} disabled={savingPhone || !phoneInput.trim()}
+              style={{ width: '100%', padding: '15px 0', borderRadius: 15, fontSize: 15, fontWeight: 700, border: 'none', background: (savingPhone || !phoneInput.trim()) ? KYVRA.border : KYVRA.teal, color: KYVRA.white, cursor: (savingPhone || !phoneInput.trim()) ? 'not-allowed' : 'pointer', marginBottom: 10, fontFamily: FF, boxShadow: (savingPhone || !phoneInput.trim()) ? 'none' : '0 4px 14px rgba(13,148,136,0.30)' }}>
               {savingPhone ? 'Guardando...' : 'Guardar y continuar'}
             </button>
-            <button type="button" onClick={() => navigate(-1)} style={{ width: '100%', fontSize: 13, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0' }}>
+            <button type="button" onClick={() => navigate(-1)}
+              style={{ width: '100%', fontSize: 13, color: KYVRA.textMuted, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', fontFamily: FF }}>
               Volver
             </button>
           </div>
@@ -728,15 +725,10 @@ export default function Checkout() {
       {/* ── Sheet: dirección ─────────────────────────────────────────── */}
       {sheetOpen && (
         <AddressSheet
-          savedAddresses={savedAddresses}
-          selectedAddrId={selectedAddr?.id}
-          showNewAddrForm={showNewAddrForm}
-          newAddrForm={newAddrForm}
-          savingAddr={savingAddr}
-          onClose={() => setSheetOpen(false)}
-          onSelectAddress={selectAddress}
-          onShowNewForm={setShowNewAddrForm}
-          onChangeNewAddrForm={setNewAddrForm}
+          savedAddresses={savedAddresses} selectedAddrId={selectedAddr?.id}
+          showNewAddrForm={showNewAddrForm} newAddrForm={newAddrForm} savingAddr={savingAddr}
+          onClose={() => setSheetOpen(false)} onSelectAddress={selectAddress}
+          onShowNewForm={setShowNewAddrForm} onChangeNewAddrForm={setNewAddrForm}
           onSaveNewAddress={saveNewAddress}
         />
       )}
@@ -744,44 +736,35 @@ export default function Checkout() {
       {/* ── Sheet: modo de entrega ───────────────────────────────────── */}
       {fulfillmentSheetOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setFulfillmentSheetOpen(false)} />
-          <div style={{ position: 'relative', width: '100%', maxWidth: 480, background: '#fff', borderRadius: '24px 24px 0 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', padding: '16px 16px' }}>
-              <h3 style={{ fontWeight: 800, fontSize: 15, color: NAVY, margin: 0 }}>Modo de entrega</h3>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)' }} onClick={() => setFulfillmentSheetOpen(false)} />
+          <div style={{ position: 'relative', width: '100%', maxWidth: 480, background: KYVRA.white, borderRadius: '24px 24px 0 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${KYVRA.border}`, padding: '18px 20px' }}>
+              <h3 style={{ fontWeight: 800, fontSize: 16, color: KYVRA.navy, margin: 0, fontFamily: FF }}>Modo de entrega</h3>
               <button type="button" onClick={() => setFulfillmentSheetOpen(false)}
-                style={{ width: 32, height: 32, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <X size={16} color={NAVY} />
+                style={{ width: 32, height: 32, borderRadius: '50%', background: KYVRA.bg, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={16} color={KYVRA.navy} />
               </button>
             </div>
-            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
                 { key: 'delivery', label: 'Delivery', sub: 'Te lo llevamos a tu domicilio', Icon: Bike },
-                { key: 'pickup',   label: 'Retiro en el local', sub: 'Retirás vos mismo en el negocio', Icon: Building2 },
+                { key: 'pickup',   label: 'Retiro en el local', sub: 'Retirás vos mismo en el negocio', Icon: ShoppingBag },
               ].map(({ key, label, sub, Icon }) => (
-                <motion.button
-                  key={key} type="button" whileTap={{ scale: 0.98 }}
+                <motion.button key={key} type="button" whileTap={{ scale: 0.98 }}
                   onClick={() => { setLocalFulfillment(key); setFulfillmentSheetOpen(false); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    width: '100%', textAlign: 'left',
-                    padding: '14px 14px', borderRadius: 14,
-                    border: `2px solid ${localFulfillment === key ? TEAL : '#E2E8F0'}`,
-                    background: localFulfillment === key ? TEAL_BG : '#fff',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <div style={{ ...iconBox, background: localFulfillment === key ? 'rgba(13,148,136,0.12)' : '#F8FAFC' }}>
-                    <Icon size={18} color={TEAL} strokeWidth={2} />
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left', minHeight: 64, padding: '0 16px', borderRadius: 16, border: `2px solid ${localFulfillment === key ? KYVRA.teal : KYVRA.border}`, background: localFulfillment === key ? KYVRA.tealBg : KYVRA.white, cursor: 'pointer', boxShadow: localFulfillment === key ? '0 4px 16px rgba(13,148,136,0.15)' : 'none', transition: 'all 0.15s' }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: localFulfillment === key ? 'rgba(13,148,136,0.14)' : KYVRA.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon size={20} color={KYVRA.teal} strokeWidth={2} />
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontWeight: 700, fontSize: 13, color: NAVY, margin: 0 }}>{label}</p>
-                    <p style={{ fontSize: 12, color: '#64748B', margin: '2px 0 0' }}>{sub}</p>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontWeight: 700, fontSize: 14, color: KYVRA.navy, margin: 0, fontFamily: FF }}>{label}</p>
+                    <p style={{ fontSize: 12, color: KYVRA.textSec, margin: '2px 0 0' }}>{sub}</p>
                   </div>
-                  {localFulfillment === key && <CheckCircle size={18} style={{ color: TEAL, flexShrink: 0 }} />}
+                  {localFulfillment === key && <CheckCircle size={20} color={KYVRA.teal} style={{ flexShrink: 0 }} />}
                 </motion.button>
               ))}
             </div>
-            <div style={{ height: 16 }} />
+            <div style={{ height: 24 }} />
           </div>
         </div>
       )}

@@ -1,12 +1,15 @@
-﻿import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Minus } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Minus, Utensils } from 'lucide-react';
 import useCartStore from '../store/cartStore.js';
+import { KYVRA } from '../lib/theme.js';
 
 export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
   const { name, description, price_unit, price_dozen, image_url, is_available, allows_extras } = item;
 
   const cartQty   = useCartStore(s => s.items.find(i => i.id === item.id)?.qty ?? 0);
   const updateQty = useCartStore(s => s.updateQty);
+  const [imgError, setImgError] = useState(false);
 
   // Dozen-priced items always need the modal (so "docenas" context is clear)
   const needsModal = !!price_dozen || allows_extras;
@@ -29,9 +32,7 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
     ? `$${price_dozen.toLocaleString('es-AR')} la docena`
     : `$${(item.price || 0).toLocaleString('es-AR')} c/u`;
 
-  const handleCardClick = () => {
-    if (onTap) onTap(item);
-  };
+  const handleCardClick = () => { if (onTap) onTap(item); };
 
   const handlePlusClick = (e) => {
     e.stopPropagation();
@@ -40,34 +41,28 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
     onAdd(quickAddItem);
   };
 
-  const handleMinus = (e) => {
-    e.stopPropagation();
-    updateQty(item.id, cartQty - 1);
-  };
-
-  const handlePlus = (e) => {
-    e.stopPropagation();
-    if (onAdd) onAdd(quickAddItem);
-  };
+  const handleMinus = (e) => { e.stopPropagation(); updateQty(item.id, cartQty - 1); };
+  const handlePlus  = (e) => { e.stopPropagation(); if (onAdd) onAdd(quickAddItem); };
 
   return (
-    <div
+    <motion.div
       onClick={handleCardClick}
+      whileTap={onTap ? { scale: 0.99 } : {}}
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 16,
+        gap: 14,
         padding: '16px 0',
-        borderBottom: isLast ? 'none' : '1px solid #F3F4F6',
-        opacity: is_available ? 1 : 0.45,
+        borderBottom: isLast ? 'none' : `1px solid ${KYVRA.border}`,
+        opacity: is_available ? 1 : 0.42,
         cursor: onTap ? 'pointer' : 'default',
       }}
     >
       {/* ── Left: text ── */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <h4 style={{
-          fontSize: 16, fontWeight: 700, color: '#111',
-          letterSpacing: '-0.01em', lineHeight: 1.3,
+          fontSize: 16, fontWeight: 800, color: KYVRA.navy,
+          letterSpacing: '-0.02em', lineHeight: 1.25,
           margin: '0 0 5px',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
@@ -76,8 +71,8 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
 
         {description && (
           <p style={{
-            fontSize: 14, fontWeight: 400, color: '#6B7280',
-            lineHeight: 1.45, margin: '0 0 10px',
+            fontSize: 12.5, fontWeight: 400, color: KYVRA.textMuted,
+            lineHeight: 1.5, margin: '0 0 9px',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
@@ -88,34 +83,35 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
         )}
 
         <p style={{
-          fontSize: 15, fontWeight: 800, color: '#111',
-          letterSpacing: '-0.01em', margin: 0,
+          fontSize: 15.5, fontWeight: 800, color: KYVRA.teal,
+          letterSpacing: '-0.02em', margin: 0,
         }}>
           {priceText}
         </p>
       </div>
 
       {/* ── Right: image + button ── */}
-      <div style={{ position: 'relative', flexShrink: 0, width: 120, height: 120 }}>
+      <div style={{ position: 'relative', flexShrink: 0, width: 112, height: 112 }}>
         <div style={{
-          width: 120, height: 120,
-          borderRadius: 12,
+          width: 112, height: 112,
+          borderRadius: 14,
           overflow: 'hidden',
-          background: '#F3F4F6',
+          background: KYVRA.bg,
         }}>
-          {image_url ? (
+          {(image_url && !imgError) ? (
             <img
               src={image_url}
               alt={name}
+              onError={() => setImgError(true)}
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           ) : (
             <div style={{
               width: '100%', height: '100%',
+              background: `linear-gradient(145deg, ${KYVRA.teal} 0%, ${KYVRA.tealDark} 100%)`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 38, background: '#F9FAFB',
             }}>
-              🍽️
+              <Utensils size={36} strokeWidth={1} color="rgba(255,255,255,0.40)" />
             </div>
           )}
         </div>
@@ -135,10 +131,10 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
                   position: 'absolute',
                   bottom: -8, right: -8,
                   display: 'flex', alignItems: 'center',
-                  background: '#fff',
+                  background: KYVRA.white,
                   borderRadius: 999,
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.22)',
-                  border: '1.5px solid #F3F4F6',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.16)',
+                  border: `1.5px solid ${KYVRA.border}`,
                   overflow: 'hidden',
                 }}
               >
@@ -150,12 +146,12 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  <Minus size={14} color="#0F172A" strokeWidth={3} />
+                  <Minus size={14} color={KYVRA.textMuted} strokeWidth={3} />
                 </button>
 
                 <span style={{
-                  minWidth: 20, textAlign: 'center',
-                  fontSize: 13, fontWeight: 800, color: '#111',
+                  minWidth: 22, textAlign: 'center',
+                  fontSize: 13, fontWeight: 800, color: KYVRA.navy,
                   lineHeight: 1, userSelect: 'none',
                 }}>
                   {cartQty}
@@ -169,7 +165,7 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  <Plus size={14} color="#0F172A" strokeWidth={3} />
+                  <Plus size={14} color={KYVRA.teal} strokeWidth={3} />
                 </button>
               </motion.div>
             ) : (
@@ -186,19 +182,19 @@ export default function MenuItem({ item, onAdd, onTap, isLast = false }) {
                   bottom: -8, right: -8,
                   width: 36, height: 36,
                   borderRadius: '50%',
-                  background: '#fff',
-                  border: 'none',
+                  background: KYVRA.teal,
+                  border: '2px solid #fff',
                   cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
+                  boxShadow: '0 2px 8px rgba(13,148,136,0.38)',
                 }}
               >
-                <Plus size={20} color="#0F172A" strokeWidth={2.5} />
+                <Plus size={18} color="#fff" strokeWidth={2.8} />
               </motion.button>
             )}
           </AnimatePresence>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

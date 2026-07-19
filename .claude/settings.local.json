@@ -54,7 +54,12 @@
       "PowerShell(npx supabase secrets set RESEND_API_KEY=re_J2XKiGKc_FTYa5vyaptcQU9Bdbk4FY1nv --project-ref hvmdumuedqfoifgayleh 2>&1)",
       "Bash(grep -r \"\\\\[\\\\\\\\\\\\\\\\u0300-\\\\\\\\\\\\\\\\u036\" node_modules/ --include=\"*.js\" -l)",
       "Bash(grep -rn \"\\\\[̀-ͯ\\\\]\\\\|\\\\[\\\\\\\\\\\\\\\\u0300-\\\\\\\\\\\\\\\\u036F\\\\]\" node_modules/framer-motion/dist/ -l)",
-      "Bash(xxd)"
+      "Bash(xxd)",
+      "Bash(dir \"C:\\\\Users\\\\emine\\\\vicunaya\\\\packages\\\\delivery\\\\src\")",
+      "Bash(echo \"EXIT:$?\")",
+      "PowerShell(Copy-Item *)",
+      "PowerShell(Get-Command *)",
+      "Bash(vercel *)"
     ]
   }
 }

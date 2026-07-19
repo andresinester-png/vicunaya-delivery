@@ -1,24 +1,29 @@
-﻿import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, SlidersHorizontal, ChevronDown,
-  Star, ShoppingCart, MapPin,
+  Search, X, SlidersHorizontal, ChevronDown, ChevronRight,
+  Star, ShoppingCart, MapPin, Clock, LayoutGrid, Check,
   Utensils, Sandwich, Pizza, GlassWater, Beef, CakeSlice,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase.js';
 import { isRestaurantOpen } from '../lib/restaurantUtils.js';
 import useCartStore from '../store/cartStore.js';
+import { KYVRA } from '../lib/theme.js';
 
-const TEAL      = '#0D9488';
-const TEAL_LT   = '#5EEAD4';
-const NAVY      = '#0F172A';
-const TEXT_MUTED = '#64748B';
-const GRAY_FILL = '#F1F5F9';
-const CARD_BG   = '#F8FAFC';
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const SHADOW = {
+  card:    '0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.07)',
+  banner:  '0 4px 12px rgba(0,0,0,0.08), 0 12px 36px rgba(0,0,0,0.14)',
+  fab:     '0 4px 12px rgba(13,148,136,0.30), 0 10px 28px rgba(13,148,136,0.38)',
+  popover: '0 4px 16px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.10)',
+  chip:    '0 2px 8px rgba(13,148,136,0.22)',
+  header:  '0 4px 20px rgba(0,0,0,0.08)',
+};
 
+// ── Data ──────────────────────────────────────────────────────────────────────
 const CATEGORY_TILES = [
-  { label: 'Todo',        filter: '',           Icon: Utensils   },
+  { label: 'Todo',        filter: '',           Icon: LayoutGrid },
   { label: 'Empanadas',   filter: 'Empanadas',  Icon: Sandwich   },
   { label: 'Pizza',       filter: 'Pizza',      Icon: Pizza      },
   { label: 'Bebidas',     filter: 'Bebidas',    Icon: GlassWater },
@@ -36,9 +41,9 @@ const SORT_OPTIONS = [
 const ALL_CATS = ['Rotisería', 'Pizza', 'Empanadas', 'Parrilla', 'Sushi', 'Vegano', 'Bebidas'];
 
 const DEMO = [
-  { id: 'd1', name: 'La Rotisería de Don Carlos', category: ['Rotisería'], rating: 4.8, delivery_time: 25, delivery_price: 350, image_url: null },
-  { id: 'd2', name: 'Rotisería Los Hermanos',     category: ['Rotisería'], rating: 4.6, delivery_time: 35, delivery_price: 400, image_url: null },
-  { id: 'd3', name: 'El Buen Gusto',              category: ['Empanadas'], rating: 4.9, delivery_time: 30, delivery_price: 250, image_url: null },
+  { id: 'd1', name: 'La Rotisería de Don Carlos', category: ['Rotisería'], rating: 4.8, delivery_time: 25, delivery_price: 350,  image_url: null },
+  { id: 'd2', name: 'Rotisería Los Hermanos',     category: ['Rotisería'], rating: 4.6, delivery_time: 35, delivery_price: 400,  image_url: null },
+  { id: 'd3', name: 'El Buen Gusto',              category: ['Empanadas'], rating: 4.9, delivery_time: 30, delivery_price: 0,    image_url: null },
 ];
 
 const PROMO_BANNERS = [
@@ -46,35 +51,38 @@ const PROMO_BANNERS = [
     id: 'sumate',
     title: 'Sumate a Kyvra',
     subtitle: 'Registrá tu negocio y llegá a toda la ciudad',
-    image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&auto=format&fit=crop',
-    gradient: 'linear-gradient(to right, rgba(13,148,136,0.85), rgba(13,148,136,0.4))',
-    subtitleColor: 'rgba(255,255,255,0.82)',
+    image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&auto=format&fit=crop',
+    overlay: 'linear-gradient(135deg, rgba(13,148,136,0.92) 0%, rgba(6,95,84,0.55) 60%, transparent 100%)',
     to: '/anunciate',
   },
   {
     id: 'pedi',
     title: 'Pedí desde donde estés',
     subtitle: 'Comida, turnos y encomiendas en un solo lugar',
-    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&auto=format&fit=crop',
-    gradient: 'linear-gradient(to right, rgba(15,23,42,0.9), rgba(15,23,42,0.4))',
-    subtitleColor: '#5EEAD4',
+    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&auto=format&fit=crop',
+    overlay: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.50) 60%, transparent 100%)',
     to: '/delivery',
   },
   {
     id: 'envios',
     title: 'Envíos a toda la ciudad',
     subtitle: 'Mandá y recibí encomiendas fácil y rápido',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&auto=format&fit=crop',
-    gradient: 'linear-gradient(to right, rgba(13,148,136,0.85), rgba(6,95,84,0.6))',
-    subtitleColor: 'rgba(255,255,255,0.82)',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop',
+    overlay: 'linear-gradient(135deg, rgba(13,148,136,0.90) 0%, rgba(6,95,84,0.55) 60%, transparent 100%)',
     to: '/encomiendas',
   },
 ];
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 14 },
+  show:   { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 280, damping: 24 } },
+};
+
+// ── Promo carousel ────────────────────────────────────────────────────────────
 function PromoBanner({ navigate }) {
-  const [active, setActive]  = useState(0);
-  const timerRef             = useRef(null);
-  const pauseRef             = useRef(false);
+  const [active, setActive] = useState(0);
+  const timerRef            = useRef(null);
+  const pauseRef            = useRef(false);
 
   const goTo = useCallback((idx) => {
     setActive(idx);
@@ -94,14 +102,16 @@ function PromoBanner({ navigate }) {
 
   return (
     <div>
-      <div
+      <motion.div
+        whileTap={{ scale: 0.985 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 28 }}
         style={{
-          position: 'relative', height: 150, borderRadius: 20, overflow: 'hidden',
-          cursor: 'pointer',
+          position: 'relative', height: 172, borderRadius: 22, overflow: 'hidden',
+          cursor: 'pointer', boxShadow: SHADOW.banner,
         }}
         onClick={() => navigate(banner.to)}
       >
-        {/* Imagen de fondo */}
+        {/* Background image */}
         <img
           src={banner.image}
           alt={banner.title}
@@ -112,54 +122,83 @@ function PromoBanner({ navigate }) {
           }}
         />
 
-        {/* Degradé encima */}
-        <div style={{ position: 'absolute', inset: 0, background: banner.gradient }} />
+        {/* Directional gradient overlay */}
+        <div style={{ position: 'absolute', inset: 0, background: banner.overlay }} />
 
-        {/* Texto animado */}
+        {/* Bottom scrim for text legibility */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to top, rgba(0,0,0,0.42) 0%, transparent 55%)',
+        }} />
+
+        {/* Content */}
         <AnimatePresence initial={false} mode="wait">
           <motion.div
             key={banner.id}
-            initial={{ opacity: 0, x: 16 }}
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -16 }}
-            transition={{ duration: 0.30 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
             style={{
               position: 'absolute', inset: 0,
-              padding: '0 20px 20px',
+              padding: '0 22px 22px',
               display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
             }}
           >
+            {/* Eyebrow chip */}
+            <span style={{
+              display: 'inline-flex', alignSelf: 'flex-start',
+              background: 'rgba(255,255,255,0.18)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,255,255,0.28)',
+              color: '#fff', padding: '3px 10px', borderRadius: 99,
+              fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
+              marginBottom: 8,
+            }}>
+              KYVRA
+            </span>
             <h3 style={{
-              color: '#fff', fontSize: 17, fontWeight: 800,
-              letterSpacing: '-0.02em', lineHeight: 1.2,
-              margin: '0 0 5px',
+              color: '#fff', fontSize: 19, fontWeight: 900,
+              letterSpacing: '-0.025em', lineHeight: 1.18, margin: '0 0 5px',
+              textShadow: '0 1px 6px rgba(0,0,0,0.25)',
             }}>
               {banner.title}
             </h3>
             <p style={{
-              color: banner.subtitleColor,
-              fontSize: 12, fontWeight: 600,
-              margin: 0, lineHeight: 1.5,
+              color: 'rgba(255,255,255,0.88)', fontSize: 13,
+              fontWeight: 600, margin: 0, lineHeight: 1.5,
+              textShadow: '0 1px 4px rgba(0,0,0,0.20)',
             }}>
               {banner.subtitle}
             </p>
           </motion.div>
         </AnimatePresence>
-      </div>
 
-      {/* Dots indicadores */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 5, paddingTop: 10 }}>
+        {/* Arrow CTA — bottom right */}
+        <div style={{
+          position: 'absolute', bottom: 20, right: 20,
+          width: 32, height: 32, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.22)',
+          backdropFilter: 'blur(6px)',
+          border: '1px solid rgba(255,255,255,0.35)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <ChevronRight size={15} color="#fff" strokeWidth={2.5} />
+        </div>
+      </motion.div>
+
+      {/* Dot indicators */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 5, paddingTop: 12 }}>
         {PROMO_BANNERS.map((b, i) => (
-          <button
+          <motion.button
             key={b.id}
             onClick={() => goTo(i)}
             aria-label={`Banner ${i + 1}`}
+            animate={{ width: i === active ? 20 : 5, background: i === active ? KYVRA.teal : KYVRA.border }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
             style={{
-              width: i === active ? 18 : 5, height: 5,
-              borderRadius: 99,
-              background: i === active ? TEAL : '#CBD5E1',
+              height: 5, borderRadius: 99,
               border: 'none', padding: 0, cursor: 'pointer',
-              transition: 'width 0.3s ease, background 0.3s ease',
             }}
           />
         ))}
@@ -168,97 +207,206 @@ function PromoBanner({ navigate }) {
   );
 }
 
-function RestaurantCard({ r, navigate }) {
+// ── Restaurant card ───────────────────────────────────────────────────────────
+function RestaurantCard({ r }) {
   const isOpen     = isRestaurantOpen(r);
-  const primaryCat = Array.isArray(r.category) ? r.category[0] : (r.category ?? 'Restaurante');
+  const primaryCat = Array.isArray(r.category) ? r.category[0] : (r.category ?? '');
 
   return (
     <motion.div
-      whileTap={{ scale: 0.985 }}
-      transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-      onClick={() => navigate(`/restaurant/${r.id}`)}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        background: CARD_BG, borderRadius: 16,
-        padding: '12px 14px', cursor: 'pointer',
-      }}
+      variants={cardVariants}
+      whileTap={{ scale: 0.982 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 28 }}
     >
-      {/* Foto */}
-      <div style={{ position: 'relative', width: 64, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: GRAY_FILL }}>
-        {r.image_url ? (
-          <img
-            src={r.image_url} alt={r.name} loading="lazy"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: r.cover_position ?? 'center' }}
-          />
-        ) : (
+      <Link
+        to={`/restaurant/${r.id}`}
+        style={{
+          display: 'block', textDecoration: 'none',
+          background: KYVRA.white, borderRadius: 22,
+          border: `1px solid ${KYVRA.border}`,
+          boxShadow: SHADOW.card,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Cover image */}
+        <div style={{ position: 'relative', height: 156, overflow: 'hidden' }}>
+          {r.image_url ? (
+            <img
+              src={r.image_url} alt={r.name} loading="lazy"
+              style={{
+                width: '100%', height: '100%',
+                objectFit: 'cover',
+                objectPosition: r.cover_position ?? 'center',
+                filter: isOpen ? 'none' : 'grayscale(35%) brightness(0.85)',
+                transition: 'filter 0.3s',
+              }}
+            />
+          ) : (
+            <div style={{
+              width: '100%', height: '100%',
+              background: isOpen
+                ? `linear-gradient(145deg, ${KYVRA.teal} 0%, ${KYVRA.tealDark} 100%)`
+                : `linear-gradient(145deg, #94A3B8 0%, #64748B 100%)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'background 0.3s',
+            }}>
+              <Utensils size={52} strokeWidth={1} color="rgba(255,255,255,0.38)" />
+            </div>
+          )}
+
+          {/* Bottom scrim for overlay contrast */}
           <div style={{
-            width: '100%', height: '100%',
-            background: `linear-gradient(135deg, ${TEAL} 0%, #0F766E 100%)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(to top, rgba(0,0,0,0.22) 0%, transparent 50%)',
+            pointerEvents: 'none',
+          }} />
+
+          {/* Open/closed badge — top left */}
+          <span style={{
+            position: 'absolute', top: 11, left: 11,
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            background: isOpen ? 'rgba(5,150,105,0.94)' : 'rgba(15,23,42,0.72)',
+            backdropFilter: 'blur(6px)',
+            color: '#fff', padding: '4px 10px', borderRadius: 99,
+            fontSize: 10, fontWeight: 800, letterSpacing: '0.04em',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
           }}>
-            <span style={{ color: 'rgba(255,255,255,0.55)', fontWeight: 900, fontSize: 24, letterSpacing: '-0.04em' }}>
-              {r.name.charAt(0)}
-            </span>
-          </div>
-        )}
-        {/* Badge abierto/cerrado */}
-        <div style={{
-          position: 'absolute', bottom: 3, left: 3,
-          background: isOpen ? 'rgba(13,148,136,0.92)' : 'rgba(0,0,0,0.60)',
-          borderRadius: 6, padding: '2px 5px',
-          display: 'flex', alignItems: 'center', gap: 3,
-        }}>
-          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#fff', flexShrink: 0 }} />
-          <span style={{ color: '#fff', fontSize: 8.5, fontWeight: 800, letterSpacing: '0.03em' }}>
+            <span style={{
+              width: 5, height: 5, borderRadius: '50%',
+              background: isOpen ? '#6EE7B7' : '#94A3B8',
+              flexShrink: 0,
+            }} />
             {isOpen ? 'ABIERTO' : 'CERRADO'}
           </span>
-        </div>
-      </div>
 
-      {/* Info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 700, fontSize: 14.5, color: NAVY, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {r.name}
+          {/* Category badge — top right */}
+          {primaryCat && (
+            <span style={{
+              position: 'absolute', top: 11, right: 11,
+              background: 'rgba(255,255,255,0.94)',
+              backdropFilter: 'blur(6px)',
+              padding: '4px 10px', borderRadius: 99,
+              fontSize: 10, fontWeight: 700, color: KYVRA.navy,
+              boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
+            }}>
+              {primaryCat}
+            </span>
+          )}
+
+          {/* Rating pill — bottom right overlay */}
+          {r.rating != null && (
+            <span style={{
+              position: 'absolute', bottom: 10, right: 11,
+              display: 'inline-flex', alignItems: 'center', gap: 3,
+              background: 'rgba(0,0,0,0.54)',
+              backdropFilter: 'blur(6px)',
+              color: '#fff', padding: '3px 8px', borderRadius: 99,
+              fontSize: 11, fontWeight: 800,
+              boxShadow: '0 1px 4px rgba(0,0,0,0.20)',
+            }}>
+              <Star size={10} fill="#FBBF24" color="#FBBF24" strokeWidth={0} />
+              {r.rating.toFixed(1)}
+            </span>
+          )}
         </div>
-        <div style={{ fontSize: 12, color: TEXT_MUTED, fontWeight: 500, marginTop: 2 }}>
-          {primaryCat}{r.delivery_time ? ` · ${r.delivery_time}–${r.delivery_time + 10} min` : ''}
-          {r.delivery_price != null ? ` · ${r.delivery_price === 0 ? 'Envío gratis' : `$${r.delivery_price.toLocaleString('es-AR')}`}` : ''}
-        </div>
-        {r.rating != null && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 4 }}>
-            <Star size={11} fill={TEAL} color={TEAL} strokeWidth={0} />
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: TEAL }}>{r.rating.toFixed(1)}</span>
-            <span style={{ fontSize: 11, color: TEXT_MUTED, fontWeight: 500 }}>(100+)</span>
+
+        {/* Content */}
+        <div style={{
+          padding: '14px 16px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{
+              fontWeight: 800, fontSize: 15.5, color: KYVRA.navy,
+              marginBottom: 6, overflow: 'hidden',
+              textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              letterSpacing: '-0.01em',
+            }}>
+              {r.name}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+              {r.delivery_time != null && (
+                <span style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  fontSize: 12, color: KYVRA.textSec, fontWeight: 500,
+                }}>
+                  <Clock size={11} color={KYVRA.textMuted} strokeWidth={2} />
+                  {r.delivery_time}–{r.delivery_time + 10} min
+                </span>
+              )}
+              {r.delivery_price != null && (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                  fontSize: 12,
+                  fontWeight: r.delivery_price === 0 ? 700 : 500,
+                  color: r.delivery_price === 0 ? '#059669' : KYVRA.textSec,
+                  background: r.delivery_price === 0 ? 'rgba(5,150,105,0.08)' : 'transparent',
+                  padding: r.delivery_price === 0 ? '2px 7px' : '0',
+                  borderRadius: r.delivery_price === 0 ? 99 : 0,
+                }}>
+                  {r.delivery_price === 0 ? '✦ Envío gratis' : `Envío $${r.delivery_price.toLocaleString('es-AR')}`}
+                </span>
+              )}
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Arrow — filled teal when open */}
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%',
+            background: isOpen ? KYVRA.teal : KYVRA.bg,
+            border: `1px solid ${isOpen ? KYVRA.teal : KYVRA.border}`,
+            boxShadow: isOpen ? SHADOW.chip : 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, marginLeft: 12,
+            transition: 'background 0.25s, border-color 0.25s, box-shadow 0.25s',
+          }}>
+            <ChevronRight size={15} color={isOpen ? '#fff' : KYVRA.textMuted} strokeWidth={2.4} />
+          </div>
+        </div>
+      </Link>
     </motion.div>
   );
 }
 
+// ── Skeleton ──────────────────────────────────────────────────────────────────
 function SkeletonCard() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: CARD_BG, borderRadius: 16, padding: '12px 14px' }}>
-      <div style={{ width: 64, height: 64, borderRadius: 12, flexShrink: 0 }} className="skeleton" />
-      <div style={{ flex: 1 }}>
-        <div style={{ height: 14, width: '60%', borderRadius: 6, marginBottom: 7 }} className="skeleton" />
-        <div style={{ height: 11, width: '80%', borderRadius: 6, marginBottom: 6 }} className="skeleton" />
-        <div style={{ height: 11, width: '30%', borderRadius: 6 }} className="skeleton" />
+    <div className="animate-pulse" style={{
+      background: KYVRA.white, borderRadius: 22,
+      border: `1px solid ${KYVRA.border}`,
+      boxShadow: SHADOW.card, overflow: 'hidden',
+    }}>
+      <div style={{ height: 156, background: '#EEF2F7' }} />
+      <div style={{ padding: '14px 16px' }}>
+        <div style={{ height: 15, width: '52%', borderRadius: 7, background: '#EEF2F7', marginBottom: 8 }} />
+        <div style={{ height: 11, width: '72%', borderRadius: 7, background: '#EEF2F7' }} />
       </div>
     </div>
   );
 }
 
+// ── Main ──────────────────────────────────────────────────────────────────────
 export default function Home() {
   const navigate  = useNavigate();
   const cartCount = useCartStore(s => s.count());
 
-  const [restaurants, setRestaurants] = useState(DEMO);
-  const [loading, setLoading]         = useState(true);
-  const [search, setSearch]           = useState('');
-  const [catFilter, setCatFilter]     = useState('');
-  const [sortBy, setSortBy]           = useState('relevance');
-  const [sortOpen, setSortOpen]       = useState(false);
+  const [restaurants, setRestaurants]   = useState(DEMO);
+  const [loading, setLoading]           = useState(true);
+  const [search, setSearch]             = useState('');
+  const [catFilter, setCatFilter]       = useState('');
+  const [sortBy, setSortBy]             = useState('relevance');
+  const [sortOpen, setSortOpen]         = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [headerElevated, setHeaderElevated] = useState(false);
+
+  // Scroll elevation for sticky sub-header
+  useEffect(() => {
+    const el = document.getElementById('main-scroll');
+    if (!el) return;
+    const onScroll = () => setHeaderElevated(el.scrollTop > 8);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     supabase.from('restaurants').select('*').eq('is_active', true).order('name').then(({ data, error }) => {
@@ -267,13 +415,14 @@ export default function Home() {
     });
   }, []);
 
-  const availableChips = useMemo(() => {
-    const cats = new Set(
-      restaurants.flatMap(r =>
-        Array.isArray(r.category) ? r.category : r.category ? [r.category] : []
-      )
-    );
-    return ['Todos', ...ALL_CATS.filter(c => cats.has(c))];
+  const mergedChips = useMemo(() => {
+    const tileFilters = new Set(CATEGORY_TILES.filter(c => c.filter).map(c => c.filter.toLowerCase()));
+    const extra = restaurants
+      .flatMap(r => Array.isArray(r.category) ? r.category : r.category ? [r.category] : [])
+      .filter((c, i, arr) => arr.indexOf(c) === i)
+      .filter(c => ALL_CATS.includes(c) && !tileFilters.has(c.toLowerCase()))
+      .map(c => ({ label: c, filter: c, Icon: null }));
+    return [...CATEGORY_TILES, ...extra];
   }, [restaurants]);
 
   const filtered = useMemo(() => {
@@ -299,235 +448,309 @@ export default function Home() {
     return list;
   }, [restaurants, search, catFilter, sortBy]);
 
+  const sectionLabel = catFilter
+    ? `${catFilter}s cerca de vos`
+    : search.trim()
+    ? `Resultados para "${search.trim()}"`
+    : 'Restaurantes cerca de vos';
+
   return (
     <div
-      style={{ background: CARD_BG, minHeight: '100%' }}
+      style={{ background: KYVRA.bg, minHeight: '100%' }}
       onClick={() => sortOpen && setSortOpen(false)}
     >
-      {/* ── Bloque editorial ── */}
-      <div style={{ padding: '20px 18px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
-          <MapPin size={13} color={TEAL} strokeWidth={2.5} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: TEAL, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            Vicuña Mackenna
+
+      {/* ── Sticky sub-header ───────────────────────────────────────── */}
+      <div style={{
+        background: KYVRA.white,
+        padding: '22px 20px 18px',
+        borderBottom: `1px solid ${KYVRA.border}`,
+        position: 'sticky', top: 0, zIndex: 30,
+        boxShadow: headerElevated ? SHADOW.header : 'none',
+        transition: 'box-shadow 0.3s ease',
+      }}>
+        {/* Eyebrow */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
+          <MapPin size={12} color={KYVRA.teal} strokeWidth={2.5} />
+          <span style={{
+            fontSize: 11, fontWeight: 700, color: KYVRA.teal,
+            letterSpacing: '0.09em', textTransform: 'uppercase',
+          }}>
+            DELIVERY
           </span>
         </div>
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: NAVY, letterSpacing: '-0.03em', lineHeight: 1.1, margin: 0 }}>
+
+        {/* Heading */}
+        <h1 style={{
+          color: KYVRA.navy, fontSize: 24, fontWeight: 900,
+          margin: '0 0 5px', letterSpacing: '-0.025em', lineHeight: 1.15,
+        }}>
           ¿Qué se te antoja hoy?
         </h1>
-      </div>
+        <p style={{
+          color: KYVRA.textSec, fontSize: 14, margin: '0 0 18px',
+          lineHeight: 1.55, fontWeight: 450,
+        }}>
+          Pedí comida de los mejores locales de la ciudad.
+        </p>
 
-      {/* ── Buscador ── */}
-      <div style={{ padding: '14px 18px 0' }}>
+        {/* Search */}
         <div style={{ position: 'relative' }}>
           <Search
-            size={17} color={TEXT_MUTED}
-            style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+            size={16} color={searchFocused ? KYVRA.teal : KYVRA.textMuted}
+            style={{
+              position: 'absolute', left: 14, top: '50%',
+              transform: 'translateY(-50%)', pointerEvents: 'none',
+              transition: 'color 0.2s',
+            }}
           />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar comidas, bebidas o tiendas..."
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            placeholder="Buscar comidas, restaurantes..."
             style={{
-              width: '100%', height: 50, padding: '0 16px 0 46px',
-              background: GRAY_FILL, border: 'none', borderRadius: 16,
-              fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: NAVY,
-              boxSizing: 'border-box', outline: 'none',
+              width: '100%', height: 48,
+              background: KYVRA.bg,
+              border: `1.5px solid ${searchFocused || search ? KYVRA.teal : KYVRA.border}`,
+              borderRadius: 16, padding: '0 44px 0 42px',
+              fontSize: 14, color: KYVRA.navy, outline: 'none',
+              boxSizing: 'border-box',
+              boxShadow: searchFocused ? '0 0 0 3px rgba(13,148,136,0.12)' : 'none',
+              transition: 'border-color 0.2s, box-shadow 0.2s',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
             }}
           />
-        </div>
-      </div>
-
-      {/* ── Categorías ── */}
-      <div style={{ paddingTop: 22 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 18px', marginBottom: 14 }}>
-          <span style={{ fontWeight: 800, fontSize: 15.5, color: NAVY, letterSpacing: '-0.01em' }}>Categorías</span>
-          <button
-            onClick={() => setCatFilter('')}
-            style={{ background: 'none', border: 'none', fontSize: 12.5, fontWeight: 700, color: TEAL, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-          >
-            Ver todas
-          </button>
-        </div>
-        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', padding: '0 18px 4px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          {CATEGORY_TILES.map(({ label, filter, Icon }) => {
-            const active = catFilter === filter;
-            return (
-              <motion.button
-                key={label}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setCatFilter(active ? '' : filter)}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7,
-                  minWidth: 64, background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                }}
-              >
-                <div style={{
-                  width: 56, height: 56, borderRadius: 16,
-                  background: active ? TEAL : GRAY_FILL,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: active ? '0 4px 12px rgba(13,148,136,0.35)' : 'none',
-                  transition: 'background 0.15s, box-shadow 0.15s',
-                }}>
-                  <Icon size={22} color={active ? '#fff' : NAVY} strokeWidth={1.8} />
-                </div>
-                <span style={{ fontSize: 11, fontWeight: active ? 700 : 600, color: active ? NAVY : TEXT_MUTED }}>
-                  {label}
-                </span>
-              </motion.button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── Banners ── */}
-      <div style={{ padding: '22px 18px 0' }}>
-        <PromoBanner navigate={navigate} />
-      </div>
-
-      {/* ── Filtros / chips ── */}
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '18px 18px 0', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {/* Sort dropdown */}
-        <div style={{ position: 'relative', flexShrink: 0 }}>
-          <motion.button
-            whileTap={{ scale: 0.94 }}
-            onClick={e => { e.stopPropagation(); setSortOpen(v => !v); }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              background: '#fff', border: `1px solid ${sortBy !== 'relevance' ? TEAL : '#E2E8F0'}`,
-              padding: '8px 14px', borderRadius: 99,
-              fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12.5,
-              fontWeight: 600, color: sortBy !== 'relevance' ? TEAL : '#475569',
-              cursor: 'pointer', whiteSpace: 'nowrap',
-            }}
-          >
-            <SlidersHorizontal size={13} strokeWidth={2.2} />
-            {SORT_OPTIONS.find(o => o.id === sortBy)?.label ?? 'Relevancia'}
-            <ChevronDown
-              size={12} strokeWidth={2.6}
-              style={{ transform: sortOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
-            />
-          </motion.button>
-          <AnimatePresence>
-            {sortOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                transition={{ duration: 0.15 }}
-                onClick={e => e.stopPropagation()}
-                style={{
-                  position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 50,
-                  background: '#fff', borderRadius: 14,
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.12)', border: '1px solid #F1F5F9',
-                  minWidth: 180, overflow: 'hidden',
-                }}
-              >
-                {SORT_OPTIONS.map(opt => (
-                  <button
-                    key={opt.id}
-                    onClick={() => { setSortBy(opt.id); setSortOpen(false); }}
-                    style={{
-                      display: 'block', width: '100%', padding: '11px 16px',
-                      background: sortBy === opt.id ? '#F0FDFA' : '#fff',
-                      color: sortBy === opt.id ? TEAL : '#374151',
-                      border: 'none', textAlign: 'left',
-                      fontSize: 14, fontWeight: sortBy === opt.id ? 700 : 600,
-                      cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      borderBottom: '1px solid #F8FAFC',
-                    }}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Chips de categoría */}
-        {availableChips.map(chip => {
-          const active = chip === 'Todos' ? catFilter === '' : catFilter === chip;
-          return (
-            <motion.button
-              key={chip}
-              whileTap={{ scale: 0.92 }}
-              onClick={() => setCatFilter(chip === 'Todos' ? '' : chip)}
+          {search && (
+            <button
+              onClick={() => setSearch('')}
               style={{
-                flexShrink: 0,
-                background: active ? TEAL : '#fff',
-                color: active ? '#fff' : TEXT_MUTED,
-                border: active ? 'none' : '1px solid #E2E8F0',
-                padding: '8px 18px', borderRadius: 99,
-                fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12.5,
-                fontWeight: active ? 700 : 600, cursor: 'pointer', whiteSpace: 'nowrap',
-                transition: 'background 0.15s, color 0.15s',
+                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                background: '#E2E8F0', border: 'none', cursor: 'pointer',
+                width: 22, height: 22, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              {chip}
+              <X size={12} color={KYVRA.textSec} strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Category chip row ─────────────────────────────────────────── */}
+      <div style={{
+        background: KYVRA.white,
+        overflowX: 'auto', scrollbarWidth: 'none',
+        display: 'flex', gap: 8,
+        padding: '14px 20px',
+        borderBottom: `1px solid ${KYVRA.border}`,
+      }}>
+        {mergedChips.map(chip => {
+          const active   = catFilter === chip.filter;
+          const ChipIcon = chip.Icon;
+          return (
+            <motion.button
+              key={chip.label}
+              whileTap={{ scale: 0.93 }}
+              onClick={() => setCatFilter(active && chip.filter !== '' ? '' : chip.filter)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '9px 16px', minHeight: 38, borderRadius: 99, flexShrink: 0,
+                background: active ? KYVRA.teal : KYVRA.white,
+                color: active ? KYVRA.white : KYVRA.textSec,
+                border: `1.5px solid ${active ? KYVRA.teal : KYVRA.border}`,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontWeight: active ? 700 : 500,
+                fontSize: 13, cursor: 'pointer',
+                boxShadow: active ? SHADOW.chip : 'none',
+                transition: 'all 0.18s ease',
+              }}
+            >
+              {ChipIcon && <ChipIcon size={13} strokeWidth={active ? 2.5 : 2} />}
+              {chip.label}
             </motion.button>
           );
         })}
       </div>
 
-      {/* ── Listado ── */}
-      <div style={{ padding: '18px 18px 80px' }}>
-        <div style={{ fontWeight: 800, fontSize: 15.5, color: NAVY, marginBottom: 12, letterSpacing: '-0.01em' }}>
-          {catFilter ? `${catFilter}s cerca de vos` : 'Cerca de vos'}
+      {/* ── Page content ─────────────────────────────────────────────── */}
+      <div style={{ padding: '20px 20px 0' }}>
+
+        {/* Promo banner */}
+        <PromoBanner navigate={navigate} />
+
+        {/* Section header + sort */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginTop: 24, marginBottom: 14,
+        }}>
+          <span style={{
+            fontWeight: 800, fontSize: 16, color: KYVRA.navy,
+            letterSpacing: '-0.015em',
+          }}>
+            {sectionLabel}
+          </span>
+
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <motion.button
+              whileTap={{ scale: 0.93 }}
+              onClick={e => { e.stopPropagation(); setSortOpen(v => !v); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                background: sortBy !== 'relevance' ? KYVRA.tealBg : KYVRA.white,
+                border: `1.5px solid ${sortBy !== 'relevance' ? KYVRA.teal : KYVRA.border}`,
+                padding: '8px 13px', borderRadius: 99,
+                fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12.5,
+                fontWeight: 600,
+                color: sortBy !== 'relevance' ? KYVRA.teal : KYVRA.textSec,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+              }}
+            >
+              <SlidersHorizontal size={12} strokeWidth={2.2} />
+              {SORT_OPTIONS.find(o => o.id === sortBy)?.label ?? 'Relevancia'}
+              <motion.span
+                animate={{ rotate: sortOpen ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ display: 'flex' }}
+              >
+                <ChevronDown size={11} strokeWidth={2.6} />
+              </motion.span>
+            </motion.button>
+
+            <AnimatePresence>
+              {sortOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  onClick={e => e.stopPropagation()}
+                  style={{
+                    position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 50,
+                    background: KYVRA.white, borderRadius: 16,
+                    boxShadow: SHADOW.popover,
+                    border: `1px solid ${KYVRA.border}`,
+                    minWidth: 190, overflow: 'hidden',
+                  }}
+                >
+                  {SORT_OPTIONS.map((opt, idx) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => { setSortBy(opt.id); setSortOpen(false); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        width: '100%', padding: '12px 16px',
+                        background: sortBy === opt.id ? KYVRA.tealBg : KYVRA.white,
+                        color: sortBy === opt.id ? KYVRA.teal : '#374151',
+                        border: 'none',
+                        borderBottom: idx < SORT_OPTIONS.length - 1 ? `1px solid ${KYVRA.bg}` : 'none',
+                        textAlign: 'left',
+                        fontSize: 13.5, fontWeight: sortBy === opt.id ? 700 : 500,
+                        cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      }}
+                    >
+                      {opt.label}
+                      {sortBy === opt.id && <Check size={13} color={KYVRA.teal} strokeWidth={2.8} />}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
+        {/* Restaurant list */}
         {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 28 }}>
             {[0, 1, 2].map(i => <SkeletonCard key={i} />)}
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <p style={{ fontWeight: 700, color: '#6B7280', fontSize: 15 }}>Sin resultados</p>
-            <button
-              onClick={() => { setSearch(''); setCatFilter(''); setSortBy('relevance'); }}
-              style={{ marginTop: 8, color: TEAL, fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-            >
-              Limpiar filtros
-            </button>
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            padding: '72px 0 28px', color: KYVRA.textMuted,
+          }}>
+            <div style={{
+              width: 72, height: 72, borderRadius: '50%',
+              background: KYVRA.bg, border: `1px solid ${KYVRA.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginBottom: 14,
+            }}>
+              <Utensils size={32} strokeWidth={1.2} color={KYVRA.textMuted} />
+            </div>
+            <p style={{ margin: '0 0 4px', color: KYVRA.navy, fontWeight: 700, fontSize: 15 }}>
+              Sin resultados
+            </p>
+            <p style={{ margin: '0 0 14px', color: KYVRA.textSec, fontSize: 13, textAlign: 'center' }}>
+              Intentá con otro término o categoría
+            </p>
+            {(search || catFilter) && (
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                onClick={() => { setSearch(''); setCatFilter(''); setSortBy('relevance'); }}
+                style={{
+                  color: KYVRA.white, fontWeight: 700, fontSize: 13.5,
+                  background: KYVRA.teal, border: 'none', cursor: 'pointer',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  padding: '10px 20px', borderRadius: 99,
+                  boxShadow: SHADOW.chip,
+                }}
+              >
+                Limpiar filtros
+              </motion.button>
+            )}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {filtered.map(r => <RestaurantCard key={r.id} r={r} navigate={navigate} />)}
-          </div>
+          <motion.div
+            initial="hidden"
+            animate="show"
+            variants={{ show: { transition: { staggerChildren: 0.06 } } }}
+            style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 28 }}
+          >
+            {filtered.map(r => <RestaurantCard key={r.id} r={r} />)}
+          </motion.div>
         )}
       </div>
 
-      {/* ── FAB carrito ── */}
+      {/* ── FAB carrito ──────────────────────────────────────────────── */}
       <AnimatePresence>
         {cartCount > 0 && (
           <motion.button
             key="fab"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            whileTap={{ scale: 0.9 }}
+            initial={{ scale: 0, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 26 }}
+            whileTap={{ scale: 0.88 }}
             onClick={() => navigate('/carrito')}
             style={{
-              position: 'fixed', right: 20, bottom: 80, zIndex: 40,
-              width: 52, height: 52, borderRadius: '50%',
-              background: TEAL, border: '2px solid #fff',
-              boxShadow: '0 6px 16px rgba(13,148,136,0.45)',
+              position: 'fixed', right: 20, bottom: 84, zIndex: 40,
+              width: 54, height: 54, borderRadius: '50%',
+              background: KYVRA.teal,
+              border: '2.5px solid #fff',
+              boxShadow: SHADOW.fab,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
             }}
           >
             <ShoppingCart size={22} color="#fff" strokeWidth={2.2} />
-            <span style={{
-              position: 'absolute', top: -2, right: -2,
-              width: 18, height: 18, borderRadius: '50%',
-              background: NAVY, color: '#fff',
-              fontSize: 10, fontWeight: 800,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '2px solid #fff',
-            }}>
+            <motion.span
+              key={cartCount}
+              initial={{ scale: 1.4 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+              style={{
+                position: 'absolute', top: -3, right: -3,
+                minWidth: 20, height: 20, borderRadius: 99,
+                background: KYVRA.navy, color: '#fff',
+                fontSize: 10, fontWeight: 800,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '2.5px solid #fff',
+                padding: '0 4px',
+              }}
+            >
               {cartCount}
-            </span>
+            </motion.span>
           </motion.button>
         )}
       </AnimatePresence>

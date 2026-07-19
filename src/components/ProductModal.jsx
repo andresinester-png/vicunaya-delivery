@@ -1,13 +1,19 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Minus, Plus } from 'lucide-react';
+import { X, Minus, Plus, Utensils } from 'lucide-react';
 import useCartStore from '../store/cartStore.js';
 import { isRestaurantOpen } from '../lib/restaurantUtils.js';
+import { KYVRA } from '../lib/theme.js';
 
 function QtyControl({ value, onChange, min = 0 }) {
   const atMin = value <= min;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', background: '#F3F4F6', borderRadius: 14, overflow: 'hidden' }}>
+    <div style={{
+      display: 'flex', alignItems: 'center',
+      background: KYVRA.white,
+      border: `1.5px solid ${KYVRA.border}`,
+      borderRadius: 14, overflow: 'hidden',
+    }}>
       <button
         type="button"
         onClick={() => !atMin && onChange(value - 1)}
@@ -16,12 +22,16 @@ function QtyControl({ value, onChange, min = 0 }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'transparent', border: 'none',
           cursor: atMin ? 'default' : 'pointer',
-          color: atMin ? '#D1D5DB' : '#241F1D',
+          color: atMin ? KYVRA.border : KYVRA.textMuted,
         }}
       >
         <Minus size={17} strokeWidth={2.5} />
       </button>
-      <span style={{ minWidth: 36, textAlign: 'center', fontSize: 17, fontWeight: 800, color: '#111', letterSpacing: '-0.02em' }}>
+      <span style={{
+        minWidth: 36, textAlign: 'center',
+        fontSize: 17, fontWeight: 800, color: KYVRA.navy,
+        letterSpacing: '-0.02em',
+      }}>
         {value}
       </span>
       <button
@@ -31,7 +41,7 @@ function QtyControl({ value, onChange, min = 0 }) {
           width: 44, height: 44,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'transparent', border: 'none', cursor: 'pointer',
-          color: '#0F172A',
+          color: KYVRA.teal,
         }}
       >
         <Plus size={17} strokeWidth={2.5} />
@@ -58,6 +68,7 @@ export default function ProductModal({ item, restaurant, onClose }) {
   const [dozenQty, setDozenQty] = useState(existingDozen?.qty ?? 0);
   const [unitQty,  setUnitQty]  = useState(existingUnit?.qty  ?? 0);
   const [qty,      setQty]      = useState(existingSingle?.qty ?? 1);
+  const [imgError, setImgError] = useState(false);
 
   // Single-price mode
   const saleMode  = item.price_unit ? 'unit' : 'dozen';
@@ -94,7 +105,7 @@ export default function ProductModal({ item, restaurant, onClose }) {
 
   const rowStyle = {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '14px 0', borderTop: '1px solid #F3F4F6',
+    padding: '16px 0', borderTop: `1px solid ${KYVRA.border}`,
   };
 
   return (
@@ -112,38 +123,65 @@ export default function ProductModal({ item, restaurant, onClose }) {
         transition={{ type: 'spring', stiffness: 380, damping: 38 }}
         style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 51,
-          background: '#fff', borderRadius: '24px 24px 0 0',
+          background: KYVRA.white, borderRadius: '24px 24px 0 0',
           maxHeight: '92vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}
       >
         {/* Handle + close */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 20px 0', position: 'relative', flexShrink: 0 }}>
-          <div style={{ width: 36, height: 4, borderRadius: 2, background: '#E5E7EB' }} />
-          <button onClick={onClose} style={{ position: 'absolute', right: 16, top: 8, width: 32, height: 32, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color="#6B7280" strokeWidth={2.5} />
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '12px 20px 0', position: 'relative', flexShrink: 0,
+        }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: KYVRA.border }} />
+          <button
+            onClick={onClose}
+            style={{
+              position: 'absolute', right: 16, top: 8,
+              width: 32, height: 32, borderRadius: '50%',
+              background: KYVRA.bg, border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <X size={16} color={KYVRA.textSec} strokeWidth={2.5} />
           </button>
         </div>
 
         {/* Scrollable body */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {/* Image */}
-          {item.image_url ? (
-            <div style={{ width: '100%', height: 200, overflow: 'hidden', background: '#F3F4F6', marginTop: 12 }}>
-              <img src={item.image_url} alt={item.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          {(item.image_url && !imgError) ? (
+            <div style={{
+              width: '100%', height: 200, overflow: 'hidden',
+              background: KYVRA.bg, marginTop: 12,
+              borderRadius: '14px 14px 0 0',
+            }}>
+              <img
+                src={item.image_url} alt={item.name} loading="lazy"
+                onError={() => setImgError(true)}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
             </div>
           ) : (
-            <div style={{ width: '100%', height: 120, marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F9FAFB', fontSize: 56 }}>
-              🍽️
+            <div style={{
+              width: '100%', height: 120, marginTop: 12,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: `linear-gradient(145deg, ${KYVRA.teal} 0%, ${KYVRA.tealDark} 100%)`,
+              borderRadius: '14px 14px 0 0',
+            }}>
+              <Utensils size={44} strokeWidth={1} color="rgba(255,255,255,0.40)" />
             </div>
           )}
 
           {/* Name + description */}
           <div style={{ padding: '20px 20px 4px' }}>
-            <h2 style={{ fontSize: 20, fontWeight: 900, color: '#111', letterSpacing: '-0.02em', lineHeight: 1.2, margin: '0 0 8px' }}>
+            <h2 style={{
+              fontSize: 20, fontWeight: 900, color: KYVRA.navy,
+              letterSpacing: '-0.02em', lineHeight: 1.2, margin: '0 0 8px',
+            }}>
               {item.name}
             </h2>
             {item.description && (
-              <p style={{ fontSize: 14, color: '#6B7280', lineHeight: 1.55, margin: 0 }}>
+              <p style={{ fontSize: 14, color: KYVRA.textSec, lineHeight: 1.55, margin: 0 }}>
                 {item.description}
               </p>
             )}
@@ -156,8 +194,8 @@ export default function ProductModal({ item, restaurant, onClose }) {
                 {/* Row: docena */}
                 <div style={rowStyle}>
                   <div>
-                    <p style={{ fontSize: 15, fontWeight: 700, color: '#111', margin: '0 0 2px' }}>Docena</p>
-                    <p style={{ fontSize: 13, color: '#9CA3AF', margin: 0 }}>${(item.price_dozen).toLocaleString('es-AR')} la docena</p>
+                    <p style={{ fontSize: 15, fontWeight: 700, color: KYVRA.navy, margin: '0 0 2px' }}>Docena</p>
+                    <p style={{ fontSize: 13, color: KYVRA.textMuted, margin: 0 }}>${(item.price_dozen).toLocaleString('es-AR')} la docena</p>
                   </div>
                   <QtyControl value={dozenQty} onChange={setDozenQty} min={0} />
                 </div>
@@ -165,20 +203,20 @@ export default function ProductModal({ item, restaurant, onClose }) {
                 {/* Row: unidad */}
                 <div style={rowStyle}>
                   <div>
-                    <p style={{ fontSize: 15, fontWeight: 700, color: '#111', margin: '0 0 2px' }}>Unidad</p>
-                    <p style={{ fontSize: 13, color: '#9CA3AF', margin: 0 }}>${(item.price_unit).toLocaleString('es-AR')} c/u</p>
+                    <p style={{ fontSize: 15, fontWeight: 700, color: KYVRA.navy, margin: '0 0 2px' }}>Unidad</p>
+                    <p style={{ fontSize: 13, color: KYVRA.textMuted, margin: 0 }}>${(item.price_unit).toLocaleString('es-AR')} c/u</p>
                   </div>
                   <QtyControl value={unitQty} onChange={setUnitQty} min={0} />
                 </div>
               </>
             ) : (
               /* Single-price row */
-              <div style={{ ...rowStyle, borderBottom: '1px solid #F3F4F6' }}>
+              <div style={{ ...rowStyle, borderBottom: `1px solid ${KYVRA.border}` }}>
                 <div>
-                  <p style={{ fontSize: 15, fontWeight: 700, color: '#111', margin: '0 0 2px' }}>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: KYVRA.navy, margin: '0 0 2px' }}>
                     {saleMode === 'dozen' ? 'Docenas' : 'Unidades'}
                   </p>
-                  <p style={{ fontSize: 13, color: '#9CA3AF', margin: 0 }}>
+                  <p style={{ fontSize: 13, color: KYVRA.textMuted, margin: 0 }}>
                     ${unitPrice.toLocaleString('es-AR')} {saleMode === 'dozen' ? 'la docena' : 'c/u'}
                   </p>
                 </div>
@@ -189,28 +227,34 @@ export default function ProductModal({ item, restaurant, onClose }) {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '14px 20px', paddingBottom: 'calc(14px + env(safe-area-inset-bottom))', borderTop: '1px solid #F3F4F6', background: '#fff', flexShrink: 0 }}>
-          <button
+        <div style={{
+          padding: '14px 20px',
+          paddingBottom: 'calc(14px + env(safe-area-inset-bottom))',
+          borderTop: `1px solid ${KYVRA.border}`,
+          background: KYVRA.white, flexShrink: 0,
+        }}>
+          <motion.button
             onClick={handleAdd}
             disabled={!canAdd}
+            whileTap={canAdd ? { scale: 0.97 } : {}}
             style={{
               width: '100%',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: canAdd ? '#0D9488' : '#E5E7EB',
-              color: canAdd ? '#fff' : '#9CA3AF',
+              background: canAdd ? KYVRA.teal : KYVRA.border,
+              color: canAdd ? '#fff' : KYVRA.textMuted,
               fontWeight: 700, fontSize: 15,
               padding: '15px 20px', borderRadius: 16, border: 'none',
               cursor: canAdd ? 'pointer' : 'not-allowed',
               boxShadow: canAdd ? '0 4px 14px rgba(13,148,136,0.35)' : 'none',
               fontFamily: "'Plus Jakarta Sans', sans-serif",
-              transition: 'all 0.18s',
+              transition: 'background 0.18s, box-shadow 0.18s',
             }}
           >
             <span>Agregar al pedido</span>
             <span style={{ fontWeight: 900, fontSize: 16 }}>
               {canAdd ? `$${lineTotal.toLocaleString('es-AR')}` : '—'}
             </span>
-          </button>
+          </motion.button>
         </div>
       </motion.div>
     </AnimatePresence>

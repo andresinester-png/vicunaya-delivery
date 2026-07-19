@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -6,19 +6,18 @@ import {
   LayoutGrid, Scissors, Eye, PawPrint, Car, Wrench,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase.js';
-
-const RED = '#0F172A';
+import { KYVRA } from '../lib/theme.js';
 
 export const CATEGORY_INFO = {
   peluqueria:  { label: 'Peluquería',  emoji: '💇', Icon: Scissors,   bg: '#EFF6FF', color: '#2563EB' },
   barberia:    { label: 'Barbería',    emoji: '💈', Icon: Scissors,   bg: '#EFF6FF', color: '#2563EB' },
-  estetica:    { label: 'Estética',    emoji: '💆', Icon: Eye,        bg: '#FEF2F2', color: '#DC2626' },
-  unas:        { label: 'Uñas',        emoji: '💅', Icon: null,       bg: '#FFF1F2', color: '#E11D48' },
+  estetica:    { label: 'Estética',    emoji: '💆', Icon: Eye,        bg: '#FDF2F8', color: '#EC4899' },
+  unas:        { label: 'Uñas',        emoji: '💅', Icon: null,       bg: '#FAF5FF', color: '#9333EA' },
   spa:         { label: 'Spa',         emoji: '🧖', Icon: null,       bg: '#ECFDF5', color: '#059669' },
   taller:      { label: 'Taller',      emoji: '🔧', Icon: Wrench,     bg: '#FFF7ED', color: '#EA580C' },
   medico:      { label: 'Médico',      emoji: '🩺', Icon: null,       bg: '#EFF6FF', color: '#0284C7' },
   veterinaria: { label: 'Veterinaria', emoji: '🐾', Icon: PawPrint,   bg: '#F0FDF4', color: '#16A34A' },
-  gimnasio:    { label: 'Gimnasio',    emoji: '🏋️', Icon: null,       bg: '#FEF2F2', color: '#DC2626' },
+  gimnasio:    { label: 'Gimnasio',    emoji: '🏋️', Icon: null,       bg: '#FFFBEB', color: '#D97706' },
   lavadero:    { label: 'Lavadero',    emoji: '🚗', Icon: Car,        bg: '#ECFEFF', color: '#0891B2' },
   otro:        { label: 'Otro',        emoji: '📅', Icon: null,       bg: '#F3F4F6', color: '#6B7280' },
 };
@@ -73,185 +72,134 @@ export default function Turnos() {
   }, [businesses, search, catFilter]);
 
   return (
-    <div style={{ background: '#FFF8F8', minHeight: '100%' }}>
+    <div style={{ background: KYVRA.bg, minHeight: '100%' }}>
 
-      {/* Sub-header: extends MainLayout's red bar with title + search */}
-      <div style={{ background: RED, padding: '2px 18px 18px' }}>
-        <h1 style={{ color: '#fff', fontWeight: 800, fontSize: 22, letterSpacing: '-0.02em', margin: '0 0 12px' }}>
-          Turnos
+      {/* Intro: title + search */}
+      <div style={{
+        background: KYVRA.white,
+        padding: '20px 16px 16px',
+        borderBottom: `1px solid ${KYVRA.border}`,
+      }}>
+        <span style={{
+          display: 'block', color: KYVRA.teal,
+          fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', marginBottom: 4,
+        }}>
+          RESERVAS
+        </span>
+        <h1 style={{
+          color: KYVRA.navy, fontSize: 22, fontWeight: 900,
+          margin: '0 0 4px', letterSpacing: '-0.02em',
+        }}>
+          ¿Qué servicio necesitás?
         </h1>
+        <p style={{ color: KYVRA.textSec, fontSize: 13.5, margin: '0 0 16px', lineHeight: 1.5 }}>
+          Reservá turnos en negocios locales, sin llamadas.
+        </p>
+
+        {/* Search */}
         <div style={{ position: 'relative' }}>
           <Search
             size={16}
-            style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#8A8580', pointerEvents: 'none' }}
+            color={KYVRA.textMuted}
+            style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
           />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Peluquerías, talleres, turnos..."
             style={{
-              width: '100%', height: 46,
-              background: '#fff', border: '1px solid #E9D5D8',
-              borderRadius: 14, padding: '0 40px 0 42px',
-              fontSize: 14, color: '#241F1D', outline: 'none',
-              boxSizing: 'border-box',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              width: '100%', height: 44,
+              background: KYVRA.bg,
+              border: `1.5px solid ${search ? KYVRA.teal : KYVRA.border}`,
+              borderRadius: 14, padding: '0 40px 0 40px',
+              fontSize: 14, color: KYVRA.navy, outline: 'none',
+              boxSizing: 'border-box', transition: 'border-color 0.2s',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
             }}
           />
           {search && (
             <button
               onClick={() => setSearch('')}
               style={{
-                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                color: '#8A8580', background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+                position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+                display: 'flex', alignItems: 'center',
               }}
             >
-              <X size={14} />
+              <X size={14} color={KYVRA.textMuted} />
             </button>
           )}
         </div>
       </div>
 
-      <div style={{ padding: '0 18px' }}>
-
-        {/* Promo banner */}
-        <div
-          style={{
-            marginTop: 16, height: 190, borderRadius: 20, overflow: 'hidden',
-            position: 'relative', display: 'flex', alignItems: 'flex-end',
-            backgroundImage: 'url(https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80)',
-            backgroundSize: 'cover', backgroundPosition: 'center',
-          }}
-        >
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to right, rgba(15,23,42,0.88) 12%, rgba(183,28,28,0.28) 60%)',
-          }} />
-          <div style={{ position: 'relative', padding: '0 20px 20px' }}>
-            <p style={{ color: '#fff', fontWeight: 800, fontSize: 22, margin: 0, lineHeight: 1.2 }}>
-              Reservá tu turno<br />en segundos
-            </p>
-            <p style={{ color: 'rgba(255,255,255,0.90)', fontWeight: 500, fontSize: 13, margin: '6px 0 14px' }}>
-              Peluquerías, talleres y más,<br />sin esperar en el local.
-            </p>
-            <button
+      {/* Category filters — single icon+label chip row */}
+      <div style={{
+        background: KYVRA.white,
+        overflowX: 'auto', scrollbarWidth: 'none',
+        display: 'flex', gap: 8,
+        padding: '12px 16px',
+        borderBottom: `1px solid ${KYVRA.border}`,
+      }}>
+        {FILTER_CATS.map(cat => {
+          const active  = catFilter === cat.key;
+          const CatIcon = cat.Icon;
+          return (
+            <motion.button
+              key={cat.key}
+              whileTap={{ scale: 0.94 }}
+              onClick={() => setCatFilter(cat.key)}
               style={{
-                background: '#fff', color: RED, fontWeight: 700, fontSize: 13,
-                border: 'none', borderRadius: 99, padding: '8px 18px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '8px 14px', borderRadius: 99, flexShrink: 0,
+                background: active ? KYVRA.teal : KYVRA.white,
+                color: active ? KYVRA.white : KYVRA.navy,
+                border: `1px solid ${active ? KYVRA.teal : KYVRA.border}`,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontWeight: active ? 700 : 500,
+                fontSize: 13, cursor: 'pointer',
+                transition: 'all 0.18s',
               }}
             >
-              Buscar turno
-            </button>
-          </div>
-        </div>
+              {CatIcon && <CatIcon size={13} strokeWidth={active ? 2.5 : 2} />}
+              {cat.label}
+            </motion.button>
+          );
+        })}
+      </div>
 
-        {/* Categories — horizontal scroll circular tiles */}
-        <div style={{ marginTop: 22 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <span style={{ fontWeight: 800, fontSize: 16.5, color: '#241F1D' }}>Categorías</span>
-            <button
-              onClick={() => setCatFilter('Todos')}
-              style={{ fontWeight: 700, fontSize: 12.5, color: RED, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-            >
-              Ver todas
-            </button>
-          </div>
-          <div
-            style={{
-              display: 'flex', gap: 18, overflowX: 'auto', paddingBottom: 4,
-              scrollbarWidth: 'none', marginLeft: -18, marginRight: -18, paddingLeft: 18, paddingRight: 18,
-            }}
-          >
-            {FILTER_CATS.map(cat => {
-              const active = catFilter === cat.key;
-              const CatIcon = cat.Icon;
-              return (
-                <button
-                  key={cat.key}
-                  onClick={() => setCatFilter(cat.key)}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7,
-                    flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                  }}
-                >
-                  <div style={{
-                    width: 64, height: 64, borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: active ? RED : '#fff',
-                    border: active ? 'none' : '1px solid #E9D5D8',
-                    boxShadow: active ? '0 4px 14px rgba(15,23,42,0.38)' : '0 2px 8px rgba(0,0,0,0.06)',
-                    color: active ? '#fff' : RED,
-                    transition: 'all 0.18s',
-                  }}>
-                    {CatIcon && <CatIcon size={22} strokeWidth={2} />}
-                  </div>
-                  <span style={{
-                    fontSize: 11.5,
-                    fontWeight: active ? 700 : 600,
-                    color: active ? '#241F1D' : '#5B5450',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {cat.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Filter chips */}
-        <div
-          style={{
-            display: 'flex', gap: 8, overflowX: 'auto', padding: '14px 0',
-            scrollbarWidth: 'none', marginLeft: -18, marginRight: -18, paddingLeft: 18, paddingRight: 18,
-          }}
-        >
-          {FILTER_CATS.map(cat => {
-            const active = catFilter === cat.key;
-            return (
-              <motion.button
-                key={cat.key}
-                whileTap={{ scale: 0.94 }}
-                onClick={() => setCatFilter(cat.key)}
-                style={{
-                  flexShrink: 0, padding: '8px 16px', borderRadius: 99,
-                  fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  border: active ? 'none' : '1px solid #E9D5D8',
-                  background: active ? RED : '#fff',
-                  color: active ? '#fff' : '#5B5450',
-                  boxShadow: active ? '0 4px 12px rgba(13,148,136,0.30)' : 'none',
-                  transition: 'all 0.18s',
-                }}
-              >
-                {cat.label}
-              </motion.button>
-            );
-          })}
-        </div>
-
-        {/* Business list */}
+      {/* Business list */}
+      <div style={{ padding: '16px 16px 0' }}>
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 24 }}>
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse" style={{ background: '#fff', borderRadius: 20, overflow: 'hidden', border: '1px solid #E9D5D8' }}>
-                <div style={{ height: 140, background: '#E9D5D8' }} />
+              <div key={i} className="animate-pulse" style={{
+                background: KYVRA.white, borderRadius: 20, overflow: 'hidden',
+                border: `1px solid ${KYVRA.border}`,
+              }}>
+                <div style={{ height: 140, background: '#E2E8F0' }} />
                 <div style={{ padding: '26px 14px 12px' }}>
-                  <div style={{ height: 15, width: '55%', borderRadius: 6, background: '#E9D5D8', marginBottom: 7 }} />
-                  <div style={{ height: 11, width: '75%', borderRadius: 6, background: '#E9D5D8' }} />
+                  <div style={{ height: 15, width: '55%', borderRadius: 6, background: '#E2E8F0', marginBottom: 7 }} />
+                  <div style={{ height: 11, width: '75%', borderRadius: 6, background: '#E2E8F0' }} />
                 </div>
               </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '64px 0 24px', color: '#B7B0A8' }}>
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            padding: '64px 0 24px', color: KYVRA.textMuted,
+          }}>
             <CalendarClock size={48} strokeWidth={1} />
-            <p style={{ marginTop: 12, color: '#8A8580', fontWeight: 600, fontSize: 15 }}>
+            <p style={{ marginTop: 12, color: KYVRA.textSec, fontWeight: 600, fontSize: 15 }}>
               Sin resultados
             </p>
             {(search || catFilter !== 'Todos') && (
               <button
                 onClick={() => { setSearch(''); setCatFilter('Todos'); }}
-                style={{ marginTop: 8, color: RED, fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}
+                style={{
+                  marginTop: 8, color: KYVRA.teal, fontWeight: 700, fontSize: 14,
+                  background: 'none', border: 'none', cursor: 'pointer',
+                }}
               >
                 Limpiar filtros
               </button>
@@ -265,8 +213,8 @@ export default function Turnos() {
             style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 24 }}
           >
             {filtered.map(b => {
-              const info       = CATEGORY_INFO[b.category] || CATEGORY_INFO.otro;
-              const coverImg   = b.logo_url || CATEGORY_IMAGES[b.category];
+              const info         = CATEGORY_INFO[b.category] || CATEGORY_INFO.otro;
+              const coverImg     = b.logo_url || CATEGORY_IMAGES[b.category];
               const FallbackIcon = info.Icon;
               return (
                 <motion.div key={b.id} variants={cardVariants}>
@@ -274,8 +222,8 @@ export default function Turnos() {
                     to={`/turnos/${b.id}`}
                     style={{
                       display: 'block', textDecoration: 'none',
-                      background: '#fff', borderRadius: 20,
-                      border: '1px solid #E9D5D8',
+                      background: KYVRA.white, borderRadius: 20,
+                      border: `1px solid ${KYVRA.border}`,
                       boxShadow: '0 4px 14px rgba(0,0,0,0.06)',
                       overflow: 'hidden', cursor: 'pointer',
                     }}
@@ -300,7 +248,7 @@ export default function Turnos() {
                         </div>
                       )}
 
-                      {/* Category badge top-left */}
+                      {/* Category badge */}
                       <span style={{
                         position: 'absolute', top: 10, left: 10,
                         display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -311,16 +259,20 @@ export default function Turnos() {
                       }}>
                         {info.emoji} {info.label}
                       </span>
-
                     </div>
 
                     {/* Content */}
-                    <div style={{ padding: '12px 14px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{
+                      padding: '12px 14px 12px',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                    }}>
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ fontWeight: 800, fontSize: 15, color: '#241F1D', marginBottom: 3 }}>{b.name}</div>
+                        <div style={{ fontWeight: 800, fontSize: 15, color: KYVRA.navy, marginBottom: 3 }}>
+                          {b.name}
+                        </div>
                         {b.description && (
                           <p style={{
-                            margin: 0, fontSize: 12, color: '#8A8580', fontWeight: 500,
+                            margin: 0, fontSize: 12, color: KYVRA.textSec, fontWeight: 500,
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                           }}>
                             {b.description}
@@ -328,11 +280,13 @@ export default function Turnos() {
                         )}
                       </div>
                       <div style={{
-                        width: 34, height: 34, borderRadius: '50%', border: '1px solid #E9D5D8',
-                        background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 34, height: 34, borderRadius: '50%',
+                        border: `1px solid ${KYVRA.border}`,
+                        background: KYVRA.white,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                         flexShrink: 0, marginLeft: 10,
                       }}>
-                        <ChevronRight size={15} color={RED} strokeWidth={2.2} />
+                        <ChevronRight size={15} color={KYVRA.teal} strokeWidth={2.2} />
                       </div>
                     </div>
                   </Link>

@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, Receipt, CalendarDays, CalendarCheck, User } from 'lucide-react';
+import { KYVRA } from '../lib/theme.js';
 
 const TABS = [
   { to: '/',           icon: Home,          label: 'Inicio'     },
@@ -9,9 +10,6 @@ const TABS = [
   { to: '/mis-turnos', icon: CalendarCheck, label: 'Mis turnos' },
   { to: '/perfil',     icon: User,          label: 'Perfil'     },
 ];
-
-const TEAL_LT = '#5EEAD4';
-const TEAL_BG = 'rgba(13,148,136,0.25)';
 
 export default function BottomNav() {
   const location = useLocation();
@@ -23,12 +21,10 @@ export default function BottomNav() {
       left: 20,
       right: 20,
       zIndex: 50,
-      background: 'rgba(15,23,42,0.90)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
+      background: KYVRA.white,
       borderRadius: 24,
-      border: '1px solid rgba(255,255,255,0.08)',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+      border: `1px solid ${KYVRA.border}`,
+      boxShadow: '0 -2px 12px rgba(15,23,42,0.06), 0 4px 20px rgba(15,23,42,0.10)',
       padding: '8px 4px',
       paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
     }}>
@@ -50,13 +46,17 @@ export default function BottomNav() {
                 padding: '2px 8px', flex: 1,
               }}
             >
-              <div style={{ position: 'relative', width: 44, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{
+                position: 'relative',
+                width: 44, height: 28,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
                 {active && (
                   <motion.div
                     layoutId="island-pill"
                     style={{
                       position: 'absolute', inset: 0,
-                      background: TEAL_BG,
+                      background: KYVRA.tealBg,
                       borderRadius: 14,
                     }}
                     transition={{ type: 'spring', stiffness: 420, damping: 32 }}
@@ -70,13 +70,13 @@ export default function BottomNav() {
                   <Icon
                     size={19}
                     strokeWidth={active ? 2.5 : 1.8}
-                    color={active ? TEAL_LT : 'rgba(255,255,255,0.50)'}
+                    color={active ? KYVRA.teal : KYVRA.textMuted}
                   />
                 </motion.div>
               </div>
 
               <motion.span
-                animate={{ color: active ? TEAL_LT : 'rgba(255,255,255,0.40)' }}
+                animate={{ color: active ? KYVRA.teal : KYVRA.textMuted }}
                 transition={{ duration: 0.18 }}
                 style={{
                   fontSize: 9.5,
@@ -91,7 +91,7 @@ export default function BottomNav() {
             </NavLink>
           );
         })}
-      </div>
+    </div>
     </nav>
   );
 }
