@@ -1,0 +1,1 @@
+import{j as e}from"./index-Ckaf04uc.js";function l({value:t,onChange:a,placeholder:n,className:r,style:s,autoFocus:i}){return e.jsx("div",{className:"relative",children:e.jsx("input",{value:t,onChange:o=>a(o.target.value),placeholder:n,className:r,style:s,autoFocus:i})})}export{l as P};

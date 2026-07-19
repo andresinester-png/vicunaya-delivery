@@ -105,7 +105,7 @@ export default function Welcome() {
     setSubmitting(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
-        redirectTo: 'https://vicunaya-delivery.vercel.app/reset-password',
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
       setForgotSent(true);
