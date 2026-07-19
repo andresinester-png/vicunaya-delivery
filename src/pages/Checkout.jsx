@@ -322,22 +322,20 @@ export default function Checkout() {
 
       {/* ── Header ────────────────────────────────────────────────────── */}
       <header style={{
-        background: KYVRA.white,
-        borderBottom: `1px solid ${KYVRA.border}`,
-        height: 56,
-        display: 'flex', alignItems: 'center',
-        padding: '0 16px',
+        background: 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)',
+        padding: `calc(env(safe-area-inset-top, 0px) + 12px) 16px 14px`,
         position: 'sticky', top: 0, zIndex: 40,
-        boxShadow: '0 2px 12px rgba(15,23,42,0.07)',
+        boxShadow: '0 4px 28px rgba(0,0,0,0.28)',
       }}>
-        <button onClick={() => navigate(-1)} style={{ width: 36, height: 36, borderRadius: '50%', background: KYVRA.bg, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <ChevronLeft size={20} color={KYVRA.navy} strokeWidth={2.5} />
-        </button>
-        <span style={{ flex: 1, textAlign: 'center', fontWeight: 800, fontSize: 16, color: KYVRA.navy, letterSpacing: '-0.02em' }}>
-          Confirmar pedido
-        </span>
-        {/* balance spacer */}
-        <div style={{ width: 36 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => navigate(-1)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.22)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <ChevronLeft size={20} color="#fff" strokeWidth={2.5} />
+          </button>
+          <span style={{ flex: 1, textAlign: 'center', fontWeight: 800, fontSize: 16, color: '#fff', letterSpacing: '-0.02em' }}>
+            Confirmar pedido
+          </span>
+          <div style={{ width: 36 }} />
+        </div>
       </header>
 
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '20px 16px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -593,7 +591,7 @@ export default function Checkout() {
         {/* ── 4. RESUMEN DEL PEDIDO ─────────────────────────────────────── */}
         <div>
           <SectionLabel>Tu pedido</SectionLabel>
-          <div style={{ background: KYVRA.white, borderRadius: 22, border: `1px solid ${KYVRA.border}`, boxShadow: '0 4px 20px rgba(15,23,42,0.07)', overflow: 'hidden' }}>
+          <div style={{ background: '#0F172A', borderRadius: 22, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.22)' }}>
             {items.map((i, idx) => {
               const lineTotal = i.price * i.qty + (i.extras || 0) * (i.extra_price || 0);
               const extraText = i.extras > 0 ? ` + ${i.extras} ${i.extra_label || 'extra'}` : '';
@@ -606,38 +604,38 @@ export default function Checkout() {
                       <img src={i.image_url} alt={i.name} loading="lazy"
                         style={{ width: 64, height: 64, borderRadius: 14, objectFit: 'cover', flexShrink: 0 }} />
                     ) : (
-                      <div style={{ width: 64, height: 64, borderRadius: 14, background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Utensils size={24} color={KYVRA.teal} strokeWidth={1.5} />
+                      <div style={{ width: 64, height: 64, borderRadius: 14, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Utensils size={24} color="#5EEAD4" strokeWidth={1.5} />
                       </div>
                     )}
                     {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: KYVRA.navy, margin: 0, lineHeight: 1.35 }}>{i.name}</p>
-                      <p style={{ fontSize: 12, color: KYVRA.textMuted, margin: '3px 0 0' }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.35 }}>{i.name}</p>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: '3px 0 0' }}>
                         Cantidad: {i.qty}{extraText}
                       </p>
                     </div>
                     {/* Price right */}
-                    <p style={{ fontSize: 15, fontWeight: 800, color: KYVRA.teal, margin: 0, flexShrink: 0, letterSpacing: '-0.015em' }}>
+                    <p style={{ fontSize: 15, fontWeight: 800, color: '#5EEAD4', margin: 0, flexShrink: 0, letterSpacing: '-0.015em' }}>
                       ${lineTotal.toLocaleString('es-AR')}
                     </p>
                   </div>
-                  {!isLast && <div style={{ height: 1, background: KYVRA.border, margin: '0 20px' }} />}
+                  {!isLast && <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '0 20px' }} />}
                 </div>
               );
             })}
 
             {/* Total row */}
-            <div style={{ background: KYVRA.bg, borderTop: `1px solid ${KYVRA.border}`, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ background: 'rgba(0,0,0,0.28)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: KYVRA.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 2px' }}>Total</p>
-                <p style={{ fontSize: 22, fontWeight: 900, color: KYVRA.navy, margin: 0, letterSpacing: '-0.025em' }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 2px' }}>Total</p>
+                <p style={{ fontSize: 22, fontWeight: 900, color: '#5EEAD4', margin: 0, letterSpacing: '-0.025em' }}>
                   ${totalVal.toLocaleString('es-AR')}
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: 12, color: KYVRA.textMuted, margin: '0 0 2px' }}>{items.length} {items.length === 1 ? 'producto' : 'productos'}</p>
-                <p style={{ fontSize: 12, fontWeight: 600, color: KYVRA.teal, margin: 0 }}>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: '0 0 2px' }}>{items.length} {items.length === 1 ? 'producto' : 'productos'}</p>
+                <p style={{ fontSize: 12, fontWeight: 600, color: '#5EEAD4', margin: 0 }}>
                   {localFulfillment === 'delivery' ? 'Con delivery' : 'Retiro en local'}
                 </p>
               </div>
@@ -650,17 +648,16 @@ export default function Checkout() {
       {/* ── 5. FIXED CTA ─────────────────────────────────────────────── */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-        background: KYVRA.white,
-        borderTop: `1px solid ${KYVRA.border}`,
-        boxShadow: '0 -6px 24px rgba(15,23,42,0.10)',
+        background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+        boxShadow: '0 -4px 32px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.06)',
         padding: '14px 16px',
-        paddingBottom: 'calc(14px + env(safe-area-inset-bottom))',
+        paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
       }}>
         <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 14 }}>
           {/* Total left */}
           <div style={{ flexShrink: 0 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: KYVRA.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 1px' }}>Total</p>
-            <p style={{ fontSize: 20, fontWeight: 900, color: KYVRA.navy, margin: 0, letterSpacing: '-0.025em' }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 1px', fontFamily: FF }}>Total</p>
+            <p style={{ fontSize: 20, fontWeight: 900, color: '#5EEAD4', margin: 0, letterSpacing: '-0.025em', fontFamily: FF }}>
               ${totalVal.toLocaleString('es-AR')}
             </p>
           </div>
@@ -670,8 +667,8 @@ export default function Checkout() {
             whileTap={canPay ? { scale: 0.97 } : {}}
             style={{
               flex: 1, height: 56, borderRadius: 16,
-              background: canPay ? KYVRA.teal : KYVRA.border,
-              color: canPay ? KYVRA.white : KYVRA.textMuted,
+              background: canPay ? 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)' : 'rgba(255,255,255,0.10)',
+              color: canPay ? '#fff' : 'rgba(255,255,255,0.35)',
               border: 'none', cursor: canPay ? 'pointer' : 'not-allowed',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               fontFamily: FF,

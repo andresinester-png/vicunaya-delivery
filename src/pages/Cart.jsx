@@ -6,6 +6,7 @@ import useCartStore from '../store/cartStore.js';
 import { supabase } from '../lib/supabase.js';
 import { KYVRA } from '../lib/theme.js';
 
+const FF = "'Plus Jakarta Sans', sans-serif";
 const PRIORITY_KEYWORDS = ['postre', 'dulce', 'torta', 'helado', 'budín', 'bebida', 'gaseosa', 'refresco', 'agua', 'jugo', 'cerveza', 'vino', 'café', 'infusión'];
 
 export default function Cart() {
@@ -44,7 +45,7 @@ export default function Cart() {
           return { ...i, _priority: priority };
         })
         .sort((a, b) => a._priority - b._priority)
-        .slice(0, 12);
+        .slice(0, 8);
 
       setSuggestions(filtered);
     };
@@ -59,96 +60,108 @@ export default function Cart() {
     setTimeout(() => setAddedIds(prev => { const n = new Set(prev); n.delete(item.id); return n; }), 1200);
   };
 
-  const BOTTOM_BAR_H = 80;
+  const BOTTOM_BAR_H = 88;
+  const itemCount = items.reduce((s, i) => s + i.qty, 0);
 
   return (
-    <div style={{ minHeight: '100vh', background: KYVRA.bg, paddingBottom: BOTTOM_BAR_H + 16 }}>
+    <div style={{ minHeight: '100vh', background: KYVRA.bg, paddingBottom: BOTTOM_BAR_H + 16, fontFamily: FF }}>
 
-      {/* Header */}
-      <nav style={{
-        background: KYVRA.white,
-        borderBottom: `1px solid ${KYVRA.border}`,
+      {/* ── Gradient Header ── */}
+      <div style={{
+        background: 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+        paddingBottom: 16,
         position: 'sticky', top: 0, zIndex: 40,
-        boxShadow: '0 1px 8px rgba(15,23,42,0.06)',
+        boxShadow: '0 4px 28px rgba(0,0,0,0.30)',
       }}>
-        <div style={{
-          height: 56, display: 'flex', alignItems: 'center',
-          padding: '0 16px', gap: 12, maxWidth: 640, margin: '0 auto',
-        }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              width: 36, height: 36, borderRadius: '50%', border: 'none',
-              background: KYVRA.bg, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: KYVRA.navy, flexShrink: 0,
-            }}
-          >
-            <ChevronLeft size={20} />
-          </button>
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 16px' }}>
+          {/* Nav row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+            <button
+              onClick={() => navigate(-1)}
+              style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255,255,255,0.22)',
+                cursor: 'pointer', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <ChevronLeft size={20} color="#fff" />
+            </button>
 
-          {(restaurantImage && !headerImgError) ? (
-            <img
-              src={restaurantImage}
-              alt={restaurantName}
-              loading="lazy"
-              onError={() => setHeaderImgError(true)}
-              style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-            />
-          ) : (
-            <div style={{
-              width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-              background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Utensils size={16} color={KYVRA.teal} strokeWidth={1.5} />
+            {/* Restaurant identity */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+              {(restaurantImage && !headerImgError) ? (
+                <img
+                  src={restaurantImage}
+                  alt={restaurantName}
+                  loading="lazy"
+                  onError={() => setHeaderImgError(true)}
+                  style={{ width: 34, height: 34, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.22)' }}
+                />
+              ) : (
+                <div style={{
+                  width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                  background: 'rgba(13,148,136,0.28)', border: '1px solid rgba(13,148,136,0.45)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Utensils size={16} color="#5EEAD4" strokeWidth={1.5} />
+                </div>
+              )}
+              <p style={{ fontWeight: 700, fontSize: 15, color: '#fff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
+                {restaurantName || 'Tu pedido'}
+              </p>
             </div>
-          )}
 
-          <span style={{ fontWeight: 700, fontSize: 16, color: KYVRA.navy, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {restaurantName || 'Tu pedido'}
-          </span>
+            {/* Item count chip */}
+            <div style={{
+              background: 'rgba(13,148,136,0.28)', border: '1px solid rgba(94,234,212,0.30)',
+              borderRadius: 999, padding: '4px 10px', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#5EEAD4' }}>
+                {itemCount} {itemCount === 1 ? 'ítem' : 'ítems'}
+              </span>
+            </div>
+          </div>
+
+          {/* Glass fulfillment selector */}
+          <div style={{
+            background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.16)',
+            borderRadius: 14, padding: 4,
+            display: 'flex', gap: 4,
+          }}>
+            {[
+              { key: 'delivery', label: 'Delivery', Icon: Bike },
+              { key: 'pickup',   label: 'Retirar en local', Icon: ShoppingBag },
+            ].map(({ key, label, Icon }) => {
+              const active = fulfillmentMethod === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setFulfillmentMethod(key)}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    gap: 7, padding: '9px 0', borderRadius: 11, border: 'none', cursor: 'pointer',
+                    background: active ? 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)' : 'transparent',
+                    color: active ? '#fff' : 'rgba(255,255,255,0.55)',
+                    fontWeight: 700, fontSize: 13, fontFamily: FF,
+                    transition: 'background 0.18s, color 0.18s',
+                    boxShadow: active ? '0 3px 12px rgba(13,148,136,0.35)' : 'none',
+                  }}
+                >
+                  <Icon size={15} strokeWidth={active ? 2.2 : 1.8} />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </nav>
+      </div>
 
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '16px 16px 0' }}>
-
-        {/* Delivery / Pickup selector */}
-        <div style={{
-          background: KYVRA.white,
-          borderRadius: 18,
-          padding: 6,
-          display: 'flex',
-          gap: 6,
-          marginBottom: 14,
-          boxShadow: '0 2px 10px rgba(15,23,42,0.06)',
-          border: `1px solid ${KYVRA.border}`,
-        }}>
-          {[
-            { key: 'delivery', label: 'Delivery', Icon: Bike },
-            { key: 'pickup',   label: 'Retirar en local', Icon: ShoppingBag },
-          ].map(({ key, label, Icon }) => {
-            const active = fulfillmentMethod === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setFulfillmentMethod(key)}
-                style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  gap: 7, padding: '10px 0', borderRadius: 13, border: 'none', cursor: 'pointer',
-                  background: active ? KYVRA.teal : 'transparent',
-                  color: active ? KYVRA.white : KYVRA.textSec,
-                  fontWeight: 700, fontSize: 13,
-                  transition: 'background 0.18s, color 0.18s',
-                  boxShadow: active ? '0 3px 10px rgba(13,148,136,0.28)' : 'none',
-                }}
-              >
-                <Icon size={15} strokeWidth={active ? 2.2 : 1.8} />
-                {label}
-              </button>
-            );
-          })}
-        </div>
 
         {/* Cart items card */}
         <div style={{
@@ -211,21 +224,23 @@ export default function Cart() {
           </motion.button>
         )}
 
-        {/* Suggestions */}
+        {/* Suggestions — vertical list */}
         {suggestions.length > 0 && (
           <div style={{ marginBottom: 8 }}>
-            <p style={{ fontWeight: 800, fontSize: 14, color: KYVRA.navy, margin: '0 0 12px 2px' }}>
+            <p style={{ fontWeight: 800, fontSize: 14, color: KYVRA.navy, margin: '0 0 10px 2px' }}>
               ¿Agregás algo más?
             </p>
             <div style={{
-              display: 'flex', gap: 10,
-              overflowX: 'auto', scrollSnapType: 'x mandatory',
-              paddingBottom: 4, scrollbarWidth: 'none', msOverflowStyle: 'none',
+              background: KYVRA.white, borderRadius: 20,
+              border: `1px solid ${KYVRA.border}`,
+              boxShadow: '0 2px 12px rgba(15,23,42,0.06)',
+              padding: '4px 16px',
             }}>
-              {suggestions.map(item => (
-                <SuggestionCard
+              {suggestions.map((item, idx) => (
+                <SuggestionRow
                   key={item.id}
                   item={item}
+                  isLast={idx === suggestions.length - 1}
                   justAdded={addedIds.has(item.id)}
                   onAdd={() => handleQuickAdd(item)}
                 />
@@ -239,27 +254,33 @@ export default function Cart() {
       {/* Fixed bottom checkout bar */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-        background: KYVRA.white,
-        borderTop: `1px solid ${KYVRA.border}`,
-        boxShadow: '0 -4px 20px rgba(15,23,42,0.08)',
+        background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+        boxShadow: '0 -4px 32px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.06)',
         padding: '12px 16px',
-        paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
+        paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
       }}>
-        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ flexShrink: 0 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 1px', fontFamily: FF }}>Total</p>
+            <p style={{ fontSize: 22, fontWeight: 900, color: '#5EEAD4', margin: 0, letterSpacing: '-0.025em', fontFamily: FF }}>
+              ${totalVal.toLocaleString('es-AR')}
+            </p>
+          </div>
           <motion.button
             whileTap={{ scale: 0.97 }}
             type="button"
             onClick={() => navigate('/checkout')}
             style={{
-              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: KYVRA.teal, color: KYVRA.white,
-              border: 'none', borderRadius: 16, padding: '14px 20px',
-              cursor: 'pointer', fontWeight: 700, fontSize: 16,
-              boxShadow: '0 4px 16px rgba(13,148,136,0.35)',
+              flex: 1, height: 54, borderRadius: 16,
+              background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)',
+              color: '#fff', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              fontFamily: FF, fontWeight: 800, fontSize: 15,
+              boxShadow: '0 4px 20px rgba(13,148,136,0.40)',
             }}
           >
-            <span>Ir a pagar</span>
-            <span style={{ fontWeight: 800 }}>${totalVal.toLocaleString('es-AR')}</span>
+            Ir a pagar
+            <ChevronRight size={17} strokeWidth={2.5} />
           </motion.button>
         </div>
       </div>
@@ -269,6 +290,7 @@ export default function Cart() {
 
 function CartItemRow({ item, lineTotal, subText, isLast, onMinus, onPlus }) {
   const [imgError, setImgError] = useState(false);
+  const isOne = item.qty === 1;
 
   return (
     <motion.div
@@ -277,13 +299,13 @@ function CartItemRow({ item, lineTotal, subText, isLast, onMinus, onPlus }) {
       animate={{ opacity: 1, y: 0 }}
       style={{
         display: 'flex', alignItems: 'center', gap: 14,
-        padding: '16px 0',
+        padding: '14px 0',
         borderBottom: isLast ? 'none' : `1px solid ${KYVRA.border}`,
       }}
     >
       {/* Thumbnail */}
       <div style={{
-        width: 58, height: 58, borderRadius: 14, overflow: 'hidden',
+        width: 68, height: 68, borderRadius: 16, overflow: 'hidden',
         background: KYVRA.tealBg, flexShrink: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
@@ -296,13 +318,13 @@ function CartItemRow({ item, lineTotal, subText, isLast, onMinus, onPlus }) {
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         ) : (
-          <Utensils size={24} color={KYVRA.teal} strokeWidth={1.5} />
+          <Utensils size={26} color={KYVRA.teal} strokeWidth={1.5} />
         )}
       </div>
 
       {/* Name + sub */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontWeight: 700, fontSize: 14, color: KYVRA.navy, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <p style={{ fontWeight: 700, fontSize: 15, color: KYVRA.navy, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {item.name}{item.variant_label ? ` ${item.variant_label}` : ''}
         </p>
         {subText && (
@@ -319,13 +341,13 @@ function CartItemRow({ item, lineTotal, subText, isLast, onMinus, onPlus }) {
           whileTap={{ scale: 0.85 }}
           onClick={onMinus}
           style={{
-            width: 32, height: 32, borderRadius: '50%', border: `2px solid ${KYVRA.border}`,
-            background: KYVRA.white, cursor: 'pointer',
+            width: 34, height: 34, borderRadius: '50%', border: 'none',
+            background: isOne ? '#FEE2E2' : KYVRA.bg,
+            cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: KYVRA.navy,
           }}
         >
-          {item.qty === 1 ? <Trash2 size={13} color={KYVRA.textSec} /> : <Minus size={13} />}
+          {isOne ? <Trash2 size={14} color="#EF4444" /> : <Minus size={14} color={KYVRA.navy} />}
         </motion.button>
 
         <motion.span
@@ -333,7 +355,7 @@ function CartItemRow({ item, lineTotal, subText, isLast, onMinus, onPlus }) {
           initial={{ scale: 1.4 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-          style={{ width: 22, textAlign: 'center', fontWeight: 800, fontSize: 14, color: KYVRA.navy }}
+          style={{ width: 24, textAlign: 'center', fontWeight: 800, fontSize: 15, color: KYVRA.navy }}
         >
           {item.qty}
         </motion.span>
@@ -342,31 +364,34 @@ function CartItemRow({ item, lineTotal, subText, isLast, onMinus, onPlus }) {
           whileTap={{ scale: 0.85 }}
           onClick={onPlus}
           style={{
-            width: 32, height: 32, borderRadius: '50%', border: 'none',
-            background: KYVRA.teal, cursor: 'pointer',
+            width: 34, height: 34, borderRadius: '50%', border: 'none',
+            background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)',
+            cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 3px 10px rgba(13,148,136,0.30)',
+            boxShadow: '0 3px 10px rgba(13,148,136,0.32)',
           }}
         >
-          <Plus size={13} color={KYVRA.white} />
+          <Plus size={14} color="#fff" />
         </motion.button>
       </div>
     </motion.div>
   );
 }
 
-function SuggestionCard({ item, justAdded, onAdd }) {
+function SuggestionRow({ item, isLast, justAdded, onAdd }) {
   const [imgError, setImgError] = useState(false);
 
   return (
     <div style={{
-      flexShrink: 0, width: 132, scrollSnapAlign: 'start',
-      background: KYVRA.white, borderRadius: 16,
-      border: `1px solid ${KYVRA.border}`,
-      overflow: 'hidden', position: 'relative',
-      boxShadow: '0 2px 8px rgba(15,23,42,0.06)',
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '12px 0',
+      borderBottom: isLast ? 'none' : `1px solid ${KYVRA.border}`,
     }}>
-      <div style={{ width: '100%', height: 90, background: KYVRA.tealBg, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{
+        width: 56, height: 56, borderRadius: 14, overflow: 'hidden',
+        background: KYVRA.tealBg, flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
         {(item.image_url && !imgError) ? (
           <img
             src={item.image_url}
@@ -376,18 +401,18 @@ function SuggestionCard({ item, justAdded, onAdd }) {
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         ) : (
-          <Utensils size={28} color={KYVRA.teal} strokeWidth={1.2} />
+          <Utensils size={22} color={KYVRA.teal} strokeWidth={1.2} />
         )}
       </div>
 
-      <div style={{ padding: '8px 8px 34px' }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{
-          fontSize: 12, fontWeight: 700, color: KYVRA.navy, lineHeight: 1.3, margin: 0,
-          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          fontSize: 13.5, fontWeight: 700, color: KYVRA.navy, margin: 0,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {item.name}
         </p>
-        <p style={{ fontSize: 12, fontWeight: 800, color: KYVRA.teal, margin: '4px 0 0' }}>
+        <p style={{ fontSize: 13, fontWeight: 800, color: KYVRA.teal, margin: '2px 0 0' }}>
           ${item.price.toLocaleString('es-AR')}
         </p>
       </div>
@@ -396,21 +421,21 @@ function SuggestionCard({ item, justAdded, onAdd }) {
         whileTap={{ scale: 0.85 }}
         onClick={onAdd}
         style={{
-          position: 'absolute', bottom: 8, right: 8,
-          width: 26, height: 26, borderRadius: '50%',
-          background: justAdded ? '#059669' : KYVRA.teal,
-          color: KYVRA.white, border: 'none', cursor: 'pointer',
+          width: 34, height: 34, borderRadius: '50%', border: 'none',
+          background: justAdded ? '#059669' : 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)',
+          color: '#fff', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 3px 8px rgba(13,148,136,0.35)',
+          flexShrink: 0,
+          boxShadow: '0 3px 10px rgba(13,148,136,0.32)',
           transition: 'background 0.2s',
         }}
       >
         {justAdded ? (
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2.5 7l3 3 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         ) : (
-          <Plus size={14} />
+          <Plus size={15} />
         )}
       </motion.button>
     </div>

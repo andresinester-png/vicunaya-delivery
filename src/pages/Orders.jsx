@@ -22,8 +22,23 @@ const STATUS_BADGE = {
   rejected:  { label: 'Rechazado',          bg: 'rgba(239,68,68,0.13)',  color: '#DC2626' },
 };
 
+const ACTIVE_STATUS_DARK = {
+  pending:   { label: 'Pendiente',  bg: 'rgba(245,158,11,0.18)', color: '#FCD34D' },
+  accepted:  { label: 'Aceptado',   bg: 'rgba(96,165,250,0.18)', color: '#93C5FD' },
+  preparing: { label: 'Preparando', bg: 'rgba(96,165,250,0.18)', color: '#93C5FD' },
+  ready:     { label: 'En camino',  bg: 'rgba(94,234,212,0.18)', color: '#5EEAD4' },
+};
+
 function getStatusBadge(order) {
   const base = STATUS_BADGE[order.order_status] || STATUS_BADGE.pending;
+  if (order.order_status === 'ready' && order.delivery_method === 'pickup') {
+    return { ...base, label: 'Listo para retirar' };
+  }
+  return base;
+}
+
+function getActiveBadge(order) {
+  const base = ACTIVE_STATUS_DARK[order.order_status] || ACTIVE_STATUS_DARK.pending;
   if (order.order_status === 'ready' && order.delivery_method === 'pickup') {
     return { ...base, label: 'Listo para retirar' };
   }
@@ -43,13 +58,6 @@ const SHIMMER = {
   borderRadius: 16,
 };
 
-const CARD = {
-  background: KYVRA.white,
-  border: `1px solid ${KYVRA.border}`,
-  borderRadius: 20,
-  boxShadow: '0 2px 12px rgba(15,23,42,0.06)',
-};
-
 const SECTION_LABEL = {
   display: 'block',
   fontSize: 11, fontWeight: 700,
@@ -57,6 +65,70 @@ const SECTION_LABEL = {
   color: KYVRA.textMuted, marginBottom: 10,
   fontFamily: FF,
 };
+
+function PastOrderCard({ order }) {
+  const [imgError, setImgError] = useState(false);
+  const st  = getStatusBadge(order);
+  const img = order.restaurants?.image_url;
+
+  return (
+    <Link
+      to={`/pedido/${order.id}`}
+      style={{
+        background: KYVRA.white,
+        border: `1px solid ${KYVRA.border}`,
+        borderRadius: 20,
+        boxShadow: '0 2px 12px rgba(15,23,42,0.06)',
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '14px 14px', textDecoration: 'none',
+      }}
+    >
+      <div style={{
+        width: 48, height: 48, borderRadius: 14,
+        background: KYVRA.tealBg, flexShrink: 0,
+        overflow: 'hidden',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {(img && !imgError) ? (
+          <img
+            src={img}
+            alt={order.restaurants?.name}
+            loading="lazy"
+            onError={() => setImgError(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        ) : (
+          <ShoppingBag size={20} color={KYVRA.teal} strokeWidth={1.6} />
+        )}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{
+          fontSize: 14, fontWeight: 700, color: KYVRA.navy,
+          margin: '0 0 2px',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {order.restaurants?.name || 'Restaurante'}
+        </p>
+        <p style={{ fontSize: 11.5, color: KYVRA.textMuted, margin: '0 0 5px' }}>
+          {fmt(order.created_at)}
+        </p>
+        <span style={{
+          fontSize: 10.5, fontWeight: 700,
+          padding: '3px 8px', borderRadius: 99,
+          background: st.bg, color: st.color, display: 'inline-block',
+        }}>
+          {st.label}
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+        <p style={{ fontSize: 14.5, fontWeight: 800, color: KYVRA.navy, margin: 0, letterSpacing: '-0.01em' }}>
+          ${order.total?.toLocaleString('es-AR')}
+        </p>
+        <ChevronRight size={16} color={KYVRA.textMuted} strokeWidth={2} />
+      </div>
+    </Link>
+  );
+}
 
 export default function Orders() {
   const phone  = useProfileStore(s => s.phone);
@@ -72,7 +144,7 @@ export default function Orders() {
     const doFetch = async () => {
       let q = supabase
         .from('orders')
-        .select('*, restaurants(name)')
+        .select('*, restaurants(name, image_url)')
         .order('created_at', { ascending: false })
         .limit(30);
       if (userId) q = q.eq('user_id', userId);
@@ -176,31 +248,41 @@ export default function Orders() {
               <section style={{ marginBottom: 28 }}>
                 <span style={SECTION_LABEL}>Pedido actual</span>
 
-                <div style={{ ...CARD, overflow: 'hidden' }}>
+                <div style={{
+                  background: 'linear-gradient(145deg, #0F172A 0%, #1E293B 55%, #0F2A28 100%)',
+                  borderRadius: 22,
+                  overflow: 'hidden',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.24), 0 0 0 1px rgba(94,234,212,0.08)',
+                  position: 'relative',
+                }}>
+                  {/* Teal ambient glow */}
+                  <div style={{ position: 'absolute', bottom: -30, left: -20, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,148,136,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
                   {/* Info row */}
-                  <div style={{ padding: '16px 16px 14px', borderBottom: `1px solid ${KYVRA.border}` }}>
+                  <div style={{ padding: '16px 18px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{
                         width: 44, height: 44, borderRadius: 14,
-                        background: KYVRA.tealBg, flexShrink: 0,
+                        background: 'rgba(13,148,136,0.22)', border: '1px solid rgba(94,234,212,0.20)',
+                        flexShrink: 0,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
-                        <ShoppingBag size={20} color={KYVRA.teal} strokeWidth={1.8} />
+                        <ShoppingBag size={20} color="#5EEAD4" strokeWidth={1.8} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 15, fontWeight: 800, color: KYVRA.navy, margin: '0 0 3px', letterSpacing: '-0.01em' }}>
+                        <p style={{ fontSize: 15, fontWeight: 800, color: '#fff', margin: '0 0 3px', letterSpacing: '-0.01em' }}>
                           {activeOrder.restaurants?.name || 'Restaurante'}
                         </p>
-                        <p style={{ fontSize: 12, color: KYVRA.textMuted, margin: 0 }}>
+                        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.42)', margin: 0 }}>
                           {fmt(activeOrder.created_at)}
                         </p>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <p style={{ fontSize: 17, fontWeight: 900, color: KYVRA.teal, margin: '0 0 5px', letterSpacing: '-0.02em' }}>
+                        <p style={{ fontSize: 17, fontWeight: 900, color: '#5EEAD4', margin: '0 0 5px', letterSpacing: '-0.02em' }}>
                           ${activeOrder.total?.toLocaleString('es-AR')}
                         </p>
                         {(() => {
-                          const st = getStatusBadge(activeOrder);
+                          const st = getActiveBadge(activeOrder);
                           return (
                             <span style={{
                               fontSize: 10.5, fontWeight: 700,
@@ -217,7 +299,7 @@ export default function Orders() {
                   </div>
 
                   {/* Vertical timeline */}
-                  <div style={{ padding: '18px 20px 14px' }}>
+                  <div style={{ padding: '18px 20px 14px', position: 'relative' }}>
                     {orderSteps.map((step, idx) => {
                       const isDone   = idx < activeStep;
                       const isActive = idx === activeStep;
@@ -226,32 +308,30 @@ export default function Orders() {
 
                       return (
                         <div key={step} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, minHeight: isLast ? 'auto' : 40 }}>
-                          {/* Dot + connector */}
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 20 }}>
                             <div style={{
                               width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-                              background: (isDone || isActive) ? KYVRA.teal : 'transparent',
-                              border: isFuture ? `2px solid ${KYVRA.border}` : 'none',
+                              background: (isDone || isActive) ? '#0D9488' : 'transparent',
+                              border: isFuture ? '2px solid rgba(255,255,255,0.15)' : 'none',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               animation: isActive ? 'pulse-dot 1.8s ease-in-out infinite' : 'none',
-                              boxShadow: isActive ? `0 0 0 4px ${KYVRA.tealBg}` : 'none',
+                              boxShadow: isActive ? '0 0 0 4px rgba(13,148,136,0.20)' : 'none',
                             }}>
                               {isDone && <Check size={10} color="#fff" strokeWidth={3.5} />}
                             </div>
                             {!isLast && (
                               <div style={{
                                 width: 2, flex: 1, minHeight: 20,
-                                background: isDone ? KYVRA.teal : KYVRA.border,
+                                background: isDone ? '#0D9488' : 'rgba(255,255,255,0.12)',
                                 borderRadius: 2, marginTop: 3,
                               }} />
                             )}
                           </div>
-                          {/* Label */}
                           <p style={{
                             fontSize: 13.5,
                             fontWeight: isActive ? 800 : isDone ? 600 : 500,
-                            color: isFuture ? KYVRA.textMuted : KYVRA.navy,
-                            margin: '1px 0 0', lineHeight: 1.35,
+                            color: isActive ? '#5EEAD4' : isDone ? '#fff' : 'rgba(255,255,255,0.28)',
+                            margin: '1px 0 0', lineHeight: 1.35, fontFamily: FF,
                           }}>
                             {step}
                           </p>
@@ -261,13 +341,14 @@ export default function Orders() {
                   </div>
 
                   {/* CTA link */}
-                  <div style={{ padding: '0 16px 16px' }}>
+                  <div style={{ padding: '0 16px 16px', position: 'relative' }}>
                     <Link to={`/pedido/${activeOrder.id}`} style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                      width: '100%', padding: '12px 0', boxSizing: 'border-box',
-                      background: KYVRA.tealBg, border: `1.5px solid ${KYVRA.teal}`,
+                      width: '100%', padding: '13px 0', boxSizing: 'border-box',
+                      background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)',
                       borderRadius: 14, textDecoration: 'none',
-                      fontSize: 13.5, fontWeight: 700, color: KYVRA.teal, fontFamily: FF,
+                      fontSize: 13.5, fontWeight: 700, color: '#fff', fontFamily: FF,
+                      boxShadow: '0 4px 16px rgba(13,148,136,0.32)',
                     }}>
                       Ver seguimiento completo
                       <ChevronRight size={15} strokeWidth={2.5} />
@@ -279,28 +360,31 @@ export default function Orders() {
 
             {/* ── Historial de pedidos ── */}
             <section style={{ marginTop: activeOrder ? 0 : 8 }}>
-              {/* Gradient banner header */}
+              {/* Deep layered gradient header */}
               <div style={{
-                background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)',
+                background: 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)',
                 borderRadius: 18,
-                padding: '14px 18px',
+                padding: '16px 18px',
                 marginBottom: 14,
-                boxShadow: '0 4px 18px rgba(13,148,136,0.24)',
+                boxShadow: '0 8px 28px rgba(0,0,0,0.22), 0 0 0 1px rgba(94,234,212,0.06)',
                 display: 'flex', alignItems: 'center', gap: 12,
+                position: 'relative', overflow: 'hidden',
               }}>
+                <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,148,136,0.22) 0%, transparent 70%)', pointerEvents: 'none' }} />
                 <div style={{
-                  width: 34, height: 34, borderRadius: 10,
-                  background: 'rgba(255,255,255,0.18)',
+                  width: 36, height: 36, borderRadius: 11,
+                  background: 'rgba(13,148,136,0.22)', border: '1px solid rgba(94,234,212,0.22)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  position: 'relative',
                 }}>
-                  <Clock size={17} color="#fff" strokeWidth={2.2} />
+                  <Clock size={17} color="#5EEAD4" strokeWidth={2.2} />
                 </div>
-                <div>
+                <div style={{ position: 'relative' }}>
                   <p style={{ fontSize: 15, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.01em', fontFamily: FF }}>
                     Historial de pedidos
                   </p>
                   {pastOrders.length > 0 && (
-                    <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.72)', margin: '2px 0 0', fontFamily: FF }}>
+                    <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.48)', margin: '2px 0 0', fontFamily: FF }}>
                       {pastOrders.length} {pastOrders.length === 1 ? 'pedido anterior' : 'pedidos anteriores'}
                     </p>
                   )}
@@ -309,53 +393,9 @@ export default function Orders() {
 
               {pastOrders.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {pastOrders.map(order => {
-                    const st = getStatusBadge(order);
-                    return (
-                      <Link
-                        key={order.id}
-                        to={`/pedido/${order.id}`}
-                        style={{
-                          ...CARD,
-                          display: 'flex', alignItems: 'center', gap: 12,
-                          padding: '14px 14px', textDecoration: 'none',
-                        }}
-                      >
-                        <div style={{
-                          width: 40, height: 40, borderRadius: 12,
-                          background: KYVRA.bg, flexShrink: 0,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          <ShoppingBag size={17} color={KYVRA.textMuted} strokeWidth={1.8} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{
-                            fontSize: 14, fontWeight: 700, color: KYVRA.navy,
-                            margin: '0 0 2px',
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                          }}>
-                            {order.restaurants?.name || 'Restaurante'}
-                          </p>
-                          <p style={{ fontSize: 11.5, color: KYVRA.textMuted, margin: '0 0 5px' }}>
-                            {fmt(order.created_at)}
-                          </p>
-                          <span style={{
-                            fontSize: 10.5, fontWeight: 700,
-                            padding: '3px 8px', borderRadius: 99,
-                            background: st.bg, color: st.color, display: 'inline-block',
-                          }}>
-                            {st.label}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                          <p style={{ fontSize: 14.5, fontWeight: 800, color: KYVRA.navy, margin: 0, letterSpacing: '-0.01em' }}>
-                            ${order.total?.toLocaleString('es-AR')}
-                          </p>
-                          <ChevronRight size={16} color={KYVRA.textMuted} strokeWidth={2} />
-                        </div>
-                      </Link>
-                    );
-                  })}
+                  {pastOrders.map(order => (
+                    <PastOrderCard key={order.id} order={order} />
+                  ))}
                 </div>
               ) : (
                 <div style={{

@@ -266,64 +266,76 @@ export default function OrderTracking() {
     <div style={{ minHeight: '100dvh', background: KYVRA.bg, fontFamily: FF, paddingBottom: 32 }}>
       <style>{CSS}</style>
 
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 40,
-        background: KYVRA.white, borderBottom: `1px solid ${KYVRA.border}`,
-        height: 56, display: 'flex', alignItems: 'center',
-        padding: '0 16px',
-        boxShadow: '0 1px 8px rgba(15,23,42,0.06)',
+      {/* ── Status Hero ── */}
+      <div style={{
+        background: 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+        paddingBottom: 28, position: 'relative', overflow: 'hidden',
       }}>
-        <button
-          onClick={() => navigate('/delivery')}
-          style={{ width: 36, height: 36, borderRadius: '50%', background: KYVRA.bg, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-        >
-          <ChevronLeft size={20} color={KYVRA.navy} strokeWidth={2.5} />
-        </button>
+        <div style={{ position: 'absolute', top: -40, right: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,148,136,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        <span style={{ flex: 1, textAlign: 'center', fontWeight: 800, fontSize: 16, color: KYVRA.navy, letterSpacing: '-0.02em' }}>
-          Mi pedido
-        </span>
+        <div style={{ maxWidth: 480, margin: '0 auto', padding: '0 16px' }}>
+          {/* Nav row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <button
+              onClick={() => navigate('/delivery')}
+              style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.22)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            >
+              <ChevronLeft size={20} color="#fff" />
+            </button>
 
-        <button
-          onClick={() => navigate('/delivery')}
-          style={{ width: 36, height: 36, borderRadius: '50%', background: KYVRA.tealBg, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}
-        >
-          <ShoppingCart size={17} color={KYVRA.teal} strokeWidth={2} />
-          {cartCount > 0 && (
-            <span style={{
-              position: 'absolute', top: -2, right: -2,
-              background: KYVRA.teal, color: KYVRA.white,
-              fontSize: 9, fontWeight: 900, minWidth: 16, height: 16,
-              borderRadius: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
-            }}>
-              {cartCount}
+            <button
+              onClick={() => navigate('/delivery')}
+              style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(13,148,136,0.28)', border: '1px solid rgba(94,234,212,0.25)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}
+            >
+              <ShoppingCart size={17} color="#5EEAD4" strokeWidth={2} />
+              {cartCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: -2, right: -2,
+                  background: '#0D9488', color: '#fff',
+                  fontSize: 9, fontWeight: 900, minWidth: 16, height: 16,
+                  borderRadius: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
+                }}>
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Order code chip */}
+          <div style={{ marginBottom: 8 }}>
+            <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 800, color: '#5EEAD4', letterSpacing: '0.12em', textTransform: 'uppercase', background: 'rgba(94,234,212,0.12)', border: '1px solid rgba(94,234,212,0.22)', borderRadius: 999, padding: '3px 10px' }}>
+              Orden #{orderCode}
             </span>
+          </div>
+
+          {/* Restaurant name */}
+          {order.restaurants?.name && (
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: '0 0 4px', fontWeight: 500, fontFamily: FF }}>
+              {order.restaurants.name}
+            </p>
           )}
-        </button>
-      </header>
 
-      <div style={{ maxWidth: 480, margin: '0 auto', padding: '0 16px' }}>
-
-        {/* ── Título + ETA ────────────────────────────────────────── */}
-        <div style={{ padding: '22px 0 18px', animation: 'fadeInUp 0.35s ease-out both' }}>
-          <p style={{ fontSize: 11, fontWeight: 800, color: KYVRA.teal, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 6px' }}>
-            Orden #{orderCode}
-          </p>
-          <h1 style={{ fontWeight: 900, fontSize: 26, color: KYVRA.navy, margin: '0 0 14px', letterSpacing: '-0.025em', lineHeight: 1.1 }}>
+          {/* Heading */}
+          <h1 style={{ fontWeight: 900, fontSize: 26, color: '#fff', margin: '0 0 16px', letterSpacing: '-0.025em', lineHeight: 1.1, fontFamily: FF }}>
             Seguimiento en vivo
           </h1>
+
+          {/* ETA pill */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: KYVRA.tealBg, border: `1px solid rgba(13,148,136,0.20)`,
+            background: 'rgba(13,148,136,0.22)', border: '1px solid rgba(94,234,212,0.25)',
             borderRadius: 999, padding: '7px 14px',
           }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: KYVRA.teal, flexShrink: 0, animation: 'dotPulse 1.8s ease-in-out infinite' }} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: KYVRA.teal }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#5EEAD4', flexShrink: 0, animation: 'dotPulse 1.8s ease-in-out infinite' }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#5EEAD4', fontFamily: FF }}>
               Llegada estimada: {fmtTime(etaEnd)}
             </span>
           </div>
         </div>
+      </div>
+
+      <div style={{ maxWidth: 480, margin: '0 auto', padding: '16px 16px 0' }}>
 
         {/* ── Timeline card ───────────────────────────────────────── */}
         <div style={{ ...card, padding: '20px 20px 16px', marginBottom: 14 }}>
