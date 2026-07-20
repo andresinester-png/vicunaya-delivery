@@ -15,6 +15,36 @@ const FF = "'Plus Jakarta Sans', sans-serif";
 const GH = 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)';
 const GTEAL = 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)';
 
+const HOVER_CSS = `
+  .kv-item-card { transition: box-shadow 0.15s, transform 0.15s; }
+  .kv-item-card:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.10) !important; transform: translateY(-1px); }
+  .kv-act-btn:hover { background: rgba(15,23,42,0.05) !important; }
+  .kv-trash-btn:hover { background: rgba(239,68,68,0.07) !important; }
+  .kv-cat-action:hover { background: rgba(15,23,42,0.05) !important; }
+`;
+
+/* Manages its own error state so broken URLs show the KYVRA placeholder */
+function ItemThumb({ url, name }) {
+  const [err, setErr] = useState(false);
+  return (
+    <div style={{
+      width: 60, height: 60, borderRadius: 12, overflow: 'hidden', flexShrink: 0,
+      background: 'rgba(13,148,136,0.07)', border: `1px solid ${T.border}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {url && !err
+        ? <img
+            src={url}
+            alt={name}
+            loading="lazy"
+            onError={() => setErr(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        : <BookOpen size={20} color={T.teal} strokeWidth={1.5} style={{ opacity: 0.45 }} />}
+    </div>
+  );
+}
+
 function KvSwitch({ on, onToggle, size = 'md' }) {
   const w = size === 'sm' ? 32 : 38;
   const h = size === 'sm' ? 18 : 22;
@@ -265,7 +295,7 @@ export default function Menu() {
     return parts.length ? parts.join(' · ') : (item.price != null ? `$${parseFloat(item.price).toLocaleString('es-AR')} c/u` : '—');
   };
 
-  const totalItems    = items.length;
+  const totalItems       = items.length;
   const availableItems   = items.filter(i => i.is_available).length;
   const unavailableItems = totalItems - availableItems;
 
@@ -279,17 +309,19 @@ export default function Menu() {
 
   return (
     <div style={{ fontFamily: FF, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <style>{HOVER_CSS}</style>
 
       {/* ── Hero ── */}
-      <div style={{ background: GH, borderRadius: 18, padding: '20px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: GH, borderRadius: 18, padding: '22px 20px 20px', position: 'relative', overflow: 'hidden' }}>
         <div style={{
-          position: 'absolute', top: -40, right: -40, width: 200, height: 200,
-          background: 'radial-gradient(circle, rgba(13,148,136,0.20) 0%, transparent 70%)',
+          position: 'absolute', top: -50, right: -50, width: 220, height: 220,
+          background: 'radial-gradient(circle, rgba(13,148,136,0.22) 0%, transparent 70%)',
           borderRadius: '50%', pointerEvents: 'none',
         }} />
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            {/* Eyebrow */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <div style={{
                 width: 30, height: 30, borderRadius: 9,
                 background: 'rgba(13,148,136,0.22)', display: 'flex',
@@ -297,23 +329,31 @@ export default function Menu() {
               }}>
                 <BookOpen size={15} color={T.tealLight} strokeWidth={2} />
               </div>
-              <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.4, color: T.tealLight, textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.6, color: T.tealLight, textTransform: 'uppercase' }}>
                 KYVRA · GESTIÓN DE MENÚ
               </span>
             </div>
-            <h1 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>
+            <h1 style={{ margin: '0 0 12px', fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.3px' }}>
               Mi menú
             </h1>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+            {/* Stats chips */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
               <span style={{
-                padding: '3px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
                 background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.65)',
                 border: '1px solid rgba(255,255,255,0.10)',
+              }}>
+                {totalItems} {totalItems === 1 ? 'producto' : 'productos'}
+              </span>
+              <span style={{
+                padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.50)',
+                border: '1px solid rgba(255,255,255,0.08)',
               }}>
                 {categories.length} {categories.length === 1 ? 'categoría' : 'categorías'}
               </span>
               <span style={{
-                padding: '3px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
                 background: 'rgba(13,148,136,0.18)', color: T.tealLight,
                 border: '1px solid rgba(13,148,136,0.25)',
               }}>
@@ -321,7 +361,7 @@ export default function Menu() {
               </span>
               {unavailableItems > 0 && (
                 <span style={{
-                  padding: '3px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                  padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
                   background: 'rgba(239,68,68,0.15)', color: '#FCA5A5',
                   border: '1px solid rgba(239,68,68,0.20)',
                 }}>
@@ -330,15 +370,17 @@ export default function Menu() {
               )}
             </div>
           </div>
+
+          {/* CTA buttons */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'flex-end', flexShrink: 0 }}>
             <button
               onClick={() => { setCatForm(''); setModal({ type: 'category' }); }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 5,
-                padding: '7px 13px', borderRadius: 9, fontSize: 12, fontWeight: 700,
+                padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700,
                 background: 'rgba(255,255,255,0.10)', color: '#fff',
                 border: '1.5px solid rgba(255,255,255,0.18)', cursor: 'pointer',
-                fontFamily: FF,
+                fontFamily: FF, whiteSpace: 'nowrap',
               }}
             >
               <Plus size={13} strokeWidth={2.5} /> Categoría
@@ -347,10 +389,11 @@ export default function Menu() {
               onClick={() => openItemModal()}
               style={{
                 display: 'flex', alignItems: 'center', gap: 5,
-                padding: '7px 13px', borderRadius: 9, fontSize: 12, fontWeight: 700,
+                padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700,
                 background: GTEAL, color: '#fff', border: 'none',
                 cursor: 'pointer', fontFamily: FF,
-                boxShadow: '0 2px 10px rgba(13,148,136,0.35)',
+                boxShadow: '0 3px 12px rgba(13,148,136,0.40)',
+                whiteSpace: 'nowrap',
               }}
             >
               <Plus size={13} strokeWidth={2.5} /> Producto
@@ -362,50 +405,56 @@ export default function Menu() {
       {/* ── Empty state ── */}
       {categories.length === 0 ? (
         <div style={{
-          background: T.white, borderRadius: 16, border: `1.5px solid ${T.border}`,
-          padding: '48px 24px', textAlign: 'center',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+          background: T.white, borderRadius: 16,
+          border: `1.5px solid ${T.border}`,
+          boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
+          padding: '52px 24px', textAlign: 'center',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18,
         }}>
           <div style={{
-            width: 64, height: 64, borderRadius: 20,
-            background: 'rgba(13,148,136,0.08)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
+            width: 72, height: 72, borderRadius: 22,
+            background: 'rgba(13,148,136,0.08)',
+            border: `1.5px solid rgba(13,148,136,0.15)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <BookOpen size={28} color={T.teal} strokeWidth={1.5} />
+            <BookOpen size={30} color={T.teal} strokeWidth={1.5} />
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: T.navy }}>Tu menú está vacío</p>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: T.textMuted }}>Creá una categoría para empezar</p>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: T.navy, letterSpacing: '-0.2px' }}>Tu menú está vacío</p>
+            <p style={{ margin: '5px 0 0', fontSize: 13, color: T.textMuted, lineHeight: 1.5 }}>Creá tu primera categoría para empezar a agregar productos</p>
           </div>
           <button
             onClick={() => { setCatForm(''); setModal({ type: 'category' }); }}
             style={{
               display: 'flex', alignItems: 'center', gap: 7,
-              padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+              padding: '11px 22px', borderRadius: 12, fontSize: 14, fontWeight: 700,
               background: GTEAL, color: '#fff', border: 'none', cursor: 'pointer',
-              fontFamily: FF, boxShadow: '0 2px 10px rgba(13,148,136,0.3)',
+              fontFamily: FF, boxShadow: '0 3px 12px rgba(13,148,136,0.30)',
             }}
           >
             <Plus size={15} strokeWidth={2.5} /> Agregar categoría
           </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {categories.map((cat, idx) => {
-            const catItems  = items.filter(i => i.category_id === cat.id);
+            const catItems    = items.filter(i => i.category_id === cat.id);
             const isCollapsed = !!collapsed[cat.id];
             const isRenaming  = editingCatId === cat.id;
 
             return (
               <div key={cat.id} style={{
-                background: T.white, borderRadius: 14,
-                border: `1.5px solid ${T.border}`, overflow: 'hidden',
+                background: T.white, borderRadius: 16,
+                border: `1.5px solid ${T.border}`,
+                boxShadow: '0 2px 8px rgba(15,23,42,0.05)',
+                overflow: 'hidden',
               }}>
 
-                {/* Category header */}
+                {/* ── Category header ── */}
                 <div style={{
-                  display: 'flex', alignItems: 'center', gap: 6, padding: '12px 13px',
-                  borderBottom: isCollapsed ? 'none' : `1px solid ${T.border}`,
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px',
+                  borderBottom: isCollapsed ? 'none' : `1.5px solid ${T.border}`,
+                  background: isCollapsed ? T.white : 'rgba(248,250,252,0.7)',
                 }}>
 
                   {/* Reorder arrows */}
@@ -414,31 +463,36 @@ export default function Menu() {
                       onClick={() => moveCategoryUp(cat, idx)}
                       disabled={idx === 0}
                       style={{
-                        width: 20, height: 15, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 22, height: 17, display: 'flex', alignItems: 'center', justifyContent: 'center',
                         background: 'none', border: 'none',
                         cursor: idx === 0 ? 'default' : 'pointer',
-                        color: idx === 0 ? T.border : T.textMuted, padding: 0,
+                        color: idx === 0 ? '#D1D5DB' : T.textMuted, padding: 0,
+                        transition: 'color 0.15s',
                       }}
                     >
-                      <ChevronUp size={13} strokeWidth={2.5} />
+                      <ChevronUp size={14} strokeWidth={2.5} />
                     </button>
                     <button
                       onClick={() => moveCategoryDown(cat, idx)}
                       disabled={idx === categories.length - 1}
                       style={{
-                        width: 20, height: 15, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 22, height: 17, display: 'flex', alignItems: 'center', justifyContent: 'center',
                         background: 'none', border: 'none',
                         cursor: idx === categories.length - 1 ? 'default' : 'pointer',
-                        color: idx === categories.length - 1 ? T.border : T.textMuted, padding: 0,
+                        color: idx === categories.length - 1 ? '#D1D5DB' : T.textMuted, padding: 0,
+                        transition: 'color 0.15s',
                       }}
                     >
-                      <ChevronDown size={13} strokeWidth={2.5} />
+                      <ChevronDown size={14} strokeWidth={2.5} />
                     </button>
                   </div>
 
+                  {/* Thin divider */}
+                  <div style={{ width: 1, height: 28, background: T.border, flexShrink: 0 }} />
+
                   {/* Name / rename input */}
                   {isRenaming ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, flex: 1, minWidth: 0 }}>
                       <input
                         ref={catEditRef}
                         value={editingCatName}
@@ -450,103 +504,111 @@ export default function Menu() {
                         onBlur={confirmCatRename}
                         style={{
                           flex: 1, minWidth: 0,
-                          padding: '5px 10px', border: `1.5px solid ${T.teal}`, borderRadius: 8,
+                          padding: '6px 11px', border: `2px solid ${T.teal}`, borderRadius: 9,
                           fontSize: 14, fontWeight: 700, fontFamily: FF, color: T.navy,
-                          outline: 'none', background: T.bg,
+                          outline: 'none', background: T.white,
+                          boxShadow: `0 0 0 3px rgba(13,148,136,0.12)`,
                         }}
                       />
                       <button
                         onMouseDown={e => { e.preventDefault(); confirmCatRename(); }}
                         style={{
-                          width: 28, height: 28, borderRadius: 8, background: T.teal,
+                          width: 32, height: 32, borderRadius: 9, background: T.teal,
                           border: 'none', cursor: 'pointer', display: 'flex',
                           alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                          boxShadow: '0 2px 8px rgba(13,148,136,0.30)',
                         }}
                       >
-                        <Check size={14} color="#fff" strokeWidth={2.5} />
+                        <Check size={15} color="#fff" strokeWidth={2.5} />
                       </button>
                     </div>
                   ) : (
-                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{
-                        fontSize: 14, fontWeight: 800, color: T.navy,
+                        fontSize: 15, fontWeight: 800, color: T.navy, letterSpacing: '-0.2px',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       }}>
                         {cat.name}
                       </span>
+                      {/* Count badge — teal tint */}
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        minWidth: 20, height: 20, borderRadius: 20, padding: '0 5px',
-                        background: T.bg, border: `1px solid ${T.border}`,
-                        fontSize: 10, fontWeight: 800, color: T.textMuted, flexShrink: 0,
+                        minWidth: 22, height: 22, borderRadius: 22, padding: '0 6px',
+                        background: 'rgba(13,148,136,0.09)',
+                        border: `1px solid rgba(13,148,136,0.18)`,
+                        fontSize: 11, fontWeight: 800, color: T.teal, flexShrink: 0,
                       }}>
                         {catItems.length}
                       </span>
                     </div>
                   )}
 
-                  {/* Actions */}
+                  {/* Category actions */}
                   {!isRenaming && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                       <button
                         onClick={() => startCatRename(cat)}
                         title="Renombrar"
+                        className="kv-cat-action"
                         style={{
-                          width: 28, height: 28, borderRadius: 8, background: 'none',
+                          width: 32, height: 32, borderRadius: 9, background: 'none',
                           border: 'none', cursor: 'pointer', display: 'flex',
                           alignItems: 'center', justifyContent: 'center', color: T.textMuted,
                         }}
                       >
-                        <Pencil size={13} strokeWidth={2} />
+                        <Pencil size={14} strokeWidth={2} />
                       </button>
                       <button
                         onClick={() => openItemModal(cat.id)}
                         title="Agregar producto"
                         style={{
-                          width: 28, height: 28, borderRadius: 8,
+                          width: 32, height: 32, borderRadius: 9,
                           background: GTEAL, border: 'none', cursor: 'pointer',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          flexShrink: 0,
+                          flexShrink: 0, boxShadow: '0 2px 6px rgba(13,148,136,0.30)',
                         }}
                       >
-                        <Plus size={14} color="#fff" strokeWidth={2.5} />
+                        <Plus size={15} color="#fff" strokeWidth={2.5} />
                       </button>
                       <button
                         onClick={() => deleteCategory(cat.id)}
                         title="Eliminar categoría"
+                        className="kv-trash-btn"
                         style={{
-                          width: 28, height: 28, borderRadius: 8, background: 'none',
+                          width: 32, height: 32, borderRadius: 9, background: 'none',
                           border: 'none', cursor: 'pointer', display: 'flex',
                           alignItems: 'center', justifyContent: 'center', color: '#F87171',
                         }}
                       >
-                        <Trash2 size={13} strokeWidth={2} />
+                        <Trash2 size={14} strokeWidth={2} />
                       </button>
+                      {/* Collapse chevron */}
                       <button
                         onClick={() => setCollapsed(c => ({ ...c, [cat.id]: !c[cat.id] }))}
                         style={{
-                          width: 28, height: 28, borderRadius: 8,
-                          background: T.bg, border: `1px solid ${T.border}`,
+                          width: 32, height: 32, borderRadius: 9,
+                          background: T.bg, border: `1.5px solid ${T.border}`,
                           cursor: 'pointer', display: 'flex',
-                          alignItems: 'center', justifyContent: 'center', color: T.textMuted,
+                          alignItems: 'center', justifyContent: 'center', color: T.textSec,
+                          flexShrink: 0,
                         }}
                       >
                         <ChevronDown
-                          size={14} strokeWidth={2.5}
-                          style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+                          size={15} strokeWidth={2.5}
+                          style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.22s' }}
                         />
                       </button>
                     </div>
                   )}
                 </div>
 
-                {/* Product list */}
+                {/* ── Product list ── */}
                 {!isCollapsed && (
-                  <div>
+                  <div style={{ padding: catItems.length === 0 ? 0 : '10px 10px 10px' }}>
                     {catItems.length === 0 ? (
                       <div style={{
-                        padding: '20px 14px', textAlign: 'center',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                        padding: '24px 16px', textAlign: 'center',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
                       }}>
                         <p style={{ margin: 0, fontSize: 12, color: T.textMuted, fontStyle: 'italic' }}>
                           Sin productos en esta categoría
@@ -554,95 +616,111 @@ export default function Menu() {
                         <button
                           onClick={() => openItemModal(cat.id)}
                           style={{
-                            display: 'flex', alignItems: 'center', gap: 5,
-                            padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            padding: '8px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700,
                             background: 'rgba(13,148,136,0.08)', color: T.teal,
-                            border: `1px solid rgba(13,148,136,0.2)`, cursor: 'pointer', fontFamily: FF,
+                            border: `1.5px solid rgba(13,148,136,0.20)`, cursor: 'pointer', fontFamily: FF,
                           }}
                         >
                           <Plus size={13} strokeWidth={2.5} /> Agregar primer producto
                         </button>
                       </div>
                     ) : (
-                      <div>
-                        {catItems.map((item, iIdx) => (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                        {catItems.map(item => (
                           <div
                             key={item.id}
+                            className="kv-item-card"
                             style={{
-                              display: 'flex', alignItems: 'center', gap: 10,
-                              padding: '10px 13px',
-                              borderBottom: iIdx < catItems.length - 1 ? `1px solid ${T.border}` : 'none',
+                              display: 'flex', alignItems: 'center', gap: 12,
+                              padding: '12px 14px',
+                              background: T.white, borderRadius: 12,
+                              border: `1px solid ${T.border}`,
+                              boxShadow: '0 1px 4px rgba(15,23,42,0.05)',
                             }}
                           >
-                            {/* Thumbnail */}
-                            <div style={{
-                              width: 48, height: 48, borderRadius: 10,
-                              background: T.bg, overflow: 'hidden', flexShrink: 0,
-                              border: `1px solid ${T.border}`,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            }}>
-                              {item.image_url
-                                ? <img src={item.image_url} alt={item.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                : <span style={{ fontSize: 20 }}>🍽️</span>}
-                            </div>
+                            {/* Thumbnail — 60px, error-safe */}
+                            <ItemThumb url={item.image_url} name={item.name} />
 
                             {/* Info */}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <p style={{
-                                margin: 0, fontSize: 13, fontWeight: 700, color: T.navy,
+                                margin: 0, fontSize: 13.5, fontWeight: 800, color: T.navy,
                                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                letterSpacing: '-0.1px',
                               }}>
                                 {item.name}
                               </p>
                               {item.description && (
                                 <p style={{
-                                  margin: '1px 0 0', fontSize: 11, color: T.textMuted,
+                                  margin: '2px 0 5px', fontSize: 11.5, color: T.textSec,
                                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                  lineHeight: 1.4,
                                 }}>
                                   {item.description}
                                 </p>
                               )}
-                              <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 700, color: T.teal }}>
+                              {/* Price badge */}
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center',
+                                padding: '2px 9px', borderRadius: 20, marginTop: item.description ? 0 : 4,
+                                background: 'rgba(13,148,136,0.09)',
+                                border: '1px solid rgba(13,148,136,0.18)',
+                                fontSize: 11.5, fontWeight: 700, color: T.teal, fontFamily: FF,
+                              }}>
                                 {priceLabel(item)}
-                              </p>
+                              </span>
                             </div>
 
-                            {/* Actions */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                            {/* Actions: switch + capsule */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                              {/* Availability toggle */}
                               <KvSwitch on={item.is_available} onToggle={() => toggleAvailable(item)} size="sm" />
-                              <button
-                                onClick={() => duplicateItem(item)}
-                                title="Duplicar"
-                                style={{
-                                  width: 28, height: 28, borderRadius: 8, background: 'none',
-                                  border: 'none', cursor: 'pointer', display: 'flex',
-                                  alignItems: 'center', justifyContent: 'center', color: T.textMuted,
-                                }}
-                              >
-                                <Copy size={13} strokeWidth={2} />
-                              </button>
-                              <button
-                                onClick={() => openItemModal(cat.id, item)}
-                                title="Editar"
-                                style={{
-                                  width: 28, height: 28, borderRadius: 8, background: 'none',
-                                  border: 'none', cursor: 'pointer', display: 'flex',
-                                  alignItems: 'center', justifyContent: 'center', color: T.textMuted,
-                                }}
-                              >
-                                <Pencil size={13} strokeWidth={2} />
-                              </button>
-                              <button
-                                onClick={() => deleteItem(item.id)}
-                                title="Eliminar"
-                                style={{
-                                  width: 28, height: 28, borderRadius: 8, background: 'none',
-                                  border: 'none', cursor: 'pointer', display: 'flex',
-                                  alignItems: 'center', justifyContent: 'center', color: '#F87171',
-                                }}
-                              >
-                                <Trash2 size={13} strokeWidth={2} />
-                              </button>
+
+                              {/* Action capsule: Duplicate · Edit · Delete */}
+                              <div style={{
+                                display: 'flex', alignItems: 'center', gap: 1,
+                                background: T.bg, borderRadius: 22,
+                                border: `1.5px solid ${T.border}`,
+                                padding: '2px 3px', flexShrink: 0,
+                              }}>
+                                <button
+                                  onClick={() => duplicateItem(item)}
+                                  title="Duplicar"
+                                  className="kv-act-btn"
+                                  style={{
+                                    width: 30, height: 30, borderRadius: 8, background: 'none',
+                                    border: 'none', cursor: 'pointer', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', color: T.textMuted,
+                                  }}
+                                >
+                                  <Copy size={13} strokeWidth={2} />
+                                </button>
+                                <button
+                                  onClick={() => openItemModal(cat.id, item)}
+                                  title="Editar"
+                                  className="kv-act-btn"
+                                  style={{
+                                    width: 30, height: 30, borderRadius: 8, background: 'none',
+                                    border: 'none', cursor: 'pointer', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', color: T.textMuted,
+                                  }}
+                                >
+                                  <Pencil size={13} strokeWidth={2} />
+                                </button>
+                                <button
+                                  onClick={() => deleteItem(item.id)}
+                                  title="Eliminar"
+                                  className="kv-trash-btn"
+                                  style={{
+                                    width: 30, height: 30, borderRadius: 8, background: 'none',
+                                    border: 'none', cursor: 'pointer', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', color: '#F87171',
+                                  }}
+                                >
+                                  <Trash2 size={13} strokeWidth={2} />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -660,40 +738,47 @@ export default function Menu() {
       {modal && (
         <div
           style={{
-            position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.65)',
+            position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.68)',
             zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '0 16px',
           }}
           onClick={e => { if (e.target === e.currentTarget) closeModal(); }}
         >
           <div style={{
-            background: T.white, borderRadius: 20,
+            background: T.white, borderRadius: 22,
             width: '100%', maxWidth: 440, maxHeight: '90vh',
-            overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.35)',
+            overflowY: 'auto', boxShadow: '0 28px 70px rgba(0,0,0,0.38)',
           }}>
-            {/* Modal header */}
+            {/* Sticky header */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '16px 18px', borderBottom: `1.5px solid ${T.border}`,
+              padding: '18px 20px 16px', borderBottom: `1.5px solid ${T.border}`,
               position: 'sticky', top: 0, background: T.white, zIndex: 2,
-              borderRadius: '20px 20px 0 0',
+              borderRadius: '22px 22px 0 0',
             }}>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: T.navy, fontFamily: FF }}>
-                {modal.type === 'category' ? 'Nueva categoría' : form.id ? 'Editar producto' : 'Nuevo producto'}
-              </h3>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: T.navy, fontFamily: FF, letterSpacing: '-0.2px' }}>
+                  {modal.type === 'category' ? 'Nueva categoría' : form.id ? 'Editar producto' : 'Nuevo producto'}
+                </h3>
+                {modal.type === 'item' && (
+                  <p style={{ margin: '2px 0 0', fontSize: 11, color: T.textMuted }}>
+                    Completá los datos del producto
+                  </p>
+                )}
+              </div>
               <button
                 onClick={closeModal}
                 style={{
-                  width: 30, height: 30, borderRadius: 9, background: T.bg,
-                  border: `1px solid ${T.border}`, cursor: 'pointer', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center', color: T.textMuted,
+                  width: 32, height: 32, borderRadius: 10, background: T.bg,
+                  border: `1.5px solid ${T.border}`, cursor: 'pointer', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', color: T.textSec,
                 }}
               >
                 <X size={15} strokeWidth={2} />
               </button>
             </div>
 
-            <div style={{ padding: '16px 18px 22px' }}>
+            <div style={{ padding: '18px 20px 24px' }}>
               {modal.type === 'category' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <input
@@ -704,15 +789,16 @@ export default function Menu() {
                     autoFocus
                     style={{
                       width: '100%', boxSizing: 'border-box',
-                      padding: '11px 14px', border: `1.5px solid ${T.border}`, borderRadius: 10,
+                      padding: '12px 14px', border: `1.5px solid ${T.border}`, borderRadius: 11,
                       fontSize: 14, fontFamily: FF, color: T.navy, outline: 'none',
+                      background: T.bg,
                     }}
                   />
                   <button
                     onClick={saveCategory}
                     disabled={saving}
                     style={{
-                      width: '100%', padding: '12px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                      width: '100%', padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 700,
                       background: saving ? T.border : GTEAL,
                       color: saving ? T.textMuted : '#fff',
                       border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: FF,
@@ -722,11 +808,11 @@ export default function Menu() {
                   </button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
                   {/* Name */}
                   <div>
-                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 5 }}>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 6 }}>
                       Nombre *
                     </label>
                     <input
@@ -735,15 +821,16 @@ export default function Menu() {
                       placeholder="Nombre del producto"
                       style={{
                         width: '100%', boxSizing: 'border-box',
-                        padding: '11px 14px', border: `1.5px solid ${T.border}`, borderRadius: 10,
+                        padding: '12px 14px', border: `1.5px solid ${T.border}`, borderRadius: 11,
                         fontSize: 14, fontFamily: FF, color: T.navy, outline: 'none',
+                        background: T.bg,
                       }}
                     />
                   </div>
 
                   {/* Description */}
                   <div>
-                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 5 }}>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 6 }}>
                       Descripción
                     </label>
                     <textarea
@@ -753,15 +840,16 @@ export default function Menu() {
                       rows={2}
                       style={{
                         width: '100%', boxSizing: 'border-box',
-                        padding: '11px 14px', border: `1.5px solid ${T.border}`, borderRadius: 10,
-                        fontSize: 14, fontFamily: FF, color: T.navy, outline: 'none', resize: 'none',
+                        padding: '12px 14px', border: `1.5px solid ${T.border}`, borderRadius: 11,
+                        fontSize: 14, fontFamily: FF, color: T.navy, outline: 'none',
+                        resize: 'none', background: T.bg,
                       }}
                     />
                   </div>
 
                   {/* Category selector */}
                   <div>
-                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 5 }}>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 6 }}>
                       Categoría
                     </label>
                     <select
@@ -769,9 +857,9 @@ export default function Menu() {
                       onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}
                       style={{
                         width: '100%', boxSizing: 'border-box',
-                        padding: '11px 14px', border: `1.5px solid ${T.border}`, borderRadius: 10,
+                        padding: '12px 14px', border: `1.5px solid ${T.border}`, borderRadius: 11,
                         fontSize: 14, fontFamily: FF, color: T.navy, outline: 'none',
-                        background: T.white, cursor: 'pointer',
+                        background: T.bg, cursor: 'pointer',
                       }}
                     >
                       <option value="">Seleccioná una categoría</option>
@@ -782,13 +870,17 @@ export default function Menu() {
                   </div>
 
                   {/* Pricing */}
-                  <div style={{ border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                  <div style={{
+                    border: `1.5px solid ${T.border}`, borderRadius: 14,
+                    padding: '16px', display: 'flex', flexDirection: 'column', gap: 14,
+                    background: 'rgba(248,250,252,0.6)',
+                  }}>
+                    <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 0.9 }}>
                       Opciones de venta
                     </p>
 
                     {/* Unit */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: T.navy, fontFamily: FF }}>Venta por unidad</span>
                         <KvSwitch
@@ -806,7 +898,7 @@ export default function Menu() {
                     </div>
 
                     {/* Dozen */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: T.navy, fontFamily: FF }}>Venta por docena</span>
                         <KvSwitch
@@ -826,37 +918,38 @@ export default function Menu() {
 
                   {/* Image upload */}
                   <div>
-                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 5 }}>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 6 }}>
                       Imagen del producto
                     </label>
                     <div
                       onClick={() => imageRef.current?.click()}
                       style={{
-                        display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12,
+                        display: 'flex', alignItems: 'center', gap: 14, padding: 14, borderRadius: 14,
                         border: `2px dashed ${imageTooLarge ? '#F87171' : T.border}`,
-                        background: T.bg, cursor: 'pointer',
+                        background: imageTooLarge ? 'rgba(239,68,68,0.03)' : T.bg, cursor: 'pointer',
                       }}
                     >
                       <div style={{
-                        width: 56, height: 56, borderRadius: 10, overflow: 'hidden',
-                        background: T.border, flexShrink: 0,
+                        width: 60, height: 60, borderRadius: 12, overflow: 'hidden',
+                        background: 'rgba(13,148,136,0.07)', flexShrink: 0,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        border: `1px solid rgba(13,148,136,0.12)`,
                       }}>
                         {imagePreview
-                          ? <img src={imagePreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : <Image size={20} color={T.textMuted} strokeWidth={1.5} />}
+                          ? <img src={imagePreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                          : <Image size={22} color={T.teal} strokeWidth={1.5} style={{ opacity: 0.5 }} />}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: T.navy }}>
                           {imagePreview ? 'Imagen seleccionada' : 'Subir imagen'}
                         </p>
-                        <p style={{ margin: '3px 0 0', fontSize: 11, color: imageTooLarge ? '#EF4444' : T.textMuted }}>
+                        <p style={{ margin: '4px 0 0', fontSize: 11, color: imageTooLarge ? '#EF4444' : T.textMuted, lineHeight: 1.4 }}>
                           {imageTooLarge
                             ? '⚠ Imagen muy grande — máx 2 MB'
                             : imagePreview ? 'Tocá para cambiar · JPG, PNG, WebP' : 'JPG, PNG, WebP · máx 2 MB'}
                         </p>
                       </div>
-                      <Upload size={15} color={T.textMuted} />
+                      <Upload size={16} color={T.textMuted} style={{ flexShrink: 0 }} />
                     </div>
                     <input ref={imageRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
                   </div>
@@ -864,11 +957,13 @@ export default function Menu() {
                   {/* Availability */}
                   <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${T.border}`,
+                    padding: '14px 16px', borderRadius: 14,
+                    border: `1.5px solid ${T.border}`,
+                    background: form.is_available ? 'rgba(13,148,136,0.04)' : T.bg,
                   }}>
                     <div>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: T.navy }}>Disponible</p>
-                      <p style={{ margin: '2px 0 0', fontSize: 11, color: T.textMuted }}>Visible en el menú para clientes</p>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: T.navy }}>Disponible</p>
+                      <p style={{ margin: '3px 0 0', fontSize: 11, color: T.textMuted }}>Visible en el menú para clientes</p>
                     </div>
                     <KvSwitch
                       on={form.is_available}
@@ -881,10 +976,11 @@ export default function Menu() {
                     onClick={saveItem}
                     disabled={saving}
                     style={{
-                      width: '100%', padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                      width: '100%', padding: '14px', borderRadius: 13, fontSize: 14, fontWeight: 700,
                       background: saving ? T.border : GTEAL,
                       color: saving ? T.textMuted : '#fff',
                       border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: FF,
+                      boxShadow: saving ? 'none' : '0 3px 12px rgba(13,148,136,0.30)',
                     }}
                   >
                     {saving ? 'Guardando...' : 'Guardar producto'}
