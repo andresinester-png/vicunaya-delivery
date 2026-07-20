@@ -46,7 +46,6 @@ const STYLES = `
   .kv-section-nav { display: none !important; }
   @media (min-width: 1024px) {
     .kv-section-nav { display: flex !important; gap: 0; background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 10; }
-  }
     .kv-priority { grid-template-columns: 2fr 1fr 1fr; }
     .kv-split { flex-direction: row; align-items: flex-start; gap: 20px; }
     .kv-orders-col { flex: 1; min-width: 0; }
@@ -441,13 +440,15 @@ export default function Dashboard() {
   useEffect(() => {
     if (!restaurant) return;
     const fetchOrders = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('orders').select('*')
         .eq('restaurant_id', restaurant.id)
         .order('created_at', { ascending: false });
+      if (error) { console.error('[Dashboard] fetchOrders error:', error); return; }
       setOrders(data || []);
     };
     fetchOrders();
+    const refetchInterval = setInterval(fetchOrders, 90000);
     const channel = supabase
       .channel(`restaurant-orders-${restaurant.id}`)
       .on('postgres_changes',
@@ -471,7 +472,7 @@ export default function Dashboard() {
         { event: 'UPDATE', schema: 'public', table: 'orders', filter: `restaurant_id=eq.${restaurant.id}` },
         ({ new: order }) => setOrders(prev => prev.map(o => o.id === order.id ? order : o)))
       .subscribe();
-    return () => supabase.removeChannel(channel);
+    return () => { clearInterval(refetchInterval); supabase.removeChannel(channel); };
   }, [restaurant]);
 
   const updateStatus = async (orderId, status) => {
