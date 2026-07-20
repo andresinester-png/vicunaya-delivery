@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -43,7 +43,10 @@ const STYLES = `
   .kv-mob-only { display: flex; }
   .kv-mob-filter { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
   .kv-mob-filter::-webkit-scrollbar { display: none; }
+  .kv-section-nav { display: none !important; }
   @media (min-width: 1024px) {
+    .kv-section-nav { display: flex !important; gap: 0; background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 10; }
+  }
     .kv-priority { grid-template-columns: 2fr 1fr 1fr; }
     .kv-split { flex-direction: row; align-items: flex-start; gap: 20px; }
     .kv-orders-col { flex: 1; min-width: 0; }
@@ -379,6 +382,47 @@ export default function Dashboard() {
   const [newCount,      setNewCount]      = useState(0);
   const [isOpen,        setIsOpen]        = useState(true);
   const [now,           setNow]           = useState(() => Date.now());
+  const [activeSection, setActiveSection] = useState('pending');
+
+  const pendingRef = useRef(null);
+  const kitchenRef = useRef(null);
+  const roadRef    = useRef(null);
+  const doneRef    = useRef(null);
+
+  const scrollToSection = (ref, sectionId) => {
+    setActiveSection(sectionId);
+    if (!ref.current) return;
+    const scrollEl = ref.current.closest('main') || ref.current.closest('[class*="overflow"]');
+    if (scrollEl) {
+      const top = ref.current.getBoundingClientRect().top - scrollEl.getBoundingClientRect().top + scrollEl.scrollTop - 52;
+      scrollEl.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    } else {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  useEffect(() => {
+    const refs = [
+      { id: 'pending', ref: pendingRef },
+      { id: 'kitchen', ref: kitchenRef },
+      { id: 'road',    ref: roadRef    },
+      { id: 'done',    ref: doneRef    },
+    ];
+    const scrollEl = pendingRef.current?.closest('main') || pendingRef.current?.closest('[class*="overflow"]');
+    if (!scrollEl) return;
+    const handleScroll = () => {
+      const containerTop = scrollEl.getBoundingClientRect().top + 60;
+      let best = 'pending', bestDist = Infinity;
+      refs.forEach(({ id, ref }) => {
+        if (!ref.current) return;
+        const dist = Math.abs(ref.current.getBoundingClientRect().top - containerTop);
+        if (dist < bestDist) { bestDist = dist; best = id; }
+      });
+      setActiveSection(best);
+    };
+    scrollEl.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollEl.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => { if (restaurant) setIsOpen(restaurant.is_active ?? true); }, [restaurant]);
 
@@ -663,26 +707,65 @@ export default function Dashboard() {
             })}
           </div>
 
-          {/* ── DESKTOP: all workflow groups stacked ── */}
+          {/* ── DESKTOP: sticky section nav + all workflow groups stacked ── */}
           <div className="kv-desk-only" style={{ flexDirection: 'column', width: '100%' }}>
-            <WorkflowSection
-              label="Pendientes" color="#F59E0B" count={pendingOrders.length}
-              orders={pendingOrders} onUpdate={updateStatus} allOrders={orders} now={now}
-              emptyLabel="Sin pedidos pendientes · el flujo está al día"
-            />
-            <WorkflowSection
-              label="En preparación" color="#3B82F6" count={kitchenOrders.length}
-              orders={kitchenOrders} onUpdate={updateStatus} allOrders={orders} now={now}
-            />
-            <WorkflowSection
-              label="En camino" color={T.teal} count={roadOrders.length}
-              orders={roadOrders} onUpdate={updateStatus} allOrders={orders} now={now}
-            />
-            <WorkflowSection
-              label="Entregados hoy" color="#22C55E" count={doneOrders.length}
-              orders={doneOrders} onUpdate={updateStatus} allOrders={orders} now={now}
-              collapsible collapsed={collapsedDone} onToggle={() => setCollapsedDone(v => !v)}
-            />
+
+            {/* Sticky nav bar */}
+            <div className="kv-section-nav">
+              {[
+                { id: 'pending', label: 'Pendientes',  count: pendingOrders.length, color: '#F59E0B', ref: pendingRef },
+                { id: 'kitchen', label: 'En cocina',   count: kitchenOrders.length, color: '#3B82F6', ref: kitchenRef },
+                { id: 'road',    label: 'En camino',   count: roadOrders.length,    color: T.teal,    ref: roadRef    },
+                { id: 'done',    label: 'Entregados',  count: doneOrders.length,    color: '#22C55E', ref: doneRef    },
+              ].map(item => {
+                const isActive = activeSection === item.id;
+                return (
+                  <button key={item.id} onClick={() => scrollToSection(item.ref, item.id)} style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    padding: '9px 8px', border: 'none', cursor: 'pointer', fontFamily: FF,
+                    background: isActive ? `${item.color}10` : 'transparent',
+                    borderBottom: isActive ? `2px solid ${item.color}` : '2px solid transparent',
+                    transition: 'background 0.15s, border-color 0.15s',
+                  }}>
+                    <span style={{ fontSize: 12, fontWeight: isActive ? 700 : 500, color: isActive ? item.color : T.textSec, whiteSpace: 'nowrap' }}>
+                      {item.label}
+                    </span>
+                    {item.count > 0 && (
+                      <span style={{ fontSize: 10, fontWeight: 800, minWidth: 18, height: 18, padding: '0 4px', borderRadius: 20, background: isActive ? item.color : T.border, color: isActive ? '#fff' : T.textSec, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {item.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div ref={pendingRef}>
+              <WorkflowSection
+                label="Pendientes" color="#F59E0B" count={pendingOrders.length}
+                orders={pendingOrders} onUpdate={updateStatus} allOrders={orders} now={now}
+                emptyLabel="Sin pedidos pendientes · el flujo está al día"
+              />
+            </div>
+            <div ref={kitchenRef}>
+              <WorkflowSection
+                label="En preparación" color="#3B82F6" count={kitchenOrders.length}
+                orders={kitchenOrders} onUpdate={updateStatus} allOrders={orders} now={now}
+              />
+            </div>
+            <div ref={roadRef}>
+              <WorkflowSection
+                label="En camino" color={T.teal} count={roadOrders.length}
+                orders={roadOrders} onUpdate={updateStatus} allOrders={orders} now={now}
+              />
+            </div>
+            <div ref={doneRef}>
+              <WorkflowSection
+                label="Entregados hoy" color="#22C55E" count={doneOrders.length}
+                orders={doneOrders} onUpdate={updateStatus} allOrders={orders} now={now}
+                collapsible collapsed={collapsedDone} onToggle={() => setCollapsedDone(v => !v)}
+              />
+            </div>
           </div>
 
           {/* ── MOBILE: single group, filtered by chip ── */}
