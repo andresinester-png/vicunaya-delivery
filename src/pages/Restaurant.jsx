@@ -164,6 +164,7 @@ export default function Restaurant() {
     : [];
 
   return (
+    <>
     <motion.div
       initial={{ x: '100%' }} animate={{ x: 0 }}
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
@@ -573,7 +574,11 @@ export default function Restaurant() {
         </div>{/* /max-width container */}
       </div>{/* /bg wrapper */}
 
-      {/* ── Cart bar — centered on desktop, full-width on mobile ──── */}
+    </motion.div>
+
+      {/* ── Cart bar — outside the page-transition motion.div so that
+           position:fixed is relative to the viewport, not the transformed
+           parent (a CSS transform on any ancestor overrides fixed positioning). ── */}
       <AnimatePresence>
         {count > 0 && (
           <motion.div
@@ -583,55 +588,64 @@ export default function Restaurant() {
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             style={{
               position: 'fixed',
-              bottom: 'calc(12px + env(safe-area-inset-bottom))',
-              zIndex: 45,
-              left: '50%', transform: 'translateX(-50%)',
-              width: 'calc(100% - 32px)', maxWidth: 608,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 50,
+              display: 'flex',
+              justifyContent: 'center',
+              padding: `0 16px calc(12px + env(safe-area-inset-bottom, 0px)) 16px`,
+              pointerEvents: 'none',
+            }}
+          >
+            <div style={{
+              width: '100%',
+              maxWidth: 608,
               background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
               boxShadow: '0 -4px 32px rgba(0,0,0,0.30), 0 8px 40px rgba(0,0,0,0.24), 0 0 0 1px rgba(255,255,255,0.06)',
               borderRadius: 20,
-              border: 'none',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14,
               padding: '10px 10px 10px 20px',
-            }}
-          >
-            <motion.button
-              whileTap={{ scale: isOpen ? 0.97 : 1 }}
-              onClick={() => isOpen && navigate('/carrito')}
-              style={{
-                flex: 1,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                background: isOpen
-                  ? 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)'
-                  : 'rgba(255,255,255,0.10)',
-                color: isOpen ? '#fff' : 'rgba(255,255,255,0.35)',
-                fontWeight: 800, fontSize: 15,
-                padding: '14px 22px',
-                borderRadius: 999, border: 'none',
-                cursor: isOpen ? 'pointer' : 'not-allowed',
-                boxShadow: isOpen ? '0 4px 20px rgba(13,148,136,0.45)' : 'none',
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                transition: 'background 0.18s, box-shadow 0.18s',
-              }}
-            >
-              <ShoppingCart size={18} strokeWidth={2.2} />
-              Ver carrito
-            </motion.button>
+              pointerEvents: 'auto',
+            }}>
+              <motion.button
+                whileTap={{ scale: isOpen ? 0.97 : 1 }}
+                onClick={() => isOpen && navigate('/carrito')}
+                style={{
+                  flex: 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  background: isOpen
+                    ? 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)'
+                    : 'rgba(255,255,255,0.10)',
+                  color: isOpen ? '#fff' : 'rgba(255,255,255,0.35)',
+                  fontWeight: 800, fontSize: 15,
+                  padding: '14px 22px',
+                  borderRadius: 999, border: 'none',
+                  cursor: isOpen ? 'pointer' : 'not-allowed',
+                  boxShadow: isOpen ? '0 4px 20px rgba(13,148,136,0.45)' : 'none',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  transition: 'background 0.18s, box-shadow 0.18s',
+                }}
+              >
+                <ShoppingCart size={18} strokeWidth={2.2} />
+                Ver carrito
+              </motion.button>
 
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <p style={{
-                fontSize: 19, fontWeight: 900, color: '#5EEAD4',
-                margin: 0, lineHeight: 1.15, letterSpacing: '-0.025em',
-              }}>
-                ${total.toLocaleString('es-AR')}
-              </p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
-                {count} {count === 1 ? 'producto' : 'productos'}
-              </p>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <p style={{
+                  fontSize: 19, fontWeight: 900, color: '#5EEAD4',
+                  margin: 0, lineHeight: 1.15, letterSpacing: '-0.025em',
+                }}>
+                  ${total.toLocaleString('es-AR')}
+                </p>
+                <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
+                  {count} {count === 1 ? 'producto' : 'productos'}
+                </p>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </>
   );
 }
