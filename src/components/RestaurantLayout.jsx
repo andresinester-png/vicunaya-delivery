@@ -29,8 +29,8 @@ export default function RestaurantLayout({ children }) {
       {/* ── Sidebar (desktop only) ── */}
       <aside style={SIDEBAR_BG} className="hidden lg:flex w-56 flex-col shrink-0 sticky top-0 h-screen">
         <div className="px-5 py-5 border-b border-white/10">
-          <span className="text-primary font-extrabold text-xl">Vicuña</span>
-          <span className="bg-primary text-white font-extrabold text-xl px-1 rounded-md ml-0.5">Ya</span>
+          <span style={{ color: '#5EEAD4', fontWeight: 800, fontSize: 20, letterSpacing: '-0.3px' }}>K</span>
+          <span style={{ color: '#ffffff', fontWeight: 800, fontSize: 20, letterSpacing: '-0.3px' }}>yvra</span>
           <p className="text-xs text-slate-400 mt-0.5 truncate">{restaurant?.name || 'Mi restaurante'}</p>
         </div>
         <nav className="flex-1 py-4 space-y-1 px-3">
@@ -41,7 +41,7 @@ export default function RestaurantLayout({ children }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-[rgba(15,23,42,0.18)] text-white shadow-[inset_3px_0_0_0_#006a61]'
+                    ? 'bg-[rgba(15,23,42,0.18)] text-white shadow-[inset_3px_0_0_0_#0D9488]'
                     : 'text-[rgba(255,255,255,0.5)] hover:bg-white/5 hover:text-[rgba(255,255,255,0.8)]'
                 }`
               }
@@ -64,8 +64,8 @@ export default function RestaurantLayout({ children }) {
 
         {/* Mobile header */}
         <header className="lg:hidden sticky top-0 z-30 bg-[#1a1f2e] border-b border-white/10 px-4 py-3 flex items-center shrink-0">
-          <span className="text-primary font-extrabold text-lg">Vicuña</span>
-          <span className="bg-primary text-white font-extrabold text-lg px-1 rounded-md ml-0.5">Ya</span>
+          <span style={{ color: '#5EEAD4', fontWeight: 800, fontSize: 18, letterSpacing: '-0.3px' }}>K</span>
+          <span style={{ color: '#ffffff', fontWeight: 800, fontSize: 18, letterSpacing: '-0.3px' }}>yvra</span>
           <span className="ml-2 text-xs text-slate-400 font-medium truncate">{restaurant?.name || 'Mi restaurante'}</span>
         </header>
 
@@ -85,7 +85,7 @@ export default function RestaurantLayout({ children }) {
             to={to}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors ${
-                isActive ? 'bg-[rgba(15,23,42,0.18)] text-white shadow-[inset_0_2px_0_0_#006a61]' : 'text-[rgba(255,255,255,0.5)]'
+                isActive ? 'bg-[rgba(15,23,42,0.18)] text-white shadow-[inset_0_2px_0_0_#0D9488]' : 'text-[rgba(255,255,255,0.5)]'
               }`
             }
           >
