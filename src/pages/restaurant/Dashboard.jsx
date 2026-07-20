@@ -38,19 +38,20 @@ const STYLES = `
   .kv-dash { font-family: ${FF}; color: ${T.navy}; }
   .kv-priority { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .kv-split { display: flex; flex-direction: column; gap: 16px; }
-  .kv-sidebar { display: flex; flex-direction: column; gap: 14px; }
+  .kv-sidebar { display: none; }
   .kv-desk-only { display: none !important; }
   .kv-mob-only { display: flex; }
-  .kv-mob-filter { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .kv-mob-filter { display: flex; gap: 7px; overflow-x: auto; padding: 2px 0 6px; margin-bottom: 14px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .kv-mob-filter::-webkit-scrollbar { display: none; }
   .kv-mob-group-title { display: flex; align-items: center; gap: 7px; padding-bottom: 10px; border-bottom: 1.5px solid #E2E8F0; margin-bottom: 12px; }
+  .kv-orders-col { width: 100%; min-width: 0; box-sizing: border-box; }
   .kv-section-nav { display: none !important; }
   @media (min-width: 1024px) {
     .kv-section-nav { display: flex !important; gap: 0; background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 10; }
     .kv-priority { grid-template-columns: 2fr 1fr 1fr; }
     .kv-split { flex-direction: row; align-items: flex-start; gap: 20px; }
-    .kv-orders-col { flex: 1; min-width: 0; }
-    .kv-sidebar { width: 340px; flex-shrink: 0; }
+    .kv-orders-col { flex: 1; min-width: 0; width: auto; }
+    .kv-sidebar { display: flex; flex-direction: column; gap: 14px; width: 340px; flex-shrink: 0; }
     .kv-desk-only { display: flex !important; }
     .kv-mob-only { display: none !important; }
     .kv-mob-filter { display: none !important; }
@@ -526,6 +527,14 @@ export default function Dashboard() {
   const roadOrders     = orders.filter(o => o.order_status === 'ready').sort(oldestFirst);
   const doneOrders     = todayOrders.filter(o => o.order_status === 'delivered').sort(newestFirst);
 
+  // ── Mobile chips config (declared before mobileOrders/activeChip to avoid TDZ) ─
+  const mobileChips = [
+    { id: 'pending', label: 'Pendientes', count: pendingOrders.length, color: '#F59E0B' },
+    { id: 'kitchen', label: 'Cocina',     count: kitchenOrders.length, color: '#3B82F6' },
+    { id: 'road',    label: 'En camino',  count: roadOrders.length,    color: T.teal    },
+    { id: 'done',    label: 'Entregados', count: doneOrders.length,    color: '#22C55E' },
+  ];
+
   // ── Mobile group selected orders ─────────────────────────────────────────
   const mobileOrders = {
     pending: pendingOrders,
@@ -564,14 +573,6 @@ export default function Dashboard() {
 
   const opSentence = getOpSentence(pendingCount, inKitchenCount, onTheWayCount, todayOrders.length);
   const card = { background: T.white, borderRadius: 14, border: `1px solid ${T.border}`, boxShadow: '0 1px 12px rgba(0,0,0,0.05)' };
-
-  // ── Mobile group chips config ─────────────────────────────────────────────
-  const mobileChips = [
-    { id: 'pending', label: 'Pendientes', count: pendingOrders.length, color: '#F59E0B' },
-    { id: 'kitchen', label: 'Cocina',     count: kitchenOrders.length, color: '#3B82F6' },
-    { id: 'road',    label: 'En camino',  count: roadOrders.length,    color: T.teal    },
-    { id: 'done',    label: 'Entregados', count: doneOrders.length,    color: '#22C55E' },
-  ];
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -724,7 +725,7 @@ export default function Dashboard() {
 
         {/* ── LEFT: WORKFLOW OPERATIONS ───────────────────────────────── */}
         <div className="kv-orders-col">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8 }}>
+          <div className="kv-desk-only" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8 }}>
             <h2 style={{ fontSize: 15, fontWeight: 800, color: T.navy, margin: 0 }}>Operaciones</h2>
             <span style={{ fontSize: 11, color: T.textMuted }}>
               {pendingOrders.length + kitchenOrders.length + roadOrders.length} activos
