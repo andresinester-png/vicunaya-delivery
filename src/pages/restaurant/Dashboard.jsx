@@ -41,8 +41,9 @@ const STYLES = `
   .kv-sidebar { display: flex; flex-direction: column; gap: 14px; }
   .kv-desk-only { display: none !important; }
   .kv-mob-only { display: flex; }
-  .kv-mob-filter { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .kv-mob-filter { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .kv-mob-filter::-webkit-scrollbar { display: none; }
+  .kv-mob-group-title { display: flex; align-items: center; gap: 7px; padding-bottom: 10px; border-bottom: 1.5px solid #E2E8F0; margin-bottom: 12px; }
   .kv-section-nav { display: none !important; }
   @media (min-width: 1024px) {
     .kv-section-nav { display: flex !important; gap: 0; background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 10; }
@@ -53,6 +54,7 @@ const STYLES = `
     .kv-desk-only { display: flex !important; }
     .kv-mob-only { display: none !important; }
     .kv-mob-filter { display: none !important; }
+    .kv-mob-group-title { display: none !important; }
   }
   @keyframes kv-pulse-amber {
     0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.55); }
@@ -383,10 +385,11 @@ export default function Dashboard() {
   const [now,           setNow]           = useState(() => Date.now());
   const [activeSection, setActiveSection] = useState('pending');
 
-  const pendingRef = useRef(null);
-  const kitchenRef = useRef(null);
-  const roadRef    = useRef(null);
-  const doneRef    = useRef(null);
+  const pendingRef  = useRef(null);
+  const kitchenRef  = useRef(null);
+  const roadRef     = useRef(null);
+  const doneRef     = useRef(null);
+  const chipBarRef  = useRef(null);
 
   const scrollToSection = (ref, sectionId) => {
     setActiveSection(sectionId);
@@ -424,6 +427,12 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => { if (restaurant) setIsOpen(restaurant.is_active ?? true); }, [restaurant]);
+
+  useEffect(() => {
+    if (!chipBarRef.current) return;
+    const activeEl = chipBarRef.current.querySelector('[data-active="true"]');
+    if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+  }, [mobileGroup]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30000);
@@ -524,6 +533,8 @@ export default function Dashboard() {
     road:    roadOrders,
     done:    doneOrders,
   }[mobileGroup] || pendingOrders;
+
+  const activeChip = mobileChips.find(c => c.id === mobileGroup) || mobileChips[0];
 
   // ── Peak hours chart (real derived) ──────────────────────────────────────
   const hourCounts = Array.from({ length: 24 }, () => 0);
@@ -672,6 +683,42 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
+      {/* ── MOBILE-ONLY: status navigation bar (outside kv-split to avoid nesting) ── */}
+      <div className="kv-mob-filter" ref={chipBarRef}>
+        {mobileChips.map(chip => {
+          const active = mobileGroup === chip.id;
+          return (
+            <button
+              key={chip.id}
+              data-active={active ? 'true' : 'false'}
+              onClick={() => setMobileGroup(chip.id)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '8px 13px', borderRadius: 10, fontSize: 12, fontWeight: 700,
+                fontFamily: FF, cursor: 'pointer', flexShrink: 0,
+                background: active ? T.navy : T.white,
+                color: active ? '#fff' : T.textSec,
+                border: `1.5px solid ${active ? T.navy : T.border}`,
+                boxShadow: active ? '0 2px 10px rgba(15,23,42,0.22)' : 'none',
+                transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s',
+              }}>
+              {active && (
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: chip.color, flexShrink: 0 }} />
+              )}
+              {chip.label}
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                minWidth: 18, height: 18, borderRadius: 20, padding: '0 4px',
+                background: active ? chip.color : T.border,
+                color: '#fff', fontSize: 10, fontWeight: 800,
+              }}>
+                {chip.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* ══ MAIN SPLIT ══════════════════════════════════════════════════ */}
       <div className="kv-split">
 
@@ -682,30 +729,6 @@ export default function Dashboard() {
             <span style={{ fontSize: 11, color: T.textMuted }}>
               {pendingOrders.length + kitchenOrders.length + roadOrders.length} activos
             </span>
-          </div>
-
-          {/* Mobile filter chips */}
-          <div className="kv-mob-filter" style={{ marginBottom: 12 }}>
-            {mobileChips.map(chip => {
-              const active = mobileGroup === chip.id;
-              return (
-                <button key={chip.id} onClick={() => setMobileGroup(chip.id)} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 5,
-                  padding: '6px 13px', borderRadius: 20, fontSize: 12, fontWeight: 700,
-                  fontFamily: FF, cursor: 'pointer', border: 'none', flexShrink: 0,
-                  background: active ? chip.color : T.white,
-                  color: active ? '#fff' : T.textSec,
-                  boxShadow: active ? `0 2px 8px ${chip.color}44` : '0 1px 3px rgba(0,0,0,0.07)',
-                }}>
-                  {chip.label}
-                  {chip.count > 0 && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 20, background: active ? 'rgba(255,255,255,0.25)' : chip.color, color: active ? '#fff' : '#fff', fontSize: 10, fontWeight: 800, padding: '0 4px' }}>
-                      {chip.count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
           </div>
 
           {/* ── DESKTOP: sticky section nav + all workflow groups stacked ── */}
@@ -767,6 +790,13 @@ export default function Dashboard() {
                 collapsible collapsed={collapsedDone} onToggle={() => setCollapsedDone(v => !v)}
               />
             </div>
+          </div>
+
+          {/* ── MOBILE: group title ── */}
+          <div className="kv-mob-group-title">
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: activeChip.color, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 800, color: T.navy, fontFamily: FF }}>{activeChip.label}</span>
+            <span style={{ fontSize: 12, color: T.textMuted }}>· {mobileOrders.length} {mobileOrders.length === 1 ? 'pedido' : 'pedidos'}</span>
           </div>
 
           {/* ── MOBILE: single group, filtered by chip ── */}
