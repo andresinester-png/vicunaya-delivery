@@ -333,7 +333,7 @@ export default function Servicios() {
                       <button
                         className="kv-svc-act"
                         onClick={() => { setEditId(svc.id); setEditForm({ name: svc.name, duration_minutes: svc.duration_minutes, price: svc.price }); }}
-                        style={{ width: 30, height: 30, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textMuted }}
+                        style={{ width: 30, height: 30, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textMuted, transition: 'background 0.15s' }}
                         title="Editar"
                       >
                         <Pencil size={13} strokeWidth={2} />
@@ -341,7 +341,7 @@ export default function Servicios() {
                       <button
                         className="kv-svc-del"
                         onClick={() => handleDelete(svc.id)}
-                        style={{ width: 30, height: 30, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F87171' }}
+                        style={{ width: 30, height: 30, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F87171', transition: 'background 0.15s' }}
                         title="Eliminar"
                       >
                         <Trash2 size={13} strokeWidth={2} />

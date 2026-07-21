@@ -237,7 +237,7 @@ export default function MiNegocio() {
               color: saving ? T.textMuted : '#fff',
               border: 'none', cursor: saving ? 'default' : 'pointer', fontFamily: FF,
               boxShadow: saving ? 'none' : '0 3px 12px rgba(13,148,136,0.30)',
-              transition: 'opacity 0.15s', marginTop: 4,
+              transition: 'opacity 0.15s, box-shadow 0.15s', marginTop: 4,
             }}
           >
             {saving ? 'Guardando…' : 'Guardar cambios'}

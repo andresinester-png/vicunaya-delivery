@@ -34,7 +34,7 @@ const LST = {
 const STYLES = `
   .kv-ag-input { transition: border-color 0.15s, box-shadow 0.15s; }
   .kv-ag-input:focus { border-color: #0D9488 !important; box-shadow: 0 0 0 3px rgba(13,148,136,0.10) !important; outline: none; }
-  .kv-ag-slot-free:hover { background: rgba(13,148,136,0.04) !important; }
+  .kv-ag-slot-free:hover { background: rgba(13,148,136,0.05) !important; border-left-color: rgba(13,148,136,0.28) !important; }
   .kv-ag-slot-occ:hover { filter: brightness(0.97); }
   .kv-ag-nav:hover { background: rgba(255,255,255,0.10) !important; }
   @keyframes kv-spin { to { transform: rotate(360deg); } }
@@ -223,17 +223,17 @@ export default function Agenda() {
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div style={{ fontFamily: FF, maxWidth: 1280, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ fontFamily: FF, maxWidth: 1280, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
       <style>{STYLES}</style>
 
       {/* ── Hero ── */}
-      <div style={{ background: GH, borderRadius: 18, padding: '20px 22px 18px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: GH, borderRadius: 18, padding: '26px 24px 22px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -60, right: -40, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,148,136,0.20) 0%, transparent 68%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: -30, left: 40, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(94,234,212,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative' }}>
 
           {/* Top row: badge + date nav */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(13,148,136,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Calendar size={13} color={T.tealLight} strokeWidth={2} />
@@ -282,17 +282,17 @@ export default function Agenda() {
           </div>
 
           {/* Date + summary */}
-          <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.3px' }}>
+          <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.3px' }}>
             {cap(formattedDate)}
           </h1>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {totalBooked > 0 && (
-              <span style={{ padding: '3px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: GTEAL, color: '#fff' }}>
+              <span style={{ padding: '4px 11px', borderRadius: 20, fontSize: 12, fontWeight: 700, background: GTEAL, color: '#fff' }}>
                 {totalBooked} turno{totalBooked !== 1 ? 's' : ''} ocupado{totalBooked !== 1 ? 's' : ''}
               </span>
             )}
             {totalSlots > 0 && (
-              <span style={{ padding: '3px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.12)' }}>
+              <span style={{ padding: '4px 11px', borderRadius: 20, fontSize: 12, fontWeight: 700, background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.12)' }}>
                 {totalSlots} turnos disponibles
               </span>
             )}
@@ -463,7 +463,7 @@ export default function Agenda() {
                       transition: 'background 0.12s',
                     }}
                   >
-                    <span style={{ fontSize: 12, fontFamily: 'monospace', fontWeight: 600, color: T.textMuted, width: 40, flexShrink: 0 }}>{st}</span>
+                    <span style={{ fontSize: 12, fontFamily: 'monospace', fontWeight: 700, color: isPast ? T.textMuted : T.textSec, width: 40, flexShrink: 0 }}>{st}</span>
                     <span style={{ fontSize: 13, fontWeight: 600, color: isPast ? T.textMuted : T.textSec, fontFamily: FF }}>
                       {isPast ? 'Pasado' : 'Libre'}
                     </span>

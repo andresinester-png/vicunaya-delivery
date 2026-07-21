@@ -36,6 +36,7 @@ const STYLES = `
   .kv-hr-del { transition: background 0.12s, color 0.12s; }
   .kv-hr-del:hover { background: rgba(239,68,68,0.08) !important; color: #F87171 !important; }
   .kv-hr-expand:hover { background: rgba(13,148,136,0.03) !important; }
+  @keyframes kv-hr-spin { to { transform: rotate(360deg); } }
 `;
 
 // ── Business logic constants (unchanged) ───────────────────────────────────
@@ -600,10 +601,9 @@ export default function Horarios() {
           <div style={{
             width: 24, height: 24, borderRadius: '50%',
             border: `2.5px solid ${T.border}`, borderTopColor: T.teal,
-            animation: 'spin 0.7s linear infinite',
+            animation: 'kv-hr-spin 0.7s linear infinite',
           }} />
           <span style={{ fontSize: 13, color: T.textMuted, fontFamily: FF }}>Cargando horarios…</span>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       ) : (
         <>
@@ -673,7 +673,7 @@ export default function Horarios() {
           </div>
 
           {/* ── Duration ── */}
-          <div style={{ ...CARD, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ ...CARD, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(13,148,136,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Clock size={15} color={T.teal} strokeWidth={2} />
             </div>
@@ -817,7 +817,7 @@ export default function Horarios() {
             )}
 
             {Object.keys(groupedDates).length === 0 && !dateForm ? (
-              <div style={{ padding: '24px 20px', textAlign: 'center' }}>
+              <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                 <p style={{ margin: 0, fontSize: 12, color: T.textMuted, fontFamily: FF }}>
                   Para días especiales fuera del horario habitual.
                 </p>
@@ -962,7 +962,7 @@ export default function Horarios() {
                         <div style={{ padding: '10px 16px 14px', background: T.bg, borderTop: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
                           {loadingSlots ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0' }}>
-                              <div style={{ width: 16, height: 16, borderRadius: '50%', border: `2px solid ${T.border}`, borderTopColor: T.teal, animation: 'spin 0.7s linear infinite' }} />
+                              <div style={{ width: 16, height: 16, borderRadius: '50%', border: `2px solid ${T.border}`, borderTopColor: T.teal, animation: 'kv-hr-spin 0.7s linear infinite' }} />
                               <span style={{ fontSize: 12, color: T.textMuted, fontFamily: FF }}>Cargando turnos…</span>
                             </div>
                           ) : daySlots.length === 0 ? (

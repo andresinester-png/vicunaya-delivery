@@ -337,7 +337,7 @@ export default function Profesionales() {
                         className="kv-pro-photo-btn"
                         onClick={() => editFileRef.current?.click()}
                         style={{
-                          flexShrink: 0, width: 44, height: 44, borderRadius: '50%',
+                          flexShrink: 0, width: 40, height: 40, borderRadius: '50%',
                           border: `2px dashed ${T.border}`, background: T.bg,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           overflow: 'hidden', cursor: 'pointer', padding: 0,
@@ -408,7 +408,7 @@ export default function Profesionales() {
                       <button
                         className="kv-pro-act"
                         onClick={() => startEdit(prof)}
-                        style={{ width: 30, height: 30, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textMuted }}
+                        style={{ width: 30, height: 30, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textMuted, transition: 'background 0.15s' }}
                         title="Editar"
                       >
                         <Pencil size={13} strokeWidth={2} />
@@ -416,7 +416,7 @@ export default function Profesionales() {
                       <button
                         className="kv-pro-del"
                         onClick={() => setDeletingId(prof.id)}
-                        style={{ width: 30, height: 30, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F87171' }}
+                        style={{ width: 30, height: 30, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F87171', transition: 'background 0.15s' }}
                         title="Eliminar"
                       >
                         <Trash2 size={13} strokeWidth={2} />
