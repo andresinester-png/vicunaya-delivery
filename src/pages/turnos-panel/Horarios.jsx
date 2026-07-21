@@ -4,9 +4,43 @@ import { useTurnosNegocio } from '../../contexts/TurnosNegocioContext.js';
 import toast from 'react-hot-toast';
 import { CalendarDays, CalendarPlus, Sun, Sunset, Clock, ChevronDown, ChevronUp, Trash2, Plus, X } from 'lucide-react';
 
+// ── KYVRA tokens ───────────────────────────────────────────────────────────
+const T = {
+  navy: '#0F172A', teal: '#0D9488', tealDark: '#0F766E', tealSec: '#14B8A6',
+  tealLight: '#5EEAD4', bg: '#F8FAFC', white: '#FFFFFF',
+  textSec: '#64748B', textMuted: '#94A3B8', border: '#E2E8F0',
+};
+const FF    = "'Plus Jakarta Sans', sans-serif";
+const GH    = 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)';
+const GTEAL = 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)';
+
+const CARD = {
+  background: T.white, borderRadius: 16,
+  border: `1.5px solid ${T.border}`,
+  boxShadow: '0 2px 8px rgba(15,23,42,0.05)',
+};
+
+const IST = {
+  padding: '8px 12px', border: `1.5px solid ${T.border}`, borderRadius: 10,
+  fontSize: 14, fontFamily: FF, color: T.navy, background: T.bg,
+  boxSizing: 'border-box',
+};
+
+const STYLES = `
+  .kv-hr-input { transition: border-color 0.15s, box-shadow 0.15s; }
+  .kv-hr-input:focus { border-color: #0D9488 !important; box-shadow: 0 0 0 3px rgba(13,148,136,0.10) !important; outline: none; }
+  .kv-hr-input:disabled { opacity: 0.4; cursor: not-allowed; }
+  .kv-hr-row { transition: background 0.12s; }
+  .kv-hr-row:hover { background: rgba(13,148,136,0.03) !important; }
+  .kv-hr-plus:hover { border-color: #0D9488 !important; color: #0D9488 !important; }
+  .kv-hr-del { transition: background 0.12s, color 0.12s; }
+  .kv-hr-del:hover { background: rgba(239,68,68,0.08) !important; color: #F87171 !important; }
+  .kv-hr-expand:hover { background: rgba(13,148,136,0.03) !important; }
+`;
+
+// ── Business logic constants (unchanged) ───────────────────────────────────
 const DAY_ORDER      = [1, 2, 3, 4, 5, 6, 0];
-const DAY_LABEL_SHORT = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 0: 'Dom' };
-const DAY_LABEL_FULL  = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 0: 'Domingo' };
+const DAY_LABEL_FULL = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 0: 'Domingo' };
 
 const DEFAULT_MORNING   = { is_active: false, start_time: '09:00', end_time: '13:00', days_of_week: [] };
 const DEFAULT_AFTERNOON = { is_active: false, start_time: '17:00', end_time: '21:00', days_of_week: [] };
@@ -68,8 +102,8 @@ function localDateStr(d) {
 }
 const todayISO = () => localDateStr(new Date());
 
-// ── Per-day row ────────────────────────────────────────────────────────────
-function DayRow({ dow, morning, setMorning, afternoon, setAfternoon, dur }) {
+// ── DayRow ─────────────────────────────────────────────────────────────────
+function DayRow({ dow, morning, setMorning, afternoon, setAfternoon, dur, isLast }) {
   const inMorning   = morning.days_of_week.includes(dow);
   const inAfternoon = afternoon.days_of_week.includes(dow);
   const isActive    = inMorning || inAfternoon;
@@ -102,51 +136,85 @@ function DayRow({ dow, morning, setMorning, afternoon, setAfternoon, dur }) {
     (inAfternoon && dur > 0 ? slotCount(afternoon.start_time, afternoon.end_time, dur) : 0);
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/40 transition-colors">
+    <div
+      className="kv-hr-row"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '11px 16px',
+        borderBottom: isLast ? 'none' : `1px solid ${T.border}`,
+        background: T.white,
+      }}
+    >
       {/* Toggle */}
       <button
         type="button"
         onClick={toggleDay}
-        className="relative w-9 h-5 rounded-full transition-colors shrink-0 focus:outline-none"
-        style={{ background: isActive ? '#e31b23' : '#D1D5DB' }}
+        style={{
+          position: 'relative', width: 36, height: 20, borderRadius: 10,
+          background: isActive ? T.teal : T.border,
+          border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0,
+          transition: 'background 0.2s',
+        }}
       >
-        <span
-          className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all"
-          style={{ left: isActive ? '18px' : '2px' }}
-        />
+        <span style={{
+          position: 'absolute', top: 2, width: 16, height: 16, borderRadius: '50%',
+          background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.22)',
+          transition: 'left 0.2s', left: isActive ? 18 : 2,
+        }} />
       </button>
 
       {/* Day name */}
-      <span className={`text-sm font-semibold w-24 shrink-0 ${isActive ? 'text-gray-800' : 'text-gray-400'}`}>
+      <span style={{
+        fontSize: 13, fontWeight: 700, color: isActive ? T.navy : T.textMuted,
+        width: 88, flexShrink: 0, fontFamily: FF,
+      }}>
         {DAY_LABEL_FULL[dow]}
       </span>
 
       {/* Band pills */}
-      <div className="flex items-center gap-1.5 flex-1 flex-wrap min-w-0">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flex: 1, flexWrap: 'wrap', minWidth: 0 }}>
         {inMorning && (
-          <span className="inline-flex items-center gap-1 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap">
-            <Sun size={10} className="shrink-0" />
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 3,
+            background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E',
+            fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20,
+            whiteSpace: 'nowrap', fontFamily: FF,
+          }}>
+            <Sun size={10} style={{ flexShrink: 0 }} />
             {morning.start_time}–{morning.end_time}
-            <button type="button" onClick={removeMorning} className="text-amber-400 hover:text-amber-700 transition-colors ml-0.5">
+            <button
+              type="button" onClick={removeMorning}
+              style={{ color: '#FBBF24', background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 1, marginLeft: 2, display: 'flex' }}
+            >
               <X size={10} />
             </button>
           </span>
         )}
         {inAfternoon && (
-          <span className="inline-flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap">
-            <Sunset size={10} className="shrink-0" />
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 3,
+            background: 'rgba(13,148,136,0.08)', border: '1px solid rgba(13,148,136,0.20)', color: T.tealDark,
+            fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20,
+            whiteSpace: 'nowrap', fontFamily: FF,
+          }}>
+            <Sunset size={10} style={{ flexShrink: 0 }} />
             {afternoon.start_time}–{afternoon.end_time}
-            <button type="button" onClick={removeAfternoon} className="text-indigo-400 hover:text-indigo-700 transition-colors ml-0.5">
+            <button
+              type="button" onClick={removeAfternoon}
+              style={{ color: T.tealSec, background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 1, marginLeft: 2, display: 'flex' }}
+            >
               <X size={10} />
             </button>
           </span>
         )}
-        {!isActive && <span className="text-xs text-gray-300">Sin turnos</span>}
+        {!isActive && (
+          <span style={{ fontSize: 11, color: T.textMuted, fontFamily: FF }}>Sin turnos</span>
+        )}
       </div>
 
       {/* Slot count */}
       {isActive && dur > 0 && (
-        <span className="text-xs text-gray-400 shrink-0">{totalSlots} t.</span>
+        <span style={{ fontSize: 11, color: T.textMuted, flexShrink: 0, fontFamily: FF }}>{totalSlots} t.</span>
       )}
 
       {/* Add band */}
@@ -155,11 +223,36 @@ function DayRow({ dow, morning, setMorning, afternoon, setAfternoon, dur }) {
           type="button"
           onClick={addBand}
           title="Agregar franja"
-          className="w-6 h-6 rounded-full border border-dashed border-gray-300 text-gray-400 hover:border-[#e31b23] hover:text-[#e31b23] flex items-center justify-center transition-colors shrink-0"
+          className="kv-hr-plus"
+          style={{
+            width: 24, height: 24, borderRadius: '50%',
+            border: `1.5px dashed ${T.border}`, color: T.textMuted,
+            background: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, padding: 0,
+          }}
         >
           <Plus size={11} />
         </button>
       )}
+    </div>
+  );
+}
+
+// ── Section header ─────────────────────────────────────────────────────────
+function SH({ Icon, children, trailing }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+      <div style={{
+        width: 32, height: 32, borderRadius: 9, background: 'rgba(13,148,136,0.10)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      }}>
+        <Icon size={15} color={T.teal} strokeWidth={2} />
+      </div>
+      <h2 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: T.navy, letterSpacing: '-0.2px', fontFamily: FF, flex: 1 }}>
+        {children}
+      </h2>
+      {trailing}
     </div>
   );
 }
@@ -175,10 +268,10 @@ export default function Horarios() {
   const [afternoon, setAfternoon] = useState({ ...DEFAULT_AFTERNOON });
   const [duration, setDuration]   = useState('30');
 
-  const [expandedDay, setExpandedDay]           = useState(null);
-  const [daySlots, setDaySlots]                 = useState([]);
-  const [loadingSlots, setLoadingSlots]         = useState(false);
-  const [confirmDialog, setConfirmDialog]       = useState(null);
+  const [expandedDay, setExpandedDay]     = useState(null);
+  const [daySlots, setDaySlots]           = useState([]);
+  const [loadingSlots, setLoadingSlots]   = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState(null);
 
   const [dateRows, setDateRows]         = useState([]);
   const [dateForm, setDateForm]         = useState(null);
@@ -424,13 +517,31 @@ export default function Horarios() {
     return result.sort((a, b) => a.dateStr.localeCompare(b.dateStr));
   }, [morning, afternoon, dur, groupedDates]);
 
-  // ── Empty state ────────────────────────────────────────────────────────
+  // ── Empty state (no professionals) ────────────────────────────────────
   if (professionals.length === 0 && !loading) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-xl font-bold text-gray-900 mb-6">Horarios</h1>
-        <div className="bg-white rounded-2xl p-10 text-center shadow-sm">
-          <p className="text-gray-400 text-sm">Primero agregá profesionales en la sección Profesionales</p>
+      <div style={{ fontFamily: FF, maxWidth: 1280, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <style>{STYLES}</style>
+        <div style={{ background: GH, borderRadius: 18, padding: '22px 22px 20px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,148,136,0.20) 0%, transparent 68%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(13,148,136,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Clock size={15} color={T.tealLight} strokeWidth={2} />
+              </div>
+              <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.6, color: T.tealLight, textTransform: 'uppercase' }}>KYVRA · HORARIOS</span>
+            </div>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.3px' }}>Horarios</h1>
+          </div>
+        </div>
+        <div style={{ ...CARD, padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 18, background: 'rgba(13,148,136,0.08)', border: '1.5px solid rgba(13,148,136,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Clock size={26} color={T.teal} strokeWidth={1.5} />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: T.navy }}>Sin profesionales</p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: T.textMuted }}>Primero agregá profesionales en la sección Profesionales</p>
+          </div>
         </div>
       </div>
     );
@@ -438,196 +549,314 @@ export default function Horarios() {
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-2xl mx-auto space-y-5">
+    <div style={{ fontFamily: FF, maxWidth: 1280, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <style>{STYLES}</style>
 
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h1 className="text-xl font-bold text-gray-900">Horarios</h1>
-        {professionals.length > 1 && (
-          <select value={selectedProf} onChange={e => setSelectedProf(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#e31b23]/30">
-            {professionals.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        )}
+      {/* ── Hero ── */}
+      <div style={{ background: GH, borderRadius: 18, padding: '22px 22px 20px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,148,136,0.20) 0%, transparent 68%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -30, left: 60, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle, rgba(94,234,212,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(13,148,136,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Clock size={15} color={T.tealLight} strokeWidth={2} />
+                </div>
+                <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.6, color: T.tealLight, textTransform: 'uppercase' }}>KYVRA · HORARIOS</span>
+              </div>
+              <h1 style={{ margin: '0 0 10px', fontSize: 24, fontWeight: 900, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.3px' }}>Horarios</h1>
+              {dur > 0 && weeklySlotTotal > 0 && (
+                <span style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: 'rgba(13,148,136,0.18)', color: T.tealLight, border: '1px solid rgba(13,148,136,0.25)' }}>
+                  {weeklySlotTotal} turnos/semana
+                </span>
+              )}
+            </div>
+
+            {/* Professional selector */}
+            {professionals.length > 1 && (
+              <select
+                value={selectedProf}
+                onChange={e => setSelectedProf(e.target.value)}
+                className="kv-hr-input"
+                style={{
+                  ...IST,
+                  background: 'rgba(255,255,255,0.08)', color: '#fff',
+                  border: '1.5px solid rgba(255,255,255,0.15)',
+                  borderRadius: 10, cursor: 'pointer', alignSelf: 'flex-start',
+                  marginTop: 2,
+                }}
+              >
+                {professionals.map(p => <option key={p.id} value={p.id} style={{ background: T.navy }}>{p.name}</option>)}
+              </select>
+            )}
+          </div>
+        </div>
       </div>
 
+      {/* ── Loading ── */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-6 h-6 border-2 border-[#e31b23] border-t-transparent rounded-full animate-spin" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '48px 0' }}>
+          <div style={{
+            width: 24, height: 24, borderRadius: '50%',
+            border: `2.5px solid ${T.border}`, borderTopColor: T.teal,
+            animation: 'spin 0.7s linear infinite',
+          }} />
+          <span style={{ fontSize: 13, color: T.textMuted, fontFamily: FF }}>Cargando horarios…</span>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       ) : (
         <>
-          {/* ── Band time ranges ─────────────────────────────────────────── */}
-          <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-gray-800">Franjas horarias</h3>
+          {/* ── Franjas horarias ── */}
+          <div style={{ ...CARD, padding: 20 }}>
+            <SH Icon={Sun}>Franjas horarias</SH>
 
             {/* Franja 1 – morning */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5 w-28 shrink-0">
-                <Sun size={14} className="text-amber-500 shrink-0" />
-                <span className="text-xs font-semibold text-amber-700">Franja 1</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: 96, flexShrink: 0 }}>
+                <Sun size={14} color="#F59E0B" />
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#B45309', fontFamily: FF }}>Franja 1</span>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <input
                   type="time" value={morning.start_time}
                   onChange={e => setMorning(m => ({ ...m, start_time: e.target.value }))}
-                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 w-[108px]"
+                  className="kv-hr-input"
+                  style={{ ...IST, width: 112 }}
                 />
-                <span className="text-gray-400 text-sm">–</span>
+                <span style={{ color: T.textMuted, fontSize: 13 }}>–</span>
                 <input
                   type="time" value={morning.end_time}
                   onChange={e => setMorning(m => ({ ...m, end_time: e.target.value }))}
-                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 w-[108px]"
+                  className="kv-hr-input"
+                  style={{ ...IST, width: 112 }}
                 />
                 {dur > 0 && (
-                  <span className="text-xs text-gray-400">{slotCount(morning.start_time, morning.end_time, dur)} turnos/día</span>
+                  <span style={{ fontSize: 12, color: T.textMuted, fontFamily: FF }}>
+                    {slotCount(morning.start_time, morning.end_time, dur)} turnos/día
+                  </span>
                 )}
               </div>
             </div>
 
             {/* Franja 2 – afternoon */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5 w-28 shrink-0">
-                <Sunset size={14} className="text-indigo-500 shrink-0" />
-                <span className="text-xs font-semibold text-indigo-700">Franja 2</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: 96, flexShrink: 0 }}>
+                <Sunset size={14} color={T.teal} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: T.tealDark, fontFamily: FF }}>Franja 2</span>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <input
                   type="time" value={afternoon.start_time}
                   onChange={e => setAfternoon(a => ({ ...a, start_time: e.target.value }))}
-                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 w-[108px]"
+                  className="kv-hr-input"
+                  style={{ ...IST, width: 112 }}
                 />
-                <span className="text-gray-400 text-sm">–</span>
+                <span style={{ color: T.textMuted, fontSize: 13 }}>–</span>
                 <input
                   type="time" value={afternoon.end_time}
                   onChange={e => setAfternoon(a => ({ ...a, end_time: e.target.value }))}
-                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#e31b23]/30 w-[108px]"
+                  className="kv-hr-input"
+                  style={{ ...IST, width: 112 }}
                 />
                 {dur > 0 && (
-                  <span className="text-xs text-gray-400">{slotCount(afternoon.start_time, afternoon.end_time, dur)} turnos/día</span>
+                  <span style={{ fontSize: 12, color: T.textMuted, fontFamily: FF }}>
+                    {slotCount(afternoon.start_time, afternoon.end_time, dur)} turnos/día
+                  </span>
                 )}
               </div>
             </div>
 
-            <p className="text-xs text-gray-400">Los horarios aplican a todos los días que tengan esa franja activada.</p>
+            <p style={{ margin: 0, fontSize: 12, color: T.textMuted, fontFamily: FF }}>
+              Los horarios aplican a todos los días que tengan esa franja activada.
+            </p>
           </div>
 
-          {/* ── Duration ─────────────────────────────────────────────────── */}
-          <div className="bg-white rounded-2xl px-5 py-4 shadow-sm flex items-center gap-4 flex-wrap">
-            <Clock size={15} className="text-gray-400 shrink-0" />
-            <span className="text-sm font-semibold text-gray-700 shrink-0">Duración del turno</span>
-            <div className="flex items-center gap-2">
+          {/* ── Duration ── */}
+          <div style={{ ...CARD, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(13,148,136,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Clock size={15} color={T.teal} strokeWidth={2} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: T.navy, flexShrink: 0, fontFamily: FF }}>Duración del turno</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
                 type="number" min="1" max="480" placeholder="ej: 30"
                 value={duration}
                 onChange={e => setDuration(e.target.value)}
                 onBlur={() => { const v = parseInt(duration, 10); setDuration(v > 0 ? String(v) : ''); }}
-                className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[#e31b23]/30"
+                className="kv-hr-input"
+                style={{ ...IST, width: 80, textAlign: 'center' }}
               />
-              <span className="text-sm text-gray-500">minutos</span>
+              <span style={{ fontSize: 13, color: T.textSec, fontFamily: FF }}>minutos</span>
             </div>
           </div>
 
-          {/* ── Days of the week ────────────────────────────────────────── */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-800">Días de atención</span>
-              {dur > 0 && weeklySlotTotal > 0 && (
-                <span className="text-xs text-gray-400">{weeklySlotTotal} turnos/semana</span>
-              )}
+          {/* ── Days of week ── */}
+          <div style={{ ...CARD, padding: 0, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: `1.5px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(13,148,136,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <CalendarDays size={15} color={T.teal} strokeWidth={2} />
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 800, color: T.navy, fontFamily: FF }}>Días de atención</span>
+              </div>
             </div>
-            {DAY_ORDER.map(dow => (
+            {DAY_ORDER.map((dow, idx) => (
               <DayRow
                 key={dow} dow={dow}
-                morning={morning}   setMorning={setMorning}
+                morning={morning}     setMorning={setMorning}
                 afternoon={afternoon} setAfternoon={setAfternoon}
                 dur={dur}
+                isLast={idx === DAY_ORDER.length - 1}
               />
             ))}
           </div>
 
-          {/* ── Specific dates ────────────────────────────────────────────── */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="px-4 py-4 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CalendarPlus size={16} className="text-[#e31b23]" />
-                <h2 className="text-sm font-semibold text-gray-800">Fechas específicas</h2>
+          {/* ── Specific dates ── */}
+          <div style={{ ...CARD, padding: 0, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: `1.5px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(13,148,136,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <CalendarPlus size={15} color={T.teal} strokeWidth={2} />
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 800, color: T.navy, fontFamily: FF }}>Fechas específicas</span>
               </div>
               {!dateForm && (
-                <button onClick={() => setDateForm({ ...EMPTY_DATE_FORM })}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-[#e31b23] hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
+                <button
+                  onClick={() => setDateForm({ ...EMPTY_DATE_FORM })}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    fontSize: 12, fontWeight: 700, padding: '6px 12px', borderRadius: 8,
+                    background: 'rgba(13,148,136,0.09)', color: T.teal,
+                    border: '1px solid rgba(13,148,136,0.20)', cursor: 'pointer', fontFamily: FF,
+                  }}
+                >
                   <Plus size={13} /> Agregar fecha
                 </button>
               )}
             </div>
 
             {dateForm && (
-              <div className="px-4 py-4 bg-gray-50 border-b border-gray-100 space-y-3">
-                <div className="flex items-center gap-3">
-                  <input type="date" min={todayISO()} value={dateForm.date}
+              <div style={{ padding: 16, background: 'rgba(13,148,136,0.04)', borderBottom: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <input
+                    type="date" min={todayISO()} value={dateForm.date}
                     onChange={e => setDateForm(f => ({ ...f, date: e.target.value }))}
-                    className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#e31b23]/30 bg-white" />
-                  <button onClick={() => setDateForm(null)} className="ml-auto p-1.5 text-gray-400 hover:bg-gray-200 rounded-lg"><X size={14} /></button>
+                    className="kv-hr-input"
+                    style={{ ...IST, flex: 1 }}
+                  />
+                  <button
+                    onClick={() => setDateForm(null)}
+                    style={{ width: 32, height: 32, borderRadius: 8, background: 'none', border: `1.5px solid ${T.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textMuted }}
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
+
                 {['morning', 'afternoon'].map(shift => {
-                  const s = dateForm[shift]; const isM = shift === 'morning';
+                  const s = dateForm[shift];
+                  const isM = shift === 'morning';
                   return (
-                    <div key={shift} className={`flex items-center gap-3 flex-wrap rounded-xl px-3 py-2 ${s.is_active ? (isM ? 'bg-amber-50' : 'bg-indigo-50') : 'bg-white border border-gray-100'}`}>
-                      <label className="flex items-center gap-2 cursor-pointer w-32 shrink-0">
-                        <input type="checkbox" checked={s.is_active}
+                    <div
+                      key={shift}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+                        borderRadius: 10, padding: '10px 12px',
+                        background: s.is_active
+                          ? (isM ? '#FFFBEB' : 'rgba(13,148,136,0.07)')
+                          : T.white,
+                        border: `1.5px solid ${s.is_active ? (isM ? '#FDE68A' : 'rgba(13,148,136,0.20)') : T.border}`,
+                      }}
+                    >
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', width: 110, flexShrink: 0 }}>
+                        <input
+                          type="checkbox" checked={s.is_active}
                           onChange={e => setDateForm(f => ({ ...f, [shift]: { ...f[shift], is_active: e.target.checked } }))}
-                          className="w-4 h-4 accent-[#e31b23]" />
-                        {isM ? <Sun size={13} className={s.is_active ? 'text-amber-500' : 'text-gray-400'} />
-                               : <Sunset size={13} className={s.is_active ? 'text-indigo-500' : 'text-gray-400'} />}
-                        <span className={`text-xs font-semibold ${s.is_active ? (isM ? 'text-amber-700' : 'text-indigo-700') : 'text-gray-400'}`}>{isM ? 'Mañana' : 'Tarde'}</span>
+                          style={{ width: 15, height: 15, accentColor: T.teal, cursor: 'pointer' }}
+                        />
+                        {isM
+                          ? <Sun size={13} color={s.is_active ? '#F59E0B' : T.textMuted} />
+                          : <Sunset size={13} color={s.is_active ? T.teal : T.textMuted} />}
+                        <span style={{ fontSize: 12, fontWeight: 700, color: s.is_active ? (isM ? '#B45309' : T.tealDark) : T.textMuted, fontFamily: FF }}>
+                          {isM ? 'Mañana' : 'Tarde'}
+                        </span>
                       </label>
-                      <div className="flex items-center gap-2">
-                        <input type="time" value={s.start_time} disabled={!s.is_active}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <input
+                          type="time" value={s.start_time} disabled={!s.is_active}
                           onChange={e => setDateForm(f => ({ ...f, [shift]: { ...f[shift], start_time: e.target.value } }))}
-                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none disabled:text-gray-300 w-[110px]" />
-                        <span className="text-gray-400">–</span>
-                        <input type="time" value={s.end_time} disabled={!s.is_active}
+                          className="kv-hr-input"
+                          style={{ ...IST, width: 112 }}
+                        />
+                        <span style={{ color: T.textMuted, fontSize: 13 }}>–</span>
+                        <input
+                          type="time" value={s.end_time} disabled={!s.is_active}
                           onChange={e => setDateForm(f => ({ ...f, [shift]: { ...f[shift], end_time: e.target.value } }))}
-                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none disabled:text-gray-300 w-[110px]" />
+                          className="kv-hr-input"
+                          style={{ ...IST, width: 112 }}
+                        />
                       </div>
                     </div>
                   );
                 })}
-                <button onClick={saveSpecificDate} disabled={savingDate}
-                  className="bg-[#e31b23] hover:bg-[#c41520] disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
-                  {savingDate ? 'Guardando...' : 'Guardar fecha'}
+
+                <button
+                  onClick={saveSpecificDate} disabled={savingDate}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 7, alignSelf: 'flex-start',
+                    padding: '10px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                    background: savingDate ? T.border : GTEAL,
+                    color: savingDate ? T.textMuted : '#fff',
+                    border: 'none', cursor: savingDate ? 'default' : 'pointer',
+                    fontFamily: FF, boxShadow: savingDate ? 'none' : '0 3px 10px rgba(13,148,136,0.28)',
+                  }}
+                >
+                  {savingDate ? 'Guardando…' : 'Guardar fecha'}
                 </button>
               </div>
             )}
 
             {Object.keys(groupedDates).length === 0 && !dateForm ? (
-              <div className="px-4 py-5 text-center">
-                <p className="text-gray-400 text-xs">Para días especiales fuera del horario habitual.</p>
+              <div style={{ padding: '24px 20px', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: 12, color: T.textMuted, fontFamily: FF }}>
+                  Para días especiales fuera del horario habitual.
+                </p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-50">
-                {Object.entries(groupedDates).sort(([a], [b]) => a.localeCompare(b)).map(([dateStr, shifts]) => {
+              <div>
+                {Object.entries(groupedDates).sort(([a], [b]) => a.localeCompare(b)).map(([dateStr, shifts], idx, arr) => {
                   const d = new Date(dateStr + 'T12:00:00');
                   const label = cap(d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }));
                   return (
-                    <div key={dateStr} className="px-4 py-3 flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900">{label}</p>
-                        <div className="flex gap-2 mt-1 flex-wrap">
+                    <div
+                      key={dateStr}
+                      style={{
+                        display: 'flex', alignItems: 'flex-start', gap: 12,
+                        padding: '12px 16px',
+                        borderBottom: idx < arr.length - 1 ? `1px solid ${T.border}` : 'none',
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: '0 0 6px', fontSize: 13, fontWeight: 700, color: T.navy, fontFamily: FF }}>{label}</p>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                           {shifts.morning?.is_active && (
-                            <span className="inline-flex items-center gap-1 text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg font-medium">
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, background: '#FFFBEB', color: '#92400E', padding: '3px 8px', borderRadius: 8, fontFamily: FF }}>
                               <Sun size={10} /> {shifts.morning.start_time} – {shifts.morning.end_time}
                             </span>
                           )}
                           {shifts.afternoon?.is_active && (
-                            <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg font-medium">
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, background: 'rgba(13,148,136,0.09)', color: T.tealDark, padding: '3px 8px', borderRadius: 8, fontFamily: FF }}>
                               <Sunset size={10} /> {shifts.afternoon.start_time} – {shifts.afternoon.end_time}
                             </span>
                           )}
                         </div>
                       </div>
-                      <button onClick={() => deleteSpecificDate(dateStr)} disabled={deletingDate === dateStr}
-                        className="p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors shrink-0">
+                      <button
+                        onClick={() => deleteSpecificDate(dateStr)}
+                        disabled={deletingDate === dateStr}
+                        className="kv-hr-del"
+                        style={{ width: 30, height: 30, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textMuted, flexShrink: 0 }}
+                      >
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -637,190 +866,261 @@ export default function Horarios() {
             )}
           </div>
 
-          {/* ── Save button ───────────────────────────────────────────────── */}
+          {/* ── Save button ── */}
           <button
             onClick={saveSchedule}
             disabled={saving}
-            className="w-full bg-[#e31b23] hover:bg-[#c41520] disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
+            style={{
+              width: '100%', padding: '14px 20px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+              background: saving ? T.border : GTEAL,
+              color: saving ? T.textMuted : '#fff',
+              border: 'none', cursor: saving ? 'default' : 'pointer', fontFamily: FF,
+              boxShadow: saving ? 'none' : '0 4px 14px rgba(13,148,136,0.32)',
+              transition: 'opacity 0.15s',
+            }}
           >
-            {saving ? 'Guardando y generando turnos...' : 'Guardar horario'}
+            {saving ? 'Guardando y generando turnos…' : 'Guardar horario'}
           </button>
 
-          {/* ── Preview ───────────────────────────────────────────────────── */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <CalendarDays size={16} className="text-gray-400" />
-              <h2 className="text-sm font-semibold text-gray-700">Vista previa — próximas 4 semanas</h2>
+          {/* ── Preview ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(13,148,136,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <CalendarDays size={15} color={T.teal} strokeWidth={2} />
+              </div>
+              <span style={{ fontSize: 14, fontWeight: 800, color: T.navy, flex: 1, fontFamily: FF }}>Vista previa — próximas 4 semanas</span>
               {preview.length > 0 && (
-                <span className="ml-auto text-xs text-gray-400">
+                <span style={{ fontSize: 12, color: T.textMuted, fontFamily: FF }}>
                   {preview.length} días · {preview.reduce((s, d) => s + d.mCount + d.aCount, 0)} turnos
                 </span>
               )}
             </div>
 
             {preview.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-                <CalendarDays size={28} className="mx-auto text-gray-200 mb-2" />
-                <p className="text-gray-400 text-sm">
+              <div style={{ ...CARD, padding: '40px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(13,148,136,0.07)', border: '1.5px solid rgba(13,148,136,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CalendarDays size={24} color={T.teal} strokeWidth={1.5} />
+                </div>
+                <p style={{ margin: 0, fontSize: 13, color: T.textMuted, fontFamily: FF }}>
                   {!dur ? 'Ingresá una duración para ver la vista previa' : 'Activá al menos un día en el horario semanal'}
                 </p>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="divide-y divide-gray-50">
-                  {preview.map((item) => {
-                    const isExpanded = expandedDay === item.dateStr;
-                    const mSlots = isExpanded ? daySlots.filter(s => { const t = String(s.start_time).slice(0, 5); return t >= morning.start_time && t < morning.end_time; }) : [];
-                    const aSlots = isExpanded ? daySlots.filter(s => { const t = String(s.start_time).slice(0, 5); return t >= afternoon.start_time && t < afternoon.end_time; }) : [];
-                    return (
-                      <div key={item.dateStr} className={item.isSpecific ? 'bg-purple-50/40' : ''}>
-                        <button
-                          onClick={() => toggleExpandDay(item.dateStr)}
-                          className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-50/60 transition-colors"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-gray-900">{item.label}</span>
-                              {item.isSpecific && <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-medium">específica</span>}
-                            </div>
-                            <div className="flex gap-2 mt-1 flex-wrap">
-                              {item.hasMorning && (
-                                <span className="inline-flex items-center gap-1 text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg font-medium">
-                                  <Sun size={10} />
-                                  {item.isSpecific ? `${item.morningDS?.start_time} – ${item.morningDS?.end_time}` : `${morning.start_time} – ${morning.end_time}`}
-                                  · {item.mCount} turnos
-                                </span>
-                              )}
-                              {item.hasAfternoon && (
-                                <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg font-medium">
-                                  <Sunset size={10} />
-                                  {item.isSpecific ? `${item.afternoonDS?.start_time} – ${item.afternoonDS?.end_time}` : `${afternoon.start_time} – ${afternoon.end_time}`}
-                                  · {item.aCount} turnos
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {isExpanded ? <ChevronUp size={14} className="text-gray-400 shrink-0" /> : <ChevronDown size={14} className="text-gray-400 shrink-0" />}
-                        </button>
-
-                        {isExpanded && (
-                          <div className="px-4 pb-3 pt-1 bg-gray-50 border-t border-gray-100 space-y-3">
-                            {loadingSlots ? (
-                              <div className="flex items-center gap-2 py-2">
-                                <div className="w-4 h-4 border-2 border-[#e31b23] border-t-transparent rounded-full animate-spin" />
-                                <span className="text-xs text-gray-400">Cargando slots...</span>
-                              </div>
-                            ) : daySlots.length === 0 ? (
-                              <p className="text-xs text-gray-400 py-2">No hay slots generados para este día. Guardá el horario primero.</p>
-                            ) : (
-                              <>
-                                {/* Bulk cancel buttons */}
-                                {(() => {
-                                  const activeMorning   = mSlots.filter(s => s.is_active).length;
-                                  const activeAfternoon = aSlots.filter(s => s.is_active).length;
-                                  const activeAll = activeMorning + activeAfternoon;
-                                  if (!activeAll) return null;
-                                  return (
-                                    <div className="flex gap-1.5 flex-wrap">
-                                      {item.hasMorning && activeMorning > 0 && (
-                                        <button onClick={() => requestBulkCancel('morning')}
-                                          className="flex items-center gap-1 text-xs border border-red-200 text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-semibold transition-colors">
-                                          <Sun size={11} /> Cancelar mañana ({activeMorning})
-                                        </button>
-                                      )}
-                                      {item.hasAfternoon && activeAfternoon > 0 && (
-                                        <button onClick={() => requestBulkCancel('afternoon')}
-                                          className="flex items-center gap-1 text-xs border border-red-200 text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-semibold transition-colors">
-                                          <Sunset size={11} /> Cancelar tarde ({activeAfternoon})
-                                        </button>
-                                      )}
-                                      {item.hasMorning && item.hasAfternoon && activeAll > 0 && (
-                                        <button onClick={() => requestBulkCancel('all')}
-                                          className="flex items-center gap-1 text-xs border border-red-300 text-red-700 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-semibold transition-colors">
-                                          Cancelar todo el día ({activeAll})
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                })()}
-
-                                {item.hasMorning && mSlots.length > 0 && (
-                                  <div className="space-y-1.5">
-                                    <div className="flex items-center gap-1.5">
-                                      <Sun size={11} className="text-amber-500" />
-                                      <span className="text-xs font-semibold text-amber-700">Mañana</span>
-                                      <span className="text-xs text-gray-400 ml-1">{mSlots.filter(s => s.is_active).length}/{mSlots.length} activos</span>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-1">
-                                      {mSlots.map(slot => {
-                                        const st = String(slot.start_time).slice(0, 5);
-                                        return (
-                                          <div key={slot.id} className={`flex items-center justify-between px-2 py-1 rounded-lg ${slot.is_active ? 'bg-white border border-amber-100' : 'bg-gray-100 opacity-50'}`}>
-                                            <span className={`text-xs font-mono font-semibold ${slot.is_active ? 'text-amber-800' : 'text-gray-400 line-through'}`}>{st}</span>
-                                            {slot.is_active && (
-                                              <button onClick={() => cancelSingleSlot(slot.id)} className="text-red-400 hover:text-red-600 ml-1 transition-colors"><X size={11} /></button>
-                                            )}
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                )}
-                                {item.hasAfternoon && aSlots.length > 0 && (
-                                  <div className="space-y-1.5">
-                                    <div className="flex items-center gap-1.5">
-                                      <Sunset size={11} className="text-indigo-500" />
-                                      <span className="text-xs font-semibold text-indigo-700">Tarde</span>
-                                      <span className="text-xs text-gray-400 ml-1">{aSlots.filter(s => s.is_active).length}/{aSlots.length} activos</span>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-1">
-                                      {aSlots.map(slot => {
-                                        const st = String(slot.start_time).slice(0, 5);
-                                        return (
-                                          <div key={slot.id} className={`flex items-center justify-between px-2 py-1 rounded-lg ${slot.is_active ? 'bg-white border border-indigo-100' : 'bg-gray-100 opacity-50'}`}>
-                                            <span className={`text-xs font-mono font-semibold ${slot.is_active ? 'text-indigo-800' : 'text-gray-400 line-through'}`}>{st}</span>
-                                            {slot.is_active && (
-                                              <button onClick={() => cancelSingleSlot(slot.id)} className="text-red-400 hover:text-red-600 ml-1 transition-colors"><X size={11} /></button>
-                                            )}
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                )}
-                              </>
+              <div style={{ ...CARD, padding: 0, overflow: 'hidden' }}>
+                {preview.map((item, idx) => {
+                  const isExpanded = expandedDay === item.dateStr;
+                  const mSlots = isExpanded ? daySlots.filter(s => { const t = String(s.start_time).slice(0, 5); return t >= morning.start_time && t < morning.end_time; }) : [];
+                  const aSlots = isExpanded ? daySlots.filter(s => { const t = String(s.start_time).slice(0, 5); return t >= afternoon.start_time && t < afternoon.end_time; }) : [];
+                  return (
+                    <div
+                      key={item.dateStr}
+                      style={{
+                        borderBottom: idx < preview.length - 1 ? `1px solid ${T.border}` : 'none',
+                        background: item.isSpecific ? 'rgba(13,148,136,0.03)' : T.white,
+                      }}
+                    >
+                      <button
+                        onClick={() => toggleExpandDay(item.dateStr)}
+                        className="kv-hr-expand"
+                        style={{
+                          width: '100%', padding: '11px 16px',
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer',
+                          transition: 'background 0.12s',
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: T.navy, fontFamily: FF }}>{item.label}</span>
+                            {item.isSpecific && (
+                              <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(13,148,136,0.12)', color: T.teal, padding: '2px 7px', borderRadius: 20, fontFamily: FF }}>específica</span>
                             )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                            {item.hasMorning && (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, background: '#FFFBEB', color: '#92400E', padding: '3px 8px', borderRadius: 8, fontFamily: FF }}>
+                                <Sun size={10} />
+                                {item.isSpecific ? `${item.morningDS?.start_time} – ${item.morningDS?.end_time}` : `${morning.start_time} – ${morning.end_time}`}
+                                · {item.mCount} turnos
+                              </span>
+                            )}
+                            {item.hasAfternoon && (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, background: 'rgba(13,148,136,0.09)', color: T.tealDark, padding: '3px 8px', borderRadius: 8, fontFamily: FF }}>
+                                <Sunset size={10} />
+                                {item.isSpecific ? `${item.afternoonDS?.start_time} – ${item.afternoonDS?.end_time}` : `${afternoon.start_time} – ${afternoon.end_time}`}
+                                · {item.aCount} turnos
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {isExpanded
+                          ? <ChevronUp size={14} color={T.textMuted} style={{ flexShrink: 0 }} />
+                          : <ChevronDown size={14} color={T.textMuted} style={{ flexShrink: 0 }} />}
+                      </button>
+
+                      {isExpanded && (
+                        <div style={{ padding: '10px 16px 14px', background: T.bg, borderTop: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          {loadingSlots ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0' }}>
+                              <div style={{ width: 16, height: 16, borderRadius: '50%', border: `2px solid ${T.border}`, borderTopColor: T.teal, animation: 'spin 0.7s linear infinite' }} />
+                              <span style={{ fontSize: 12, color: T.textMuted, fontFamily: FF }}>Cargando turnos…</span>
+                            </div>
+                          ) : daySlots.length === 0 ? (
+                            <p style={{ margin: 0, fontSize: 12, color: T.textMuted, padding: '8px 0', fontFamily: FF }}>
+                              No hay turnos generados para este día. Guardá el horario primero.
+                            </p>
+                          ) : (
+                            <>
+                              {/* Bulk cancel buttons */}
+                              {(() => {
+                                const activeMorning   = mSlots.filter(s => s.is_active).length;
+                                const activeAfternoon = aSlots.filter(s => s.is_active).length;
+                                const activeAll = activeMorning + activeAfternoon;
+                                if (!activeAll) return null;
+                                return (
+                                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                    {item.hasMorning && activeMorning > 0 && (
+                                      <button
+                                        onClick={() => requestBulkCancel('morning')}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 8, background: 'none', border: '1.5px solid #FECACA', color: '#DC2626', cursor: 'pointer', fontFamily: FF }}
+                                      >
+                                        <Sun size={11} /> Cancelar mañana ({activeMorning})
+                                      </button>
+                                    )}
+                                    {item.hasAfternoon && activeAfternoon > 0 && (
+                                      <button
+                                        onClick={() => requestBulkCancel('afternoon')}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 8, background: 'none', border: '1.5px solid #FECACA', color: '#DC2626', cursor: 'pointer', fontFamily: FF }}
+                                      >
+                                        <Sunset size={11} /> Cancelar tarde ({activeAfternoon})
+                                      </button>
+                                    )}
+                                    {item.hasMorning && item.hasAfternoon && activeAll > 0 && (
+                                      <button
+                                        onClick={() => requestBulkCancel('all')}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 8, background: 'none', border: '1.5px solid #FCA5A5', color: '#B91C1C', cursor: 'pointer', fontFamily: FF }}
+                                      >
+                                        Cancelar todo el día ({activeAll})
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+
+                              {item.hasMorning && mSlots.length > 0 && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    <Sun size={11} color="#F59E0B" />
+                                    <span style={{ fontSize: 11, fontWeight: 700, color: '#B45309', fontFamily: FF }}>Mañana</span>
+                                    <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 2, fontFamily: FF }}>
+                                      {mSlots.filter(s => s.is_active).length}/{mSlots.length} activos
+                                    </span>
+                                  </div>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 4 }}>
+                                    {mSlots.map(slot => {
+                                      const st = String(slot.start_time).slice(0, 5);
+                                      return (
+                                        <div
+                                          key={slot.id}
+                                          style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            padding: '4px 8px', borderRadius: 8,
+                                            background: slot.is_active ? T.white : T.bg,
+                                            border: slot.is_active ? '1px solid #FDE68A' : `1px solid ${T.border}`,
+                                            opacity: slot.is_active ? 1 : 0.5,
+                                          }}
+                                        >
+                                          <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, color: slot.is_active ? '#92400E' : T.textMuted, textDecoration: slot.is_active ? 'none' : 'line-through' }}>{st}</span>
+                                          {slot.is_active && (
+                                            <button onClick={() => cancelSingleSlot(slot.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F87171', padding: 0, display: 'flex', marginLeft: 3 }}>
+                                              <X size={10} />
+                                            </button>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              {item.hasAfternoon && aSlots.length > 0 && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    <Sunset size={11} color={T.teal} />
+                                    <span style={{ fontSize: 11, fontWeight: 700, color: T.tealDark, fontFamily: FF }}>Tarde</span>
+                                    <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 2, fontFamily: FF }}>
+                                      {aSlots.filter(s => s.is_active).length}/{aSlots.length} activos
+                                    </span>
+                                  </div>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 4 }}>
+                                    {aSlots.map(slot => {
+                                      const st = String(slot.start_time).slice(0, 5);
+                                      return (
+                                        <div
+                                          key={slot.id}
+                                          style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            padding: '4px 8px', borderRadius: 8,
+                                            background: slot.is_active ? T.white : T.bg,
+                                            border: slot.is_active ? `1px solid rgba(13,148,136,0.25)` : `1px solid ${T.border}`,
+                                            opacity: slot.is_active ? 1 : 0.5,
+                                          }}
+                                        >
+                                          <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, color: slot.is_active ? T.tealDark : T.textMuted, textDecoration: slot.is_active ? 'none' : 'line-through' }}>{st}</span>
+                                          {slot.is_active && (
+                                            <button onClick={() => cancelSingleSlot(slot.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F87171', padding: 0, display: 'flex', marginLeft: 3 }}>
+                                              <X size={10} />
+                                            </button>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
 
-          <p className="text-xs text-gray-400 px-1">
+          <p style={{ margin: 0, fontSize: 12, color: T.textMuted, padding: '0 4px', fontFamily: FF, lineHeight: 1.5 }}>
             "Guardar horario" convierte la plantilla semanal en turnos para los próximos 28 días. Hacé click en un día de la vista previa para cancelar turnos puntuales.
           </p>
         </>
       )}
 
-      {/* Confirmation modal */}
+      {/* ── Confirmation modal ── */}
       {confirmDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setConfirmDialog(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-6 mx-4 max-w-sm w-full" onClick={e => e.stopPropagation()}>
-            <p className="font-bold text-gray-900 text-base">¿Cancelar {confirmDialog.label}?</p>
-            <p className="text-sm text-gray-500 mt-2">
+        <div
+          onClick={() => setConfirmDialog(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(2px)' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: T.white, borderRadius: 18, boxShadow: '0 20px 60px rgba(15,23,42,0.18)', padding: 24, margin: '0 16px', maxWidth: 360, width: '100%' }}
+          >
+            <p style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 800, color: T.navy, fontFamily: FF }}>
+              ¿Cancelar {confirmDialog.label}?
+            </p>
+            <p style={{ margin: '0 0 20px', fontSize: 13, color: T.textSec, lineHeight: 1.5, fontFamily: FF }}>
               Se cancelarán <strong>{confirmDialog.count}</strong> turno{confirmDialog.count !== 1 ? 's' : ''}. Esta acción no se puede deshacer.
             </p>
-            <div className="flex gap-2 mt-5 justify-end">
-              <button onClick={() => setConfirmDialog(null)} className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setConfirmDialog(null)}
+                style={{ padding: '9px 16px', fontSize: 13, fontWeight: 700, color: T.textSec, background: T.bg, border: `1.5px solid ${T.border}`, borderRadius: 10, cursor: 'pointer', fontFamily: FF }}
+              >
                 No, volver
               </button>
               <button
                 onClick={() => { const d = confirmDialog; setConfirmDialog(null); cancelBulkSlots(d.type); }}
-                className="px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors"
+                style={{ padding: '9px 16px', fontSize: 13, fontWeight: 700, color: '#fff', background: '#DC2626', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: FF, boxShadow: '0 2px 8px rgba(220,38,38,0.30)' }}
               >
                 Sí, cancelar {confirmDialog.count} turno{confirmDialog.count !== 1 ? 's' : ''}
               </button>
