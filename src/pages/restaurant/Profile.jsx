@@ -43,6 +43,10 @@ const STYLES = `
   .kv-input:focus { border-color: #0D9488 !important; box-shadow: 0 0 0 3px rgba(13,148,136,0.10) !important; outline: none; }
   .kv-cover-wrap:hover .kv-cover-hover { opacity: 1 !important; }
   .kv-cat-chip:hover { background: rgba(13,148,136,0.06) !important; border-color: #0D9488 !important; }
+  .kv-profile-grid { display: flex; flex-direction: column; gap: 16px; }
+  @media (min-width: 1024px) {
+    .kv-profile-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(340px, 0.8fr); gap: 20px; align-items: start; }
+  }
   @media (min-width: 540px) { .kv-delivery-grid { grid-template-columns: repeat(3, 1fr) !important; } }
   @media (min-width: 400px) { .kv-time-grid { grid-template-columns: repeat(2, 1fr) !important; } }
 `;
@@ -405,7 +409,7 @@ export default function Profile() {
   );
 
   return (
-    <div style={{ fontFamily: FF, display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 680 }}>
+    <div style={{ fontFamily: FF, display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 1280 }}>
       <style>{STYLES}</style>
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
@@ -468,6 +472,12 @@ export default function Profile() {
           </button>
         </div>
       </div>
+
+      {/* ── Two-column grid ─────────────────────────────────────────── */}
+      <div className="kv-profile-grid">
+
+      {/* Left column */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* ── Imágenes y perfil ─────────────────────────────────────── */}
       <div style={CARD}>
@@ -559,6 +569,10 @@ export default function Profile() {
           </p>
         </div>
       </div>
+      </div>{/* end left column */}
+
+      {/* Right column */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* ── Detalles de entrega ───────────────────────────────────── */}
       <div style={CARD}>
@@ -736,6 +750,9 @@ export default function Profile() {
           />
         </div>
       </div>
+
+      </div>{/* end right column */}
+      </div>{/* end kv-profile-grid */}
 
       {/* ── Save ─────────────────────────────────────────────────── */}
       <button
