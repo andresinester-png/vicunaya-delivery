@@ -247,7 +247,7 @@ function SolicitudForm({ onClose, cfg }) {
               <div style={{ width: 36, height: 36, borderRadius: 10, background: KYVRA.tealBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Package size={18} color={KYVRA.teal} strokeWidth={2} />
               </div>
-              <h2 style={{ fontWeight: 900, fontSize: 17, margin: 0, color: KYVRA.navy }}>Solicitar encomienda</h2>
+              <h2 style={{ fontWeight: 900, fontSize: 17, margin: 0, color: KYVRA.navy }}>Presupuestar encomienda</h2>
             </div>
             <button
               onClick={onClose}
@@ -1110,7 +1110,7 @@ export default function Encomiendas() {
           }}
         >
           <Package size={20} />
-          Solicitar encomienda
+          Presupuestar encomienda
           <ArrowRight size={18} />
         </motion.button>
 

@@ -31,6 +31,34 @@ export function playNotificationBell() {
   } catch (_) { /* audio no disponible */ }
 }
 
+// Dos notas descendentes (mi→la) para cancelación de turno
+export function playCancellationSound() {
+  if (typeof window === 'undefined' || document.hidden) return;
+  try {
+    const ac  = ctx();
+    const now = ac.currentTime;
+
+    [
+      { freq: 660, t: 0,    decay: 0.40 }, // E5 (descending = negative signal)
+      { freq: 440, t: 0.22, decay: 0.62 }, // A4
+    ].forEach(({ freq, t, decay }) => {
+      const osc = ac.createOscillator();
+      const env = ac.createGain();
+      osc.connect(env);
+      env.connect(ac.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      env.gain.setValueAtTime(0.0001, now + t);
+      env.gain.linearRampToValueAtTime(0.22, now + t + 0.015);
+      env.gain.exponentialRampToValueAtTime(0.0001, now + t + decay);
+      osc.start(now + t);
+      osc.stop(now + t + decay + 0.02);
+    });
+
+    setTimeout(() => ac.close(), 1000);
+  } catch (_) {}
+}
+
 // Dos notas ascendentes (do→sol) para confirmar pedido
 export function playConfirmation() {
   if (typeof window === 'undefined' || document.hidden) return;

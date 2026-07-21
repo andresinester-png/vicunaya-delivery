@@ -111,22 +111,6 @@ function AppointmentCard({ appt, updating, onUpdateStatus }) {
 
         {canAct && (
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            {appt.status !== 'confirmed' && (
-              <button
-                onClick={() => onUpdateStatus(appt.id, 'confirmed')}
-                disabled={!!updating}
-                style={{
-                  flex: 1, padding: '9px', borderRadius: 12, border: 'none', fontFamily: FF, fontWeight: 700, fontSize: 12.5,
-                  cursor: !!updating ? 'default' : 'pointer',
-                  background: isUpdating('confirmed') ? 'rgba(13,148,136,0.25)' : 'linear-gradient(135deg, #0D9488, #14B8A6)',
-                  color: isUpdating('confirmed') ? '#5EEAD4' : '#fff',
-                  opacity: !!updating ? 0.7 : 1,
-                  boxShadow: isUpdating('confirmed') ? 'none' : '0 2px 8px rgba(13,148,136,0.35)',
-                }}
-              >
-                {isUpdating('confirmed') ? 'Confirmando...' : 'Confirmar'}
-              </button>
-            )}
             <button
               onClick={() => onUpdateStatus(appt.id, 'cancelled')}
               disabled={!!updating}
@@ -137,7 +121,7 @@ function AppointmentCard({ appt, updating, onUpdateStatus }) {
                 opacity: !!updating ? 0.7 : 1,
               }}
             >
-              {isUpdating('cancelled') ? 'Cancelando...' : 'Cancelar'}
+              {isUpdating('cancelled') ? 'Cancelando...' : 'Cancelar turno'}
             </button>
           </div>
         )}
