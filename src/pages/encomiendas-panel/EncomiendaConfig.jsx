@@ -36,6 +36,16 @@ const DIAS_OPTS = [
   { val: 'domingo',   label: 'Domingo'   },
 ];
 
+const DIAS_ABBR = [
+  { val: 'lunes',     label: 'Lun' },
+  { val: 'martes',    label: 'Mar' },
+  { val: 'miercoles', label: 'Mié' },
+  { val: 'jueves',    label: 'Jue' },
+  { val: 'viernes',   label: 'Vie' },
+  { val: 'sabado',    label: 'Sáb' },
+  { val: 'domingo',   label: 'Dom' },
+];
+
 const HORAS = Array.from({ length: 24 }, (_, i) => {
   const h = String(i).padStart(2, '0');
   return [`${h}:00`, `${h}:30`];
@@ -53,6 +63,28 @@ function Section({ icon: Icon, title, subtitle, children }) {
       </div>
       {subtitle && <p style={{ fontSize: 12, color: T.textMuted, margin: '0 0 12px', fontFamily: FF, lineHeight: 1.5 }}>{subtitle}</p>}
       {children}
+    </div>
+  );
+}
+
+function DayToggleRow({ label, fieldValues, onToggle }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <p style={{ fontSize: 11, fontWeight: 600, color: T.textSec, margin: '0 0 8px', fontFamily: FF }}>{label}</p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {DIAS_ABBR.map(d => {
+          const active = fieldValues.includes(d.val);
+          return (
+            <button
+              key={d.val}
+              onClick={() => onToggle(d.val)}
+              style={{ borderRadius: 8, padding: '6px 10px', background: active ? T.teal : T.white, color: active ? '#fff' : T.textSec, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: FF, border: `1.5px solid ${active ? T.teal : T.border}` }}
+            >
+              {d.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -82,6 +114,8 @@ export default function EncomiendaConfig() {
   const [loading, setLoading] = useState(true);
   const [config, setConfig]   = useState({
     dias_trabajo:            [],
+    dias_recepcion:          [],
+    dias_entrega:            [],
     horario_recepcion_desde: '',
     horario_recepcion_hasta: '',
     horario_entrega_desde:   '',
@@ -101,6 +135,8 @@ export default function EncomiendaConfig() {
       if (data) {
         setConfig({
           dias_trabajo:            data.dias_trabajo            || [],
+          dias_recepcion:          data.dias_recepcion          || [],
+          dias_entrega:            data.dias_entrega            || [],
           horario_recepcion_desde: data.horario_recepcion_desde || '',
           horario_recepcion_hasta: data.horario_recepcion_hasta || '',
           horario_entrega_desde:   data.horario_entrega_desde   || '',
@@ -125,6 +161,15 @@ export default function EncomiendaConfig() {
     }));
   };
 
+  const toggleDiaField = (field, val) => {
+    setConfig(prev => ({
+      ...prev,
+      [field]: prev[field].includes(val)
+        ? prev[field].filter(d => d !== val)
+        : [...prev[field], val],
+    }));
+  };
+
   const handleSave = async () => {
     setSaving(true);
     const { error } = await supabase
@@ -132,6 +177,8 @@ export default function EncomiendaConfig() {
       .upsert({
         empresa_id:              empresa.id,
         dias_trabajo:            config.dias_trabajo,
+        dias_recepcion:          config.dias_recepcion,
+        dias_entrega:            config.dias_entrega,
         horario_recepcion_desde: config.horario_recepcion_desde || null,
         horario_recepcion_hasta: config.horario_recepcion_hasta || null,
         horario_entrega_desde:   config.horario_entrega_desde   || null,
@@ -194,6 +241,11 @@ export default function EncomiendaConfig() {
 
             {/* Horario recepción */}
             <Section icon={Clock} title="Horario de recepción en depósito" subtitle="Horario en que recibís paquetes en tu depósito">
+              <DayToggleRow
+                label="Días que aceptás paquetes"
+                fieldValues={config.dias_recepcion}
+                onToggle={val => toggleDiaField('dias_recepcion', val)}
+              />
               <div style={{ display: 'flex', gap: 10 }}>
                 <TimeSelect label="Desde" value={config.horario_recepcion_desde} onChange={v => setField('horario_recepcion_desde', v)} />
                 <TimeSelect label="Hasta" value={config.horario_recepcion_hasta} onChange={v => setField('horario_recepcion_hasta', v)} />
@@ -202,6 +254,11 @@ export default function EncomiendaConfig() {
 
             {/* Horario entregas */}
             <Section icon={Truck} title="Horario de entregas" subtitle="Franja horaria en que hacés entregas">
+              <DayToggleRow
+                label="Días en que hacés entregas"
+                fieldValues={config.dias_entrega}
+                onToggle={val => toggleDiaField('dias_entrega', val)}
+              />
               <div style={{ display: 'flex', gap: 10 }}>
                 <TimeSelect label="Desde" value={config.horario_entrega_desde} onChange={v => setField('horario_entrega_desde', v)} />
                 <TimeSelect label="Hasta" value={config.horario_entrega_hasta} onChange={v => setField('horario_entrega_hasta', v)} />

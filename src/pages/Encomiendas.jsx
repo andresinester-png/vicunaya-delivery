@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ChevronLeft, Clock, MapPin, Phone, Package,
+  ChevronLeft, Clock, MapPin, Phone, Package, Truck,
   CheckCircle, X, ArrowRight, Send,
   ThumbsUp, MessageSquare, Check, CheckCheck, Camera, Image,
 } from 'lucide-react';
@@ -1138,38 +1138,72 @@ export default function Encomiendas() {
         <MisSolicitudes />
 
         {/* Horarios — navy header + white body */}
-        {cfg?.dias_trabajo?.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
-          >
-            <div style={{ background: KYVRA.navy, borderRadius: '16px 16px 0 0', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Clock size={15} color="#fff" strokeWidth={2} />
+        {(cfg?.dias_recepcion?.length > 0 || cfg?.dias_entrega?.length > 0 || cfg?.dias_trabajo?.length > 0) && (() => {
+          const recDays = cfg.dias_recepcion?.length > 0
+            ? cfg.dias_recepcion
+            : (cfg.dias_entrega?.length > 0 ? [] : (cfg.dias_trabajo ?? []));
+          const entDays = cfg.dias_entrega ?? [];
+          const showBoth = recDays.length > 0 && entDays.length > 0;
+
+          const DayRow = ({ d, activo, hora, teal }) => (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 13, fontWeight: activo ? 700 : 500, color: activo ? KYVRA.navy : KYVRA.textMuted, fontFamily: FF }}>{d.label}</span>
+              {activo ? (
+                <span style={{ fontSize: 12, fontWeight: 800, color: teal ? KYVRA.tealDark : KYVRA.navy, background: teal ? KYVRA.tealBg : 'rgba(15,23,42,0.07)', padding: '3px 10px', borderRadius: 999, fontFamily: FF }}>{hora}</span>
+              ) : (
+                <span style={{ fontSize: 12, fontWeight: 600, color: KYVRA.textMuted, fontFamily: FF }}>Cerrado</span>
+              )}
+            </div>
+          );
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
+            >
+              <div style={{ background: KYVRA.navy, borderRadius: '16px 16px 0 0', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Clock size={15} color="#fff" strokeWidth={2} />
+                </div>
+                <p style={{ fontSize: 14, fontWeight: 800, color: '#fff', margin: 0, fontFamily: FF }}>Horarios de servicio</p>
               </div>
-              <p style={{ fontSize: 14, fontWeight: 800, color: '#fff', margin: 0, fontFamily: FF }}>Horarios de servicio</p>
-            </div>
-            <div style={{ background: KYVRA.white, borderRadius: '0 0 16px 16px', border: `1px solid ${KYVRA.border}`, borderTop: 'none', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 9 }}>
-              {ALL_DAYS.map(d => {
-                const activo = cfg.dias_trabajo.includes(d.val);
-                const hora   = activo
-                  ? (cfg.horario_recepcion_desde && cfg.horario_recepcion_hasta
-                      ? `${cfg.horario_recepcion_desde} – ${cfg.horario_recepcion_hasta}`
-                      : 'Abierto')
-                  : null;
-                return (
-                  <div key={d.val} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 13, fontWeight: activo ? 700 : 500, color: activo ? KYVRA.navy : KYVRA.textMuted, fontFamily: FF }}>{d.label}</span>
-                    {activo ? (
-                      <span style={{ fontSize: 12, fontWeight: 800, color: KYVRA.tealDark, background: KYVRA.tealBg, padding: '3px 10px', borderRadius: 999, fontFamily: FF }}>{hora}</span>
-                    ) : (
-                      <span style={{ fontSize: 12, fontWeight: 600, color: KYVRA.textMuted, fontFamily: FF }}>Cerrado</span>
+              <div style={{ background: KYVRA.white, borderRadius: '0 0 16px 16px', border: `1px solid ${KYVRA.border}`, borderTop: 'none', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 9 }}>
+                {recDays.length > 0 && (
+                  <>
+                    {showBoth && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                        <MapPin size={12} color={KYVRA.teal} />
+                        <span style={{ fontSize: 11, fontWeight: 800, color: KYVRA.teal, textTransform: 'uppercase', letterSpacing: 0.6, fontFamily: FF }}>Recepción en depósito</span>
+                      </div>
                     )}
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
+                    {ALL_DAYS.map(d => {
+                      const activo = recDays.includes(d.val);
+                      const hora   = cfg.horario_recepcion_desde && cfg.horario_recepcion_hasta
+                        ? `${cfg.horario_recepcion_desde} – ${cfg.horario_recepcion_hasta}`
+                        : 'Abierto';
+                      return <DayRow key={d.val} d={d} activo={activo} hora={hora} teal />;
+                    })}
+                  </>
+                )}
+                {entDays.length > 0 && (
+                  <>
+                    {showBoth && <div style={{ height: 1, background: KYVRA.border, margin: '4px 0' }} />}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <Truck size={12} color={KYVRA.navy} />
+                      <span style={{ fontSize: 11, fontWeight: 800, color: KYVRA.navy, textTransform: 'uppercase', letterSpacing: 0.6, fontFamily: FF }}>Entregas a domicilio</span>
+                    </div>
+                    {ALL_DAYS.map(d => {
+                      const activo = entDays.includes(d.val);
+                      const hora   = cfg.horario_entrega_desde && cfg.horario_entrega_hasta
+                        ? `${cfg.horario_entrega_desde} – ${cfg.horario_entrega_hasta}`
+                        : 'Abierto';
+                      return <DayRow key={d.val} d={d} activo={activo} hora={hora} teal={false} />;
+                    })}
+                  </>
+                )}
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* Cómo funciona */}
         {(cfg?.condiciones_deposito || cfg?.condiciones_retiro) && (
