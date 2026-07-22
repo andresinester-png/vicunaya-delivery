@@ -4,16 +4,36 @@ import { ChevronLeft, Save, Clock, MapPin, Truck, Calendar } from 'lucide-react'
 import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase.js';
 
-const COLOR = '#e31b23';
+/* ── Design tokens ─────────────────────────────────────────────── */
+const T = {
+  navy: '#0F172A', teal: '#0D9488', tealDark: '#0F766E',
+  bg: '#F8FAFC', white: '#FFFFFF', textSec: '#64748B', textMuted: '#94A3B8', border: '#E2E8F0',
+};
+const FF    = "'Plus Jakarta Sans', sans-serif";
+const GH    = 'linear-gradient(160deg, #061118 0%, #0A1E2A 28%, #0D3A35 55%, #0F172A 100%)';
+const GTEAL = 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)';
 
+const STYLES = `
+  @keyframes kv-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+  }
+  .kv-shimmer {
+    background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+    background-size: 200% 100%;
+    animation: kv-shimmer 1.4s ease-in-out infinite;
+  }
+`;
+
+/* ── Constants ─────────────────────────────────────────────────── */
 const DIAS_OPTS = [
-  { val: 'lunes',    label: 'Lunes'    },
-  { val: 'martes',   label: 'Martes'   },
-  { val: 'miercoles',label: 'Miércoles'},
-  { val: 'jueves',   label: 'Jueves'   },
-  { val: 'viernes',  label: 'Viernes'  },
-  { val: 'sabado',   label: 'Sábado'   },
-  { val: 'domingo',  label: 'Domingo'  },
+  { val: 'lunes',     label: 'Lunes'     },
+  { val: 'martes',    label: 'Martes'    },
+  { val: 'miercoles', label: 'Miércoles' },
+  { val: 'jueves',    label: 'Jueves'    },
+  { val: 'viernes',   label: 'Viernes'   },
+  { val: 'sabado',    label: 'Sábado'    },
+  { val: 'domingo',   label: 'Domingo'   },
 ];
 
 const HORAS = Array.from({ length: 24 }, (_, i) => {
@@ -21,15 +41,17 @@ const HORAS = Array.from({ length: 24 }, (_, i) => {
   return [`${h}:00`, `${h}:30`];
 }).flat();
 
-function Section({ icon: Icon, title, children }) {
+/* ── Sub-components ────────────────────────────────────────────── */
+function Section({ icon: Icon, title, subtitle, children }) {
   return (
-    <div style={{ background: '#fff', borderRadius: 16, padding: 16, marginBottom: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 10, background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon size={16} color={COLOR} />
+    <div style={{ background: T.white, borderRadius: 16, padding: '16px 18px', marginBottom: 12, border: `1.5px solid ${T.border}`, boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: subtitle ? 6 : 14 }}>
+        <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(13,148,136,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Icon size={16} color={T.teal} />
         </div>
-        <p style={{ fontWeight: 800, fontSize: 14, color: '#111', margin: 0 }}>{title}</p>
+        <p style={{ fontWeight: 800, fontSize: 14, color: T.navy, margin: 0, fontFamily: FF }}>{title}</p>
       </div>
+      {subtitle && <p style={{ fontSize: 12, color: T.textMuted, margin: '0 0 12px', fontFamily: FF, lineHeight: 1.5 }}>{subtitle}</p>}
       {children}
     </div>
   );
@@ -38,15 +60,11 @@ function Section({ icon: Icon, title, children }) {
 function TimeSelect({ label, value, onChange }) {
   return (
     <div style={{ flex: 1 }}>
-      <label style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: 4 }}>{label}</label>
+      <label style={{ fontSize: 11, fontWeight: 600, color: T.textSec, display: 'block', marginBottom: 4, fontFamily: FF }}>{label}</label>
       <select
         value={value || ''}
         onChange={e => onChange(e.target.value)}
-        style={{
-          width: '100%', border: '1.5px solid #E5E7EB', borderRadius: 10,
-          padding: '9px 10px', fontSize: 13, outline: 'none',
-          fontFamily: 'inherit', background: '#fff', color: '#111',
-        }}
+        style={{ width: '100%', border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '9px 10px', fontSize: 13, outline: 'none', fontFamily: FF, background: T.white, color: T.navy, cursor: 'pointer' }}
       >
         <option value="">--</option>
         {HORAS.map(h => <option key={h} value={h}>{h}</option>)}
@@ -55,6 +73,7 @@ function TimeSelect({ label, value, onChange }) {
   );
 }
 
+/* ── Main component ────────────────────────────────────────────── */
 export default function EncomiendaConfig() {
   const empresa  = useOutletContext();
   const navigate = useNavigate();
@@ -81,7 +100,7 @@ export default function EncomiendaConfig() {
         .maybeSingle();
       if (data) {
         setConfig({
-          dias_trabajo:            data.dias_trabajo || [],
+          dias_trabajo:            data.dias_trabajo            || [],
           horario_recepcion_desde: data.horario_recepcion_desde || '',
           horario_recepcion_hasta: data.horario_recepcion_hasta || '',
           horario_entrega_desde:   data.horario_entrega_desde   || '',
@@ -129,27 +148,29 @@ export default function EncomiendaConfig() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8F8F8', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: T.bg, fontFamily: FF }}>
+      <style>{STYLES}</style>
+
       {/* Header */}
-      <header style={{ background: COLOR, padding: '0 16px', position: 'sticky', top: 0, zIndex: 40, boxShadow: '0 2px 12px rgba(227,27,35,0.25)' }}>
-        <div style={{ height: 56, display: 'flex', alignItems: 'center', gap: 10 }}>
+      <header style={{ background: GH, padding: '0 16px', position: 'sticky', top: 0, zIndex: 40, boxShadow: '0 2px 16px rgba(0,0,0,0.22)' }}>
+        <div style={{ height: 60, display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
             onClick={() => navigate('/encomiendas/panel')}
-            style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+            style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
           >
             <ChevronLeft size={18} color="#fff" />
           </button>
           <div>
-            <p style={{ color: '#fff', fontWeight: 900, fontSize: 16, margin: 0, lineHeight: 1.2 }}>Configuración</p>
-            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, margin: 0 }}>{empresa.nombre}</p>
+            <p style={{ color: '#fff', fontWeight: 900, fontSize: 16, margin: 0, letterSpacing: '-0.2px', fontFamily: FF }}>Configuración</p>
+            <p style={{ color: 'rgba(255,255,255,0.50)', fontSize: 11, margin: 0, fontFamily: FF }}>{empresa.nombre}</p>
           </div>
         </div>
       </header>
 
-      <div style={{ padding: '16px 16px 100px' }}>
+      <div style={{ padding: '20px 16px 100px', maxWidth: 640, margin: '0 auto' }}>
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[1, 2, 3].map(i => <div key={i} style={{ background: '#fff', borderRadius: 16, height: 120, opacity: 0.5 }} />)}
+            {[1, 2, 3].map(i => <div key={i} className="kv-shimmer" style={{ borderRadius: 16, height: 130 }} />)}
           </div>
         ) : (
           <>
@@ -162,14 +183,7 @@ export default function EncomiendaConfig() {
                     <button
                       key={d.val}
                       onClick={() => toggleDia(d.val)}
-                      style={{
-                        border: `2px solid ${active ? COLOR : '#E5E7EB'}`,
-                        borderRadius: 10, padding: '7px 14px',
-                        background: active ? '#FFF0F0' : '#F9FAFB',
-                        color: active ? COLOR : '#6B7280',
-                        fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                        fontFamily: 'inherit',
-                      }}
+                      style={{ border: `2px solid ${active ? T.teal : T.border}`, borderRadius: 10, padding: '7px 14px', background: active ? 'rgba(13,148,136,0.08)' : T.bg, color: active ? T.tealDark : T.textSec, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: FF, transition: 'all 0.15s' }}
                     >
                       {d.label}
                     </button>
@@ -179,106 +193,63 @@ export default function EncomiendaConfig() {
             </Section>
 
             {/* Horario recepción */}
-            <Section icon={Clock} title="Horario de recepción en depósito">
-              <p style={{ fontSize: 12, color: '#9CA3AF', margin: '0 0 10px' }}>Horario en que recibís paquetes en tu depósito</p>
+            <Section icon={Clock} title="Horario de recepción en depósito" subtitle="Horario en que recibís paquetes en tu depósito">
               <div style={{ display: 'flex', gap: 10 }}>
-                <TimeSelect
-                  label="Desde"
-                  value={config.horario_recepcion_desde}
-                  onChange={v => setField('horario_recepcion_desde', v)}
-                />
-                <TimeSelect
-                  label="Hasta"
-                  value={config.horario_recepcion_hasta}
-                  onChange={v => setField('horario_recepcion_hasta', v)}
-                />
+                <TimeSelect label="Desde" value={config.horario_recepcion_desde} onChange={v => setField('horario_recepcion_desde', v)} />
+                <TimeSelect label="Hasta" value={config.horario_recepcion_hasta} onChange={v => setField('horario_recepcion_hasta', v)} />
               </div>
             </Section>
 
             {/* Horario entregas */}
-            <Section icon={Truck} title="Horario de entregas">
-              <p style={{ fontSize: 12, color: '#9CA3AF', margin: '0 0 10px' }}>Franja horaria en que hacés entregas</p>
+            <Section icon={Truck} title="Horario de entregas" subtitle="Franja horaria en que hacés entregas">
               <div style={{ display: 'flex', gap: 10 }}>
-                <TimeSelect
-                  label="Desde"
-                  value={config.horario_entrega_desde}
-                  onChange={v => setField('horario_entrega_desde', v)}
-                />
-                <TimeSelect
-                  label="Hasta"
-                  value={config.horario_entrega_hasta}
-                  onChange={v => setField('horario_entrega_hasta', v)}
-                />
+                <TimeSelect label="Desde" value={config.horario_entrega_desde} onChange={v => setField('horario_entrega_desde', v)} />
+                <TimeSelect label="Hasta" value={config.horario_entrega_hasta} onChange={v => setField('horario_entrega_hasta', v)} />
               </div>
             </Section>
 
             {/* Dirección depósito */}
-            <Section icon={MapPin} title="Dirección del depósito">
-              <p style={{ fontSize: 12, color: '#9CA3AF', margin: '0 0 10px' }}>Dónde los clientes pueden dejar paquetes</p>
+            <Section icon={MapPin} title="Dirección del depósito" subtitle="Dónde los clientes pueden dejar paquetes. También se usa como punto de origen para la optimización de ruta.">
               <input
                 type="text"
                 value={config.direccion_deposito}
                 onChange={e => setField('direccion_deposito', e.target.value)}
                 placeholder="Ej: Av. San Martín 350, Vicuña Mackenna"
-                style={{
-                  width: '100%', border: '1.5px solid #E5E7EB', borderRadius: 12,
-                  padding: '11px 14px', fontSize: 14, outline: 'none',
-                  boxSizing: 'border-box', fontFamily: 'inherit', background: '#fff',
-                }}
+                style={{ width: '100%', border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', fontFamily: FF, background: T.white, color: T.navy }}
               />
             </Section>
 
             {/* Condiciones depósito */}
-            <Section icon={MapPin} title="¿Qué se puede dejar en el depósito?">
-              <p style={{ fontSize: 12, color: '#9CA3AF', margin: '0 0 10px' }}>
-                Ej: Sobres, paquetes pequeños y medianos hasta 20kg
-              </p>
+            <Section icon={MapPin} title="¿Qué se puede dejar en el depósito?" subtitle="Ej: Sobres, paquetes pequeños y medianos hasta 20kg">
               <textarea
                 value={config.condiciones_deposito}
                 onChange={e => setField('condiciones_deposito', e.target.value)}
                 placeholder="Sobres, paquetes pequeños y medianos hasta 20kg"
                 rows={3}
-                style={{
-                  width: '100%', border: '1.5px solid #E5E7EB', borderRadius: 12,
-                  padding: '11px 14px', fontSize: 14, outline: 'none', resize: 'none',
-                  boxSizing: 'border-box', fontFamily: 'inherit', background: '#fff',
-                }}
+                style={{ width: '100%', border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '11px 14px', fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box', fontFamily: FF, background: T.white, color: T.navy }}
               />
             </Section>
 
             {/* Condiciones retiro */}
-            <Section icon={Truck} title="¿Qué retiro a domicilio?">
-              <p style={{ fontSize: 12, color: '#9CA3AF', margin: '0 0 10px' }}>
-                Ej: Muebles, electrodomésticos y paquetes grandes. Consultar disponibilidad.
-              </p>
+            <Section icon={Truck} title="¿Qué retiro a domicilio?" subtitle="Ej: Muebles, electrodomésticos y paquetes grandes. Consultar disponibilidad.">
               <textarea
                 value={config.condiciones_retiro}
                 onChange={e => setField('condiciones_retiro', e.target.value)}
                 placeholder="Muebles, electrodomésticos y paquetes grandes. Consultar disponibilidad."
                 rows={3}
-                style={{
-                  width: '100%', border: '1.5px solid #E5E7EB', borderRadius: 12,
-                  padding: '11px 14px', fontSize: 14, outline: 'none', resize: 'none',
-                  boxSizing: 'border-box', fontFamily: 'inherit', background: '#fff',
-                }}
+                style={{ width: '100%', border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '11px 14px', fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box', fontFamily: FF, background: T.white, color: T.navy }}
               />
             </Section>
           </>
         )}
       </div>
 
-      {/* Botón guardar fijo abajo */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px 24px', background: '#fff', borderTop: '1px solid #E5E7EB', zIndex: 30 }}>
+      {/* Save button */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px 28px', background: T.white, borderTop: `1px solid ${T.border}`, zIndex: 30 }}>
         <button
           onClick={handleSave}
           disabled={saving || loading}
-          style={{
-            width: '100%', background: saving ? '#aaa' : COLOR, color: '#fff',
-            border: 'none', borderRadius: 14, padding: '14px 0',
-            fontWeight: 800, fontSize: 15, cursor: saving ? 'not-allowed' : 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            fontFamily: 'inherit',
-          }}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: saving || loading ? T.textMuted : GTEAL, color: '#fff', border: 'none', borderRadius: 14, padding: '14px 0', fontWeight: 800, fontSize: 15, cursor: saving || loading ? 'not-allowed' : 'pointer', fontFamily: FF, boxShadow: saving || loading ? 'none' : '0 4px 14px rgba(13,148,136,0.30)' }}
         >
           <Save size={16} />
           {saving ? 'Guardando...' : 'Guardar configuración'}
