@@ -23,6 +23,37 @@ const STYLES = `
     background-size: 200% 100%;
     animation: kv-shimmer 1.4s ease-in-out infinite;
   }
+
+  /* Mobile: single column */
+  .kvc-wrap { padding: 20px 16px 100px; }
+  .kvc-grid { display: flex; flex-direction: column; gap: 12px; }
+  .kvc-col  { display: flex; flex-direction: column; gap: 12px; }
+
+  /* Desktop: 2-column, viewport-height fit */
+  @media (min-width: 1024px) {
+    .kvc-wrap {
+      height: calc(100vh - 60px);
+      box-sizing: border-box;
+      padding: 16px 28px 80px;
+    }
+    .kvc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 16px;
+      height: 100%;
+      overflow: hidden;
+    }
+    .kvc-col {
+      height: 100%;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .kvc-col::-webkit-scrollbar { display: none; }
+    /* Last section in each column stretches to fill remaining space */
+    .kvc-col > div:last-child { flex: 1; }
+    /* Textarea inside the stretched section grows with it */
+    .kvc-col textarea { flex: 1; min-height: 60px; }
+  }
 `;
 
 /* ── Constants ─────────────────────────────────────────────────── */
@@ -54,14 +85,14 @@ const HORAS = Array.from({ length: 24 }, (_, i) => {
 /* ── Sub-components ────────────────────────────────────────────── */
 function Section({ icon: Icon, title, subtitle, children }) {
   return (
-    <div style={{ background: T.white, borderRadius: 16, padding: '16px 18px', marginBottom: 12, border: `1.5px solid ${T.border}`, boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: subtitle ? 6 : 14 }}>
+    <div style={{ background: T.white, borderRadius: 16, padding: '16px 18px', border: `1.5px solid ${T.border}`, boxShadow: '0 2px 8px rgba(15,23,42,0.04)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: subtitle ? 6 : 14, flexShrink: 0 }}>
         <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(13,148,136,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Icon size={16} color={T.teal} />
         </div>
         <p style={{ fontWeight: 800, fontSize: 14, color: T.navy, margin: 0, fontFamily: FF }}>{title}</p>
       </div>
-      {subtitle && <p style={{ fontSize: 12, color: T.textMuted, margin: '0 0 12px', fontFamily: FF, lineHeight: 1.5 }}>{subtitle}</p>}
+      {subtitle && <p style={{ fontSize: 12, color: T.textMuted, margin: '0 0 12px', fontFamily: FF, lineHeight: 1.5, flexShrink: 0 }}>{subtitle}</p>}
       {children}
     </div>
   );
@@ -69,7 +100,7 @@ function Section({ icon: Icon, title, subtitle, children }) {
 
 function DayToggleRow({ label, fieldValues, onToggle }) {
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div style={{ marginBottom: 12, flexShrink: 0 }}>
       <p style={{ fontSize: 11, fontWeight: 600, color: T.textSec, margin: '0 0 8px', fontFamily: FF }}>{label}</p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
         {DIAS_ABBR.map(d => {
@@ -214,94 +245,111 @@ export default function EncomiendaConfig() {
         </div>
       </header>
 
-      <div style={{ padding: '20px 16px 100px', maxWidth: 640, margin: '0 auto' }}>
+      {/* Content */}
+      <div className="kvc-wrap">
         {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[1, 2, 3].map(i => <div key={i} className="kv-shimmer" style={{ borderRadius: 16, height: 130 }} />)}
+          <div className="kvc-grid">
+            <div className="kvc-col">
+              {[1, 2, 3].map(i => <div key={i} className="kv-shimmer" style={{ borderRadius: 16, height: 130 }} />)}
+            </div>
+            <div className="kvc-col">
+              {[4, 5, 6].map(i => <div key={i} className="kv-shimmer" style={{ borderRadius: 16, height: 130 }} />)}
+            </div>
           </div>
         ) : (
-          <>
-            {/* Días de trabajo */}
-            <Section icon={Calendar} title="Días que trabajás">
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {DIAS_OPTS.map(d => {
-                  const active = config.dias_trabajo.includes(d.val);
-                  return (
-                    <button
-                      key={d.val}
-                      onClick={() => toggleDia(d.val)}
-                      style={{ border: `2px solid ${active ? T.teal : T.border}`, borderRadius: 10, padding: '7px 14px', background: active ? 'rgba(13,148,136,0.08)' : T.bg, color: active ? T.tealDark : T.textSec, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: FF, transition: 'all 0.15s' }}
-                    >
-                      {d.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </Section>
+          <div className="kvc-grid">
 
-            {/* Horario recepción */}
-            <Section icon={Clock} title="Horario de recepción en depósito" subtitle="Horario en que recibís paquetes en tu depósito">
-              <DayToggleRow
-                label="Días que aceptás paquetes"
-                fieldValues={config.dias_recepcion}
-                onToggle={val => toggleDiaField('dias_recepcion', val)}
-              />
-              <div style={{ display: 'flex', gap: 10 }}>
-                <TimeSelect label="Desde" value={config.horario_recepcion_desde} onChange={v => setField('horario_recepcion_desde', v)} />
-                <TimeSelect label="Hasta" value={config.horario_recepcion_hasta} onChange={v => setField('horario_recepcion_hasta', v)} />
-              </div>
-            </Section>
+            {/* ── Left column ── */}
+            <div className="kvc-col">
 
-            {/* Horario entregas */}
-            <Section icon={Truck} title="Horario de entregas" subtitle="Franja horaria en que hacés entregas">
-              <DayToggleRow
-                label="Días en que hacés entregas"
-                fieldValues={config.dias_entrega}
-                onToggle={val => toggleDiaField('dias_entrega', val)}
-              />
-              <div style={{ display: 'flex', gap: 10 }}>
-                <TimeSelect label="Desde" value={config.horario_entrega_desde} onChange={v => setField('horario_entrega_desde', v)} />
-                <TimeSelect label="Hasta" value={config.horario_entrega_hasta} onChange={v => setField('horario_entrega_hasta', v)} />
-              </div>
-            </Section>
+              {/* Días de trabajo */}
+              <Section icon={Calendar} title="Días que trabajás">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {DIAS_OPTS.map(d => {
+                    const active = config.dias_trabajo.includes(d.val);
+                    return (
+                      <button
+                        key={d.val}
+                        onClick={() => toggleDia(d.val)}
+                        style={{ border: `2px solid ${active ? T.teal : T.border}`, borderRadius: 10, padding: '7px 14px', background: active ? 'rgba(13,148,136,0.08)' : T.bg, color: active ? T.tealDark : T.textSec, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: FF, transition: 'all 0.15s' }}
+                      >
+                        {d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Section>
 
-            {/* Dirección depósito */}
-            <Section icon={MapPin} title="Dirección del depósito" subtitle="Dónde los clientes pueden dejar paquetes. También se usa como punto de origen para la optimización de ruta.">
-              <input
-                type="text"
-                value={config.direccion_deposito}
-                onChange={e => setField('direccion_deposito', e.target.value)}
-                placeholder="Ej: Av. San Martín 350, Vicuña Mackenna"
-                style={{ width: '100%', border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', fontFamily: FF, background: T.white, color: T.navy }}
-              />
-            </Section>
+              {/* Horario recepción */}
+              <Section icon={Clock} title="Horario de recepción en depósito" subtitle="Horario en que recibís paquetes en tu depósito">
+                <DayToggleRow
+                  label="Días que aceptás paquetes"
+                  fieldValues={config.dias_recepcion}
+                  onToggle={val => toggleDiaField('dias_recepcion', val)}
+                />
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <TimeSelect label="Desde" value={config.horario_recepcion_desde} onChange={v => setField('horario_recepcion_desde', v)} />
+                  <TimeSelect label="Hasta" value={config.horario_recepcion_hasta} onChange={v => setField('horario_recepcion_hasta', v)} />
+                </div>
+              </Section>
 
-            {/* Condiciones depósito */}
-            <Section icon={MapPin} title="¿Qué se puede dejar en el depósito?" subtitle="Ej: Sobres, paquetes pequeños y medianos hasta 20kg">
-              <textarea
-                value={config.condiciones_deposito}
-                onChange={e => setField('condiciones_deposito', e.target.value)}
-                placeholder="Sobres, paquetes pequeños y medianos hasta 20kg"
-                rows={3}
-                style={{ width: '100%', border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '11px 14px', fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box', fontFamily: FF, background: T.white, color: T.navy }}
-              />
-            </Section>
+              {/* Condiciones depósito — stretches to fill remaining height */}
+              <Section icon={MapPin} title="¿Qué se puede dejar en el depósito?" subtitle="Ej: Sobres, paquetes pequeños y medianos hasta 20kg">
+                <textarea
+                  value={config.condiciones_deposito}
+                  onChange={e => setField('condiciones_deposito', e.target.value)}
+                  placeholder="Sobres, paquetes pequeños y medianos hasta 20kg"
+                  rows={3}
+                  style={{ width: '100%', border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '11px 14px', fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box', fontFamily: FF, background: T.white, color: T.navy }}
+                />
+              </Section>
 
-            {/* Condiciones retiro */}
-            <Section icon={Truck} title="¿Qué retiro a domicilio?" subtitle="Ej: Muebles, electrodomésticos y paquetes grandes. Consultar disponibilidad.">
-              <textarea
-                value={config.condiciones_retiro}
-                onChange={e => setField('condiciones_retiro', e.target.value)}
-                placeholder="Muebles, electrodomésticos y paquetes grandes. Consultar disponibilidad."
-                rows={3}
-                style={{ width: '100%', border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '11px 14px', fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box', fontFamily: FF, background: T.white, color: T.navy }}
-              />
-            </Section>
-          </>
+            </div>
+
+            {/* ── Right column ── */}
+            <div className="kvc-col">
+
+              {/* Horario entregas */}
+              <Section icon={Truck} title="Horario de entregas" subtitle="Franja horaria en que hacés entregas">
+                <DayToggleRow
+                  label="Días en que hacés entregas"
+                  fieldValues={config.dias_entrega}
+                  onToggle={val => toggleDiaField('dias_entrega', val)}
+                />
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <TimeSelect label="Desde" value={config.horario_entrega_desde} onChange={v => setField('horario_entrega_desde', v)} />
+                  <TimeSelect label="Hasta" value={config.horario_entrega_hasta} onChange={v => setField('horario_entrega_hasta', v)} />
+                </div>
+              </Section>
+
+              {/* Dirección depósito */}
+              <Section icon={MapPin} title="Dirección del depósito" subtitle="Dónde los clientes pueden dejar paquetes. También se usa como punto de origen para la optimización de ruta.">
+                <input
+                  type="text"
+                  value={config.direccion_deposito}
+                  onChange={e => setField('direccion_deposito', e.target.value)}
+                  placeholder="Ej: Av. San Martín 350, Vicuña Mackenna"
+                  style={{ width: '100%', border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', fontFamily: FF, background: T.white, color: T.navy }}
+                />
+              </Section>
+
+              {/* Condiciones retiro — stretches to fill remaining height */}
+              <Section icon={Truck} title="¿Qué retiro a domicilio?" subtitle="Ej: Muebles, electrodomésticos y paquetes grandes. Consultar disponibilidad.">
+                <textarea
+                  value={config.condiciones_retiro}
+                  onChange={e => setField('condiciones_retiro', e.target.value)}
+                  placeholder="Muebles, electrodomésticos y paquetes grandes. Consultar disponibilidad."
+                  rows={3}
+                  style={{ width: '100%', border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '11px 14px', fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box', fontFamily: FF, background: T.white, color: T.navy }}
+                />
+              </Section>
+
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Save button */}
+      {/* Save button — fixed footer */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px 28px', background: T.white, borderTop: `1px solid ${T.border}`, zIndex: 30 }}>
         <button
           onClick={handleSave}

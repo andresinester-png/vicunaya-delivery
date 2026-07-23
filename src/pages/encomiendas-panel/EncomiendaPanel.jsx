@@ -524,6 +524,172 @@ function EncCard({ enc, unreadCount = 0, onChat, onPresupuesto, onModificarPresu
   );
 }
 
+/* ── Tarjeta compacta EN CAMINO ─────────────────────────────────── */
+function EnCaminoCard({ enc, onEstadoChange }) {
+  const [expanded, setExpanded] = useState(false);
+  const [fotoOpen, setFotoOpen] = useState(false);
+
+  const pres   = enc.presupuestos_encomienda?.[0];
+  const pagado = enc.cobrado === true || pres?.estado === 'pagado';
+
+  return (
+    <>
+      <div style={{ background: T.white, borderRadius: 14, border: `1.5px solid ${T.border}`, marginBottom: 8, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,23,42,0.04)', fontFamily: FF }}>
+
+        {/* ── Vista compacta ── */}
+        <div style={{ padding: '12px 14px' }}>
+
+          {/* Fila 1: código · badge pago · WA destinatario */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: T.navy, color: '#fff', borderRadius: 7, padding: '3px 9px', fontSize: 12, fontWeight: 900, letterSpacing: '0.04em', fontFamily: FF }}>
+              <Package size={11} /> {enc.codigo || '—'}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, fontFamily: FF,
+                background: pagado ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)',
+                color:      pagado ? '#065F46'               : '#92400E',
+                border:     `1px solid ${pagado ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.30)'}`,
+              }}>
+                {pagado ? 'Pagado ✓' : 'Sin cobrar'}
+              </span>
+              {enc.telefono_destinatario && (
+                <a
+                  href={waLink(enc.telefono_destinatario)}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, background: 'rgba(37,211,102,0.10)', border: '1.5px solid rgba(37,211,102,0.30)', borderRadius: 10, color: '#25D366', textDecoration: 'none', flexShrink: 0 }}
+                >
+                  <WhatsAppIcon size={16} />
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Fila 2: dirección destino */}
+          {enc.direccion_destino && (
+            <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start', marginBottom: 8 }}>
+              <MapPin size={13} color={T.teal} style={{ marginTop: 2, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: T.navy, lineHeight: 1.4, fontFamily: FF }}>{enc.direccion_destino}</span>
+            </div>
+          )}
+
+          {/* Fila 3: horario + toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            {enc.franja_horaria ? (
+              <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                <Clock size={12} color={T.textMuted} />
+                <span style={{ fontSize: 12, color: T.textSec, fontFamily: FF }}>{enc.franja_horaria}</span>
+              </div>
+            ) : <div />}
+            <button
+              onClick={() => setExpanded(v => !v)}
+              style={{ display: 'flex', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: T.teal, fontFamily: FF, padding: 0 }}
+            >
+              {expanded ? '▲ Ver menos' : '▼ Ver más'}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Vista expandida ── */}
+        {expanded && (
+          <div style={{ borderTop: `1px solid ${T.border}`, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+            {/* Datos del destinatario */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {enc.nombre_destinatario && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, fontFamily: FF, minWidth: 80 }}>Destinatario</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: T.navy, fontFamily: FF }}>{enc.nombre_destinatario}</span>
+                </div>
+              )}
+              {enc.telefono_destinatario && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, fontFamily: FF, minWidth: 80 }}>Teléfono</span>
+                  <span style={{ fontSize: 13, color: T.textSec, fontFamily: FF }}>{enc.telefono_destinatario}</span>
+                </div>
+              )}
+              {enc.descripcion && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, fontFamily: FF, minWidth: 80, marginTop: 1 }}>Descripción</span>
+                  <span style={{ fontSize: 13, color: T.textSec, lineHeight: 1.4, fontFamily: FF }}>{enc.descripcion}</span>
+                </div>
+              )}
+              {(enc.peso || enc.dimensiones) && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, fontFamily: FF, minWidth: 80 }}>Tamaño</span>
+                  <span style={{ fontSize: 13, color: T.textSec, fontFamily: FF }}>{[enc.peso, enc.dimensiones].filter(Boolean).join(' · ')}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Botones de acción */}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <a
+                href={waLink(enc.cliente_telefono)}
+                target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#fff', color: '#25D366', border: '1.5px solid #25D366', borderRadius: 10, padding: '8px 12px', fontSize: 12, fontWeight: 700, textDecoration: 'none', fontFamily: FF }}
+              >
+                <WhatsAppIcon size={13} /> Remitente
+              </a>
+              {enc.telefono_destinatario && (
+                <a
+                  href={waLink(enc.telefono_destinatario)}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#fff', color: '#25D366', border: '1.5px solid #25D366', borderRadius: 10, padding: '8px 12px', fontSize: 12, fontWeight: 700, textDecoration: 'none', fontFamily: FF }}
+                >
+                  <WhatsAppIcon size={13} /> Destinatario
+                </a>
+              )}
+              {enc.foto_url && (
+                <button
+                  onClick={() => setFotoOpen(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: T.bg, color: T.textSec, border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: FF }}
+                >
+                  <ZoomIn size={13} /> Foto
+                </button>
+              )}
+              {onEstadoChange && (
+                <button
+                  onClick={() => onEstadoChange(enc.id, 'entregado')}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: GTEAL, color: '#fff', border: 'none', borderRadius: 10, padding: '8px 12px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FF, boxShadow: '0 2px 8px rgba(13,148,136,0.28)', minWidth: 120 }}
+                >
+                  <Check size={13} /> Entregado
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+      {fotoOpen && enc.foto_url && <FotoLightbox url={enc.foto_url} onClose={() => setFotoOpen(false)} />}
+    </>
+  );
+}
+
+/* ── Vista En camino (lista compacta) ───────────────────────────── */
+function EnCaminoView({ items, loading, onEstadoChange }) {
+  return (
+    <div style={{ padding: '20px 20px 32px', maxWidth: 800, margin: '0 auto' }}>
+      <div style={{ marginBottom: 18 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 900, color: T.navy, margin: '0 0 2px', fontFamily: FF }}>En camino</h1>
+        <p style={{ fontSize: 13, color: T.textSec, margin: 0, fontFamily: FF }}>En tránsito activo</p>
+      </div>
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[1, 2, 3].map(i => <div key={i} className="kv-shimmer" style={{ borderRadius: 14, height: 90 }} />)}
+        </div>
+      ) : items.length === 0 ? (
+        <EmptyState msg="Sin encomiendas en camino" sub="Las entregas en tránsito aparecerán aquí" />
+      ) : (
+        <AnimatePresence>
+          {items.map(enc => (
+            <EnCaminoCard key={enc.id} enc={enc} onEstadoChange={onEstadoChange} />
+          ))}
+        </AnimatePresence>
+      )}
+    </div>
+  );
+}
+
 /* ── Dashboard view ─────────────────────────────────────────────── */
 function DashboardView({ empresa, encomiendas, pendientes, presupuestados, confirmadas, enCamino, entregadasHoy, metricas, unreadCounts, config, onChat, onEstadoChange, onPresupuesto, onModificarPresupuesto, setActiveView }) {
   const hora  = new Date().getHours();
@@ -1230,15 +1396,9 @@ export default function EncomiendaPanel() {
         )}
 
         {activeView === 'en_camino' && (
-          <ListaView
-            title="En camino"
-            sub="En tránsito activo"
+          <EnCaminoView
             items={enCamino}
             loading={loading}
-            emptyMsg="Sin encomiendas en camino"
-            emptySub="Las entregas en tránsito aparecerán aquí"
-            unreadCounts={unreadCounts}
-            onChat={handleOpenChat}
             onEstadoChange={handleEstadoChange}
           />
         )}
